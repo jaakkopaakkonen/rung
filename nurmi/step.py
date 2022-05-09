@@ -1,0 +1,124 @@
+import logging
+logging = logging.getLogger("nurmi")
+logging.setLevel(1)
+
+import nurmi.framework
+
+import nurmi.util
+import pprint
+
+
+class step:
+    """ Class to wrap executable parts and their arguments to
+        more controlled entities to enable testing
+    """
+
+    def __init__(
+        self,
+        target=None,
+        signature=(),
+        inputs=[],
+        optional_inputs=[],
+    ):
+        """Add and register new step to be used as input for other steps
+        :param Name to be used for executing the step specifically via run_target
+        :param signature: The actual executable call (function or lambda) and
+            it's argument names as list or tuple of strings, or as dictionary of strings,
+            when the input name either as target of earlier step or name in values is different
+            from the argument actual argument name.
+            If dictionary format is used, the argument actual argument name for the executable is key and input as value.
+        :param inputs: Additional inputs as list, tuple or separate parameters,
+            which are neccessary for this step but are not relayed to the signature executable call.
+        """
+        logging.warning("Registering step "+str(target))
+        # The name of this step to bue used by run_target
+        self.target = None
+        # The actual callable implementation extracted
+        # from the first parameter in signature
+        self.callable_implementation = None
+        # The names of arguments for the callable implementation
+        self.callable_arguments = None
+        # Other mandatory inputs or prerequisites for this step
+        self.inputs = None
+        # Optional inputs or prerequisites for this step
+        self.optional_inputs = frozenset(optional_inputs)
+        if type(target) != str:
+            # Assume target is function
+            # Dig out the functiona name and parameter names
+            inputs = nurmi.util.get_function_name_params(target)
+            new_target = inputs.pop(0)
+            signature = tuple([target] + inputs)
+            target = new_target
+        if inputs:
+            if isinstance(inputs, tuple):
+                inputs = list(inputs)
+            elif not isinstance(inputs, list):
+                inputs = [inputs]
+        if not isinstance(signature, (list, tuple)):
+            self.callable_implementation = signature
+        else:
+            self.callable_implementation = signature[0]
+            if len(signature) == 2:
+                if isinstance(signature[1], (list, tuple)):
+                    arguments = signature[1]
+                    self.inputs = frozenset(inputs + arguments)
+                elif isinstance(signature[1], dict):
+                    arguments = signature[1]
+                    inputvalues = []
+                    for inputvalue in arguments.values():
+                        if inputvalue:
+                            inputvalues.append(inputvalue)
+                    self.inputs = frozenset(inputs + inputvalues) - self.optional_inputs
+                else:
+                    arguments = [signature[1]]
+                    self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+            else:
+                arguments = list(signature[1:])
+                self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+            self.callable_arguments = arguments
+        self.target = target
+        nurmi.framework.add_step(self)
+
+    def get_missing_inputs(self, *valuedicts):
+        return self.inputs - nurmi.framework.gather_dicts(*valuedicts)
+
+    def run(self, *valuedicts):
+        call_args = dict()
+        if self.callable_arguments:
+            for values in valuedicts:
+                call_args.update(
+                    nurmi.framework.argument_subset(
+                        values,
+                        self.callable_arguments
+                    )
+                )
+        if set(call_args.keys()) < self.inputs:
+            # Not all parameters fullfilled
+            return
+        logging.warning("Running " + self.target)
+        logging.warning("with values")
+        logging.warning(pprint.pformat(*valuedicts))
+        if self.target is None:
+            return self.callable_implementation(**call_args)
+        else:
+            valuedicts[0][self.target] = self.callable_implementation(**call_args)
+            logging.warning(self.target + " set to "+str(valuedicts[0][self.target]))
+            return valuedicts[0][self.target]
+
+    def __eq__(self, other):
+        return self.callable_implementation == other.callable_implementation and \
+            set(self.callable_arguments) == set(other.callable_arguments) and \
+            set(self.inputs) == set(other.inputs) and \
+            self.target == other.target
+
+    def __lt__(self, other):
+        return len(self.inputs) < len(other.inputs)
+
+    def __repr__(self):
+        arguments = []
+        for arg in self.callable_arguments:
+            try:
+                arguments.append(repr(arg) + "=" + repr(self.callable_arguments[arg]))
+            except:
+                arguments.append(repr(arg))
+        return repr(self.callable_implementation) +  "(" +  ", ".join(arguments) + ")"
