@@ -1,6 +1,6 @@
 import logging
-logging = logging.getLogger("nurmi")
-logging.setLevel(1)
+log = logging.getLogger("nurmi")
+log.setLevel(1)
 
 import nurmi.framework
 
@@ -30,7 +30,7 @@ class step:
         :param inputs: Additional inputs as list, tuple or separate parameters,
             which are neccessary for this step but are not relayed to the signature executable call.
         """
-        logging.warning("Registering step "+str(target))
+        log.warning("Registering step "+str(target))
         # The name of this step to bue used by run_target
         self.target = None
         # The actual callable implementation extracted
@@ -95,14 +95,14 @@ class step:
         if set(call_args.keys()) < self.inputs:
             # Not all parameters fullfilled
             return
-        logging.warning("Running " + self.target)
-        logging.warning("with values")
-        logging.warning(pprint.pformat(*valuedicts))
+        log.warning("Running " + self.target)
+        log.warning("with values")
+        log.warning(pprint.pformat(*valuedicts))
         if self.target is None:
             return self.callable_implementation(**call_args)
         else:
             valuedicts[0][self.target] = self.callable_implementation(**call_args)
-            logging.warning(self.target + " set to "+str(valuedicts[0][self.target]))
+            log.warning(self.target + " set to "+str(valuedicts[0][self.target]))
             return valuedicts[0][self.target]
 
     def __eq__(self, other):

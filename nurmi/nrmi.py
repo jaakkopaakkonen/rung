@@ -6,8 +6,8 @@ import os
 import pprint
 import sys
 
-logging = logging.getLogger("nurmi")
-logging.setLevel(1)
+log = logging.getLogger("nurmi")
+log.setLevel(1)
 
 # Apply everything from modules
 
@@ -65,13 +65,15 @@ def main():
         i = 1
         while i < len(sys.argv):
             argument = sys.argv[i]
-            if argument.startswith("--"):
+            separator_idx = argument.find("=")
+            if separator_idx > 0:
+                values[argument[0:separator_idx]] = argument[separator_idx+1:]
+            elif argument.startswith("--"):
                 # Value names are prefixed with --
                 # Strip -- prefix
                 current_input = argument[2:]
             else:
                 # No argument name, perhaps it's a value or target
-
                 if current_input:
                     # Make possible to create argument lists with plural s
                     # suffix.
