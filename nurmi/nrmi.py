@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import importlib.util
+import json
 import logging
 import os
 import pprint
@@ -37,6 +38,14 @@ def read_environment_variables():
     return result
 
 
+def read_values_from_file(filename):
+    try:
+        with open(filename) as fp:
+            return json.load(fp)
+    except:
+        return dict()
+
+
 def main():
     """The main entrypoint for the program
 
@@ -66,7 +75,10 @@ def main():
         while i < len(sys.argv):
             argument = sys.argv[i]
             separator_idx = argument.find("=")
-            if separator_idx > 0:
+            if argument.startswith("-f"):
+                i += 1
+                values.update(read_values_from_file(sys.argv[i]))
+            elif separator_idx > 0:
                 values[argument[0:separator_idx]] = argument[separator_idx+1:]
             elif argument.startswith("--"):
                 # Value names are prefixed with --

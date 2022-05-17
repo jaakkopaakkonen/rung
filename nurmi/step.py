@@ -30,7 +30,6 @@ class step:
         :param inputs: Additional inputs as list, tuple or separate parameters,
             which are neccessary for this step but are not relayed to the signature executable call.
         """
-        log.warning("Registering step "+str(target))
         # The name of this step to bue used by run_target
         self.target = None
         # The actual callable implementation extracted
@@ -42,6 +41,7 @@ class step:
         self.inputs = None
         # Optional inputs or prerequisites for this step
         self.optional_inputs = frozenset(optional_inputs)
+        log.warning("Registering step "+str(target))
         if type(target) != str:
             # Assume target is function
             # Dig out the functiona name and parameter names
@@ -57,25 +57,28 @@ class step:
         if not isinstance(signature, (list, tuple)):
             self.callable_implementation = signature
         else:
-            self.callable_implementation = signature[0]
-            if len(signature) == 2:
-                if isinstance(signature[1], (list, tuple)):
-                    arguments = signature[1]
-                    self.inputs = frozenset(inputs + arguments)
-                elif isinstance(signature[1], dict):
-                    arguments = signature[1]
-                    inputvalues = []
-                    for inputvalue in arguments.values():
-                        if inputvalue:
-                            inputvalues.append(inputvalue)
-                    self.inputs = frozenset(inputs + inputvalues) - self.optional_inputs
-                else:
-                    arguments = [signature[1]]
-                    self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+            if not signature:
+                self.inputs = frozenset(inputs)
             else:
-                arguments = list(signature[1:])
-                self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
-            self.callable_arguments = arguments
+                self.callable_implementation = signature[0]
+                if len(signature) == 2:
+                    if isinstance(signature[1], (list, tuple)):
+                        arguments = signature[1]
+                        self.inputs = frozenset(inputs + arguments)
+                    elif isinstance(signature[1], dict):
+                        arguments = signature[1]
+                        inputvalues = []
+                        for inputvalue in arguments.values():
+                            if inputvalue:
+                                inputvalues.append(inputvalue)
+                        self.inputs = frozenset(inputs + inputvalues) - self.optional_inputs
+                    else:
+                        arguments = [signature[1]]
+                        self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+                else:
+                    arguments = list(signature[1:])
+                    self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+                self.callable_arguments = arguments
         self.target = target
         nurmi.framework.add_step(self)
 
@@ -92,8 +95,12 @@ class step:
                         self.callable_arguments
                     )
                 )
-        if set(call_args.keys()) < self.inputs:
+        fulfilled_dependencies = set(call_args.keys())
+        missing_dependencies = self.inputs - fulfilled_dependencies
+        if missing_dependencies:
             # Not all parameters fullfilled
+            log.warning("Not running " + self.target)
+            log.warning("Missing dependencies: " + " ".join(list(missing_dependencies)))
             return
         log.warning("Running " + self.target)
         log.warning("with values")
@@ -105,11 +112,24 @@ class step:
             log.warning(self.target + " set to "+str(valuedicts[0][self.target]))
             return valuedicts[0][self.target]
 
+    def is_predecessor_of(self, step):
+        return self.target in step.inputs
+
+    def is_successor_of(self, step):
+        return step.target in self.inputs
+
     def __eq__(self, other):
-        return self.callable_implementation == other.callable_implementation and \
-            set(self.callable_arguments) == set(other.callable_arguments) and \
-            set(self.inputs) == set(other.inputs) and \
-            self.target == other.target
+        if not self.target == other.target:
+            return False
+        if not self.inputs == other.inputs:
+            return False
+        if self.callable_implementation != other.callable_implementation:
+            return False
+        if self.callable_implementation is not None and \
+            (self.callable_arguments) != set(other.callable_arguments):
+            return False
+        return True
+
 
     def __lt__(self, other):
         return len(self.inputs) < len(other.inputs)
