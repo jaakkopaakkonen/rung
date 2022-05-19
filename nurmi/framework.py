@@ -1,6 +1,7 @@
 import logging
 import pprint
 
+import nurmi.dag
 import nurmi.step
 
 
@@ -12,16 +13,13 @@ all_inputs = set()
 
 
 def add_step(step):
-    global all_steps
-    if not step in all_steps:
-        all_steps.append(step)
-        all_inputs.update(step.inputs)
+    nurmi.dag.add(step)
 
 
 def run_all(*valuedicts):
-    global all_steps
-    for step in all_steps:
-        step.run(*valuedicts)
+    for target in nurmi.dag.final_targets():
+        for intermediate_step in nurmi.dag.get_steps_to_target(target):
+            intermediate_step.run(*valuedicts)
 
 
 def get_steps_with_target(target):

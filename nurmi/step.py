@@ -22,13 +22,16 @@ class step:
     ):
         """Add and register new step to be used as input for other steps
         :param Name to be used for executing the step specifically via run_target
-        :param signature: The actual executable call (function or lambda) and
-            it's argument names as list or tuple of strings, or as dictionary of strings,
-            when the input name either as target of earlier step or name in values is different
-            from the argument actual argument name.
-            If dictionary format is used, the argument actual argument name for the executable is key and input as value.
+        :param signature: The actual executable call (function or lambda)
+            and it's argument names as list or tuple of strings, or as
+            dictionary of strings,
+            when the input name either as target of earlier step or name
+            in values is different from the argument actual argument name.
+            If dictionary format is used, the argument actual argument name
+            for the executable is key and input as value.
         :param inputs: Additional inputs as list, tuple or separate parameters,
-            which are neccessary for this step but are not relayed to the signature executable call.
+            which are neccessary for this step but are not relayed to the
+            signature executable call.
         """
         # The name of this step to bue used by run_target
         self.target = None
@@ -71,13 +74,16 @@ class step:
                         for inputvalue in arguments.values():
                             if inputvalue:
                                 inputvalues.append(inputvalue)
-                        self.inputs = frozenset(inputs + inputvalues) - self.optional_inputs
+                        self.inputs = frozenset(inputs + inputvalues) - \
+                            self.optional_inputs
                     else:
                         arguments = [signature[1]]
-                        self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+                        self.inputs = frozenset(list(inputs) + arguments) - \
+                            self.optional_inputs
                 else:
                     arguments = list(signature[1:])
-                    self.inputs = frozenset(list(inputs) + arguments) - self.optional_inputs
+                    self.inputs = frozenset(list(inputs) + arguments) - \
+                        self.optional_inputs
                 self.callable_arguments = arguments
         self.target = target
         nurmi.framework.add_step(self)
@@ -100,7 +106,9 @@ class step:
         if missing_dependencies:
             # Not all parameters fullfilled
             log.warning("Not running " + self.target)
-            log.warning("Missing dependencies: " + " ".join(list(missing_dependencies)))
+            log.warning(
+                "Missing dependencies: " + " ".join(list(missing_dependencies))
+            )
             return
         log.warning("Running " + self.target)
         log.warning("with values")
@@ -108,8 +116,12 @@ class step:
         if self.target is None:
             return self.callable_implementation(**call_args)
         else:
-            valuedicts[0][self.target] = self.callable_implementation(**call_args)
-            log.warning(self.target + " set to "+str(valuedicts[0][self.target]))
+            valuedicts[0][self.target] = self.callable_implementation(
+                **call_args
+            )
+            log.warning(
+                self.target + " set to "+str(valuedicts[0][self.target])
+            )
             return valuedicts[0][self.target]
 
     def is_predecessor_of(self, step):
@@ -130,7 +142,6 @@ class step:
             return False
         return True
 
-
     def __lt__(self, other):
         return len(self.inputs) < len(other.inputs)
 
@@ -138,7 +149,11 @@ class step:
         arguments = []
         for arg in self.callable_arguments:
             try:
-                arguments.append(repr(arg) + "=" + repr(self.callable_arguments[arg]))
+                arguments.append(
+                    repr(arg) + "=" + repr(self.callable_arguments[arg])
+                )
             except:
                 arguments.append(repr(arg))
-        return repr(self.callable_implementation) +  "(" +  ", ".join(arguments) + ")"
+        return repr(
+            self.callable_implementation
+        ) +  "(" +  ", ".join(arguments) + ")"

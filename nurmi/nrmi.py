@@ -16,6 +16,7 @@ log.setLevel(1)
 import nurmi.framework
 import nurmi.util
 import nurmi.config
+import nurmi.values
 
 from nurmi.modules import *
 
@@ -29,57 +30,31 @@ for path in nurmi.config.read_external_modules():
     spec.loader.exec_module(module)
 
 
-def read_environment_variables():
-    env = dict(os.environ)
-
-    result = dict()
-    for name in set(env.keys()) & nurmi.framework.all_inputs:
-        result[name] = env[name]
-    return result
-
-
-def read_values_from_file(filename):
-    try:
-        with open(filename) as fp:
-            return json.load(fp)
-    except:
-        return dict()
-
-
 def main():
     """The main entrypoint for the program
 
     :return:
     """
 
-    # If no target defined, run all
-    target_defined = False
-
-    if len(sys.argv) <= 1:
-        # No arguments given, print out all registered steps
-        for step in nurmi.framework.all_steps:
-            print(step.target + "\t" + "\t".join(sorted(step.inputs)))
-    else:
+    # TODO Print out targets and inputs if no command line arguments defined
+    if len(sys.argv) > 1:
         # We have arguments
-
-        # Input values will be collected here from command line
-        values = read_environment_variables()
-        if values:
-            print("Read environment values as input:")
-            pprint.pprint(values)
-
+        valuereader = nurmi.values.ValueRunner(nurmi.dag.all_valuenames)
+        valuereader.read_environment_variables(dict(os.environ))
         # This holds the current input where value is going to be read next
         current_input = None
-
         i = 1
         while i < len(sys.argv):
             argument = sys.argv[i]
             separator_idx = argument.find("=")
             if argument.startswith("-f"):
                 i += 1
-                values.update(read_values_from_file(sys.argv[i]))
+                valuereader.read_json_file(sys.argv[i])
             elif separator_idx > 0:
-                values[argument[0:separator_idx]] = argument[separator_idx+1:]
+                valuereader.read_command_line(
+                    argument[0:separator_idx],
+                    argument[separator_idx+1:]
+                )
             elif argument.startswith("--"):
                 # Value names are prefixed with --
                 # Strip -- prefix
@@ -91,23 +66,16 @@ def main():
                     # suffix.
                     # For instance --recipient a --recipient b ->
                     #  recipients=[a,b]
-                    if (
-                        current_input not in nurmi.framework.all_inputs
-                        and current_input + "s" in nurmi.framework.all_inputs
-                    ):
-                        if not current_input + "s" in values:
-                            values[current_input + "s"] = []
-                        values[current_input + "s"].append(argument)
-                    else:
-                        values[current_input] = argument
+                    valuerader.read_command_line(
+                        current_input,
+                        argument
+                    )
                     current_input = None
+                # TODO: Array values with plural suffix "s"
                 else:
-                    target_defined = True
-                    nurmi.framework.run_target(argument, values)
+                    valuereader.run_target(argument)
             i += 1
-        if values and not target_defined:
-            nurmi.framework.run_all(values)
-        pprint.pprint(values)
+        valuereader.run()
 
 
 if __name__ == "__main__":
