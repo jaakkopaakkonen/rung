@@ -40,7 +40,7 @@ def main():
     if len(sys.argv) > 1:
         # We have arguments
         valuereader = nurmi.values.ValueRunner(nurmi.dag.all_valuenames)
-        valuereader.read_environment_variables(dict(os.environ))
+        valuereader.read_known_values_dict(dict(os.environ))
         # This holds the current input where value is going to be read next
         current_input = None
         i = 1

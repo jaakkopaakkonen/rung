@@ -125,3 +125,8 @@ def get_all_valuenames():
         result.add(target)
         result.update(mandatory_inputs_of_targets[target])
     return result
+
+
+def run_target_with_values(target, *valuedicts):
+    for step in get_steps_to_target(target):
+        step.run(*valuedicts)

@@ -89,7 +89,7 @@ class step:
         nurmi.framework.add_step(self)
 
     def get_missing_inputs(self, *valuedicts):
-        return self.inputs - nurmi.framework.gather_dicts(*valuedicts)
+        return self.inputs - nurmi.framework.keys_from_dicts(*valuedicts)
 
     def run(self, *valuedicts):
         call_args = dict()
@@ -112,7 +112,8 @@ class step:
             return
         log.warning("Running " + self.target)
         log.warning("with values")
-        log.warning(pprint.pformat(*valuedicts))
+        for values in valuedicts:
+            log.warning(pprint.pformat(values))
         if self.target is None:
             return self.callable_implementation(**call_args)
         else:

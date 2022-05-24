@@ -130,7 +130,7 @@ def run_target(
     return return_value
 
 
-def gather_dicts(*valuedicts):
+def keys_from_dicts(*valuedicts):
     inputs = set()
     for d in valuedicts:
         inputs.update(d.keys())
