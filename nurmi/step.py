@@ -44,7 +44,7 @@ class step:
         self.inputs = None
         # Optional inputs or prerequisites for this step
         self.optional_inputs = frozenset(optional_inputs)
-        log.warning("Registering step "+str(target))
+
         if type(target) != str:
             # Assume target is function
             # Dig out the functiona name and parameter names
@@ -52,6 +52,7 @@ class step:
             new_target = inputs.pop(0)
             signature = tuple([target] + inputs)
             target = new_target
+        log.warning("Registering step "+str(target))
         if inputs:
             if isinstance(inputs, tuple):
                 inputs = list(inputs)

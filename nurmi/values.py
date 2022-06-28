@@ -40,10 +40,16 @@ class ValueRunner:
         self.values[name] = value
 
     def run_target(self, target):
-        for local_values in self.valuelists:
+        if self.valuelists:
+            for local_values in self.valuelists:
+                nurmi.dag.run_target_with_values(
+                    target,
+                    local_values,
+                    self.values
+                )
+        else:
             nurmi.dag.run_target_with_values(
                 target,
-                local_values,
                 self.values
             )
 
