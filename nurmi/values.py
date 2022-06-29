@@ -8,16 +8,32 @@ log.setLevel(1)
 
 
 class ValueRunner:
+    """Class responsible for storing values provided from command line or
+    json file
+
+    """
     def __init__(self, valuenames):
+        """Initialize ValueRunner
+
+        :param valuenames: Names of values to be used.
+        This is needed for read_known_values_dict
+        """
         self.values = dict()
         self.valuenames = frozenset(valuenames)
         self.valuelists = list()
 
     def read_known_values_dict(self, values):
+        """Read values from given dict, only registering those key names
+        which are defined in constructor in valuenames
+        :param values: Value dictionary where values are collected
+        """
         for name in (set(values.keys()) & self.valuenames):
             self.values[name] = values[name]
 
     def read_dict(self, values):
+        """Read values from dict
+        :param values: Values in dict
+        """
         self.values.update(values)
 
     def read_value(self, name, value):

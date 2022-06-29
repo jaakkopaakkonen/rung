@@ -75,16 +75,19 @@ class step:
                         for inputvalue in arguments.values():
                             if inputvalue:
                                 inputvalues.append(inputvalue)
-                        self.inputs = frozenset(inputs + inputvalues) - \
-                            self.optional_inputs
+                        self.inputs = frozenset(
+                            inputs + inputvalues
+                        ) - self.optional_inputs
                     else:
                         arguments = [signature[1]]
-                        self.inputs = frozenset(list(inputs) + arguments) - \
-                            self.optional_inputs
+                        self.inputs = frozenset(
+                            list(inputs) + arguments
+                        ) - self.optional_inputs
                 else:
                     arguments = list(signature[1:])
-                    self.inputs = frozenset(list(inputs) + arguments) - \
-                        self.optional_inputs
+                    self.inputs = frozenset(
+                        list(inputs) + arguments
+                    ) - self.optional_inputs
                 self.callable_arguments = arguments
         self.target = target
         nurmi.framework.add_step(self)
@@ -145,7 +148,18 @@ class step:
         return True
 
     def __lt__(self, other):
-        return len(self.inputs) < len(other.inputs)
+        if self.target in other.inputs:
+            return True
+        if self.target in other.optional_inputs:
+            return True
+        return self.target < other.target
+
+    def __gt__(self, other):
+        if other.target in self.inputs:
+            return True
+        if other.target in self.optional_inputs:
+            return True
+        return self.target > other.target
 
     def __repr__(self):
         arguments = []

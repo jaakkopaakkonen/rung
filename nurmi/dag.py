@@ -1,11 +1,13 @@
 import copy
 
+# This file contains everything related to managing the directed asyclic graph containing all the inputs of all steps and their targets
+
+import logging
+
 # Dictionary containing set of all targets
 # which can be fulfilled by the inputs.
 # Key is inputs as frozenset.
 # Value is set of targets.
-import logging
-
 targets_by_complete_inputs = dict()
 
 # Dictionary of mandatory inputs by target.
@@ -120,10 +122,15 @@ def get_steps_to_target(target):
 
 def get_all_valuenames():
     global mandatory_inputs_of_targets
-    result = {}
-    for target in inputs_of_targets:
+    global optional_inputs_of_targets
+    result = set()
+    for target in {
+        **mandatory_inputs_of_targets,
+        **optional_inputs_of_targets
+    }:
         result.add(target)
         result.update(mandatory_inputs_of_targets[target])
+        result.update(optional_inputs_of_targets[target])
     return result
 
 

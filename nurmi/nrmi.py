@@ -6,6 +6,8 @@ import logging
 import os
 import pprint
 import sys
+import colorama
+from colorama import Fore as f
 
 log = logging.getLogger("nurmi")
 log.setLevel(1)
@@ -17,6 +19,9 @@ import nurmi.framework
 import nurmi.util
 import nurmi.config
 import nurmi.values
+
+
+colorama.init(autoreset=True)
 
 from nurmi.modules import *
 
@@ -30,6 +35,34 @@ for path in nurmi.config.read_external_modules():
     spec.loader.exec_module(module)
 
 
+def print_subgraph(target, prefixes=("", "")):
+
+    step = nurmi.dag.get_step(target)
+    if not step:
+        print(prefixes[0] + f.RED + target)
+    else:
+        all_inputs = sorted(step.inputs) + sorted(step.optional_inputs)
+        if not all_inputs:
+            print(prefixes[0] + f.RED + target)
+        else:
+            print(prefixes[0] + target)
+        i = 0
+        while i < len(all_inputs):
+            if i < (len(all_inputs) - 1):
+                print_subgraph(
+                    all_inputs[i],
+                    (prefixes[1] + " ├─", prefixes[1] + " │ ")
+                )
+            else:
+                print_subgraph(
+                    all_inputs[i],
+                    (prefixes[1] + " └─", prefixes[1] + "   ")
+                )
+            i += 1
+    # Print empty line after every major target
+    if prefixes == ("", ""):
+        print()
+
 def main():
     """The main entrypoint for the program
 
@@ -37,7 +70,11 @@ def main():
     """
 
     # TODO Print out targets and inputs if no command line arguments defined
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 1:
+        for target in sorted(nurmi.dag.final_targets()):
+            print_subgraph(target)
+
+    else:
         # We have arguments
         valuereader = nurmi.values.ValueRunner(nurmi.dag.all_valuenames)
         valuereader.read_known_values_dict(dict(os.environ))
@@ -66,7 +103,7 @@ def main():
                     # suffix.
                     # For instance --recipient a --recipient b ->
                     #  recipients=[a,b]
-                    valuerader.read_command_line(
+                    valuereader.read_command_line(
                         current_input,
                         argument
                     )
