@@ -12,14 +12,17 @@ class ValueRunner:
     json file
 
     """
-    def __init__(self, valuenames):
+    def __init__(self, valuenames=None):
         """Initialize ValueRunner
 
         :param valuenames: Names of values to be used.
         This is needed for read_known_values_dict
         """
         self.values = dict()
-        self.valuenames = frozenset(valuenames)
+        if valuenames:
+            self.valuenames = frozenset(valuenames)
+        else:
+            self.valuenames = frozenset()
         self.valuelists = list()
 
     def read_known_values_dict(self, values):
@@ -64,7 +67,7 @@ class ValueRunner:
                     self.values
                 )
         else:
-            nurmi.dag.run_target_with_values(
+            return nurmi.dag.run_target_with_values(
                 target,
                 self.values
             )

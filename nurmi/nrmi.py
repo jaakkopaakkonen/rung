@@ -36,7 +36,6 @@ for path in nurmi.config.read_external_modules():
 
 
 def print_subgraph(target, prefixes=("", "")):
-
     step = nurmi.dag.get_step(target)
     if not step:
         print(prefixes[0] + f.RED + target)

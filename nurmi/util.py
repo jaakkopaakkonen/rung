@@ -4,7 +4,7 @@ import types
 
 
 def get_function_name_params(function):
-    """Returns the name of given function. Returns None if not applicape
+    """Returns the name of given function. Returns None if not applicaple
 
     :param function:
     :return:
@@ -28,3 +28,11 @@ def get_basename_without_ext(path):
     return os.path.splitext(
         os.path.basename(path)
     )[0]
+
+
+def strip_trailing_extension(str):
+    """Remove trailing .ext as long as len(ext) > 0"""
+    pos = str.find(".")
+    if pos < len(str)-1:
+        str = str[0:pos]
+    return str

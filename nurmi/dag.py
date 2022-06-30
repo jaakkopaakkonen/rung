@@ -3,6 +3,7 @@ import copy
 # This file contains everything related to managing the directed asyclic graph containing all the inputs of all steps and their targets
 
 import logging
+from nurmi.util import strip_trailing_extension
 
 # Dictionary containing set of all targets
 # which can be fulfilled by the inputs.
@@ -115,7 +116,16 @@ def get_steps_to_target(target):
     result = []
     for intermediate_target in get_inputs_to_target(target):
         try:
-            result.append(steps_by_target[intermediate_target])
+            intermediate_step = None
+            while "." in intermediate_target and intermediate_step is None:
+                # If "." in target, find "parent" of given target
+                if intermediate_target in steps_by_target:
+                    intermediate_step = steps_by_target[intermediate_target]
+                intermediate_target = strip_trailing_extension(
+                    intermediate_target
+                )
+            if intermediate_step:
+                result.append(intermediate_step)
         except KeyError:
             pass
     return result
@@ -135,5 +145,9 @@ def get_all_valuenames():
 
 
 def run_target_with_values(target, *valuedicts):
-    for step in get_steps_to_target(target):
-        step.run(*valuedicts)
+    steps = get_steps_to_target(target)
+    if len(steps) == 1:
+        return steps[0].run(*valuedicts)
+    else:
+        for step in steps:
+            step.run(*valuedicts)

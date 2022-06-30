@@ -173,3 +173,8 @@ class step:
         return repr(
             self.callable_implementation
         ) +  "(" +  ", ".join(arguments) + ")"
+
+
+def step_func(func):
+    step(func)
+
