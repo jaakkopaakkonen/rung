@@ -22,3 +22,13 @@ Each step has set of inputs, mandatory or optional, and a target.
 
 All these parameters have a string identifier or name describing the property.
 
+# Development
+
+## TODO
+| Importance        | Component        | Task                                                                                   | Size   | Difficulty     | 
+|-------------------|------------------|----------------------------------------------------------------------------------------|--------|----------------|
+| Very important    | All              | Change name                                                                            | Tiny   | Very easy      |
+| Quite important   | Main/ info graph | Dependencies and targets other way around                                                                                                                                                                                               | Tiny   | Very easy      |
+| Quite important   | dag              | Optional inputs are not traversed from the values. If you have step with optional input which can be built from the inputs provided but the original optional input in itself is not provided, framework does not construct the optional input | Huge   | Very difficult |
+| Important         | values           | Output all values related to target execution to enable result comparison/verification | Huge   | Difficult      |
+| Not important yet | values           | Start and end timestamps of each target to results                                     | Medium | Medium         |

@@ -3,7 +3,7 @@ log = logging.getLogger("nurmi")
 log.setLevel(1)
 
 import nurmi.framework
-
+import nurmi.valuestack
 import nurmi.util
 import pprint
 
@@ -95,6 +95,15 @@ class step:
     def get_missing_inputs(self, *valuedicts):
         return self.inputs - nurmi.framework.keys_from_dicts(*valuedicts)
 
+    def log_result(self, target, values):
+        if target is None:
+            target = "unnamed"
+        if type(values) == str:
+            if len(values) > 80:
+                log.warning(target + "=\"" + values[0:80] + "\"...")
+            else:
+                log.warning(target + "=\"" + values+"\"")
+
     def run(self, *valuedicts):
         call_args = dict()
         if self.callable_arguments:
@@ -116,18 +125,14 @@ class step:
             return
         log.warning("Running " + self.target)
         log.warning("with values")
-        for values in valuedicts:
-            log.warning(pprint.pformat(values))
+        log.warning("\n"+nurmi.valuestack.values_as_string(call_args))
+
         if self.target is None:
-            return self.callable_implementation(**call_args)
+            result = self.callable_implementation(**call_args)
         else:
-            valuedicts[0][self.target] = self.callable_implementation(
-                **call_args
-            )
-            log.warning(
-                self.target + " set to "+str(valuedicts[0][self.target])
-            )
-            return valuedicts[0][self.target]
+            result = self.callable_implementation(**call_args)
+        self.log_result(self.target, result)
+        return result
 
     def is_predecessor_of(self, step):
         return self.target in step.inputs
@@ -171,10 +176,19 @@ class step:
             except:
                 arguments.append(repr(arg))
         return repr(
-            self.callable_implementation
+            self.target
         ) +  "(" +  ", ".join(arguments) + ")"
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __hash__(self):
+        result = hash(self.target)
+        for input in self.inputs:
+            result += hash(input)
+        for optional_input in self.optional_inputs:
+            result += hash(optional_input)
+        return result
 
 def step_func(func):
     step(func)
-

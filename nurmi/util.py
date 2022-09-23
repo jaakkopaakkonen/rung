@@ -1,7 +1,9 @@
 import inspect
+import logging
 import os
 import types
 
+log = logging.getLogger("nurmi")
 
 def get_function_name_params(function):
     """Returns the name of given function. Returns None if not applicaple
@@ -36,3 +38,4 @@ def strip_trailing_extension(str):
     if pos < len(str)-1:
         str = str[0:pos]
     return str
+

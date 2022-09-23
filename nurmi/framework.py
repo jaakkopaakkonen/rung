@@ -16,12 +16,6 @@ def add_step(step):
     nurmi.dag.add(step)
 
 
-def run_all(*valuedicts):
-    for target in nurmi.dag.final_targets():
-        for intermediate_step in nurmi.dag.get_steps_to_target(target):
-            intermediate_step.run(*valuedicts)
-
-
 def get_steps_with_target(target):
     global all_steps
     steps = []
@@ -111,9 +105,9 @@ def run_target(
     target=None,
     *valuedicts,
 ):
-    logging.warning("run_target("+target+")")
-    logging.warning("with values")
-    logging.warning(pprint.pformat(valuedicts))
+    # logging.warning("run_target("+target+")")
+    # logging.warning("with values")
+    # logging.warning(pprint.pformat(valuedicts))
     return_value = None
     build_chains = get_build_chains(
         target,

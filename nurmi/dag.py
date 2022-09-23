@@ -1,9 +1,12 @@
 import copy
-
-# This file contains everything related to managing the directed asyclic graph containing all the inputs of all steps and their targets
+import time
+# This file contains everything related to managing the directed asyclic graph
+# containing all the inputs of all steps and their targets
 
 import logging
+log = logging.getLogger("nurmi")
 from nurmi.util import strip_trailing_extension
+import nurmi.valuestack
 
 # Dictionary containing set of all targets
 # which can be fulfilled by the inputs.
@@ -62,7 +65,7 @@ def add(step):
 
     # targets_having_input
     for input in inputs:
-        if not input in targets_having_input:
+        if input not in targets_having_input:
             targets_having_input[input] = set()
         targets_having_input[input].add(target)
     steps_by_target[target] = step
@@ -96,58 +99,119 @@ def final_targets():
             logging.exception(be)
     return all_targets - all_inputs
 
-def get_inputs_to_target(target):
-    """ Returns all the mandatory inputs to target
-        in the order they have to be executed
+
+def create_target_value_structure(
+    structure=dict(),
+    values=dict(),
+    target=None,
+):
+    """ Calculates the target-value structure with all the input values in place
+    :param target: Target which' values to be set
+    :param values: The original values to insert to structure
+    :return: The actual target-value-substructure
     """
-    global mandatory_inputs_of_targets
-    result = []
-    inputs = mandatory_inputs_of_targets[target]
-    for input in inputs:
+    result = dict()
+    values = dict(values)
+    dictkeys = set()
+    for key in structure:
+        if type(structure[key]) == dict:
+            dictkeys.add(key)
+        else:
+            # First round, store only input values
+            values[key] = structure[key]
+    # Next process keys with dictionary value
+    for key in dictkeys:
+        result[key] = create_target_value_structure(
+            structure[key],
+            values=values,
+            target=key
+        )
+    # Process actual input of the target
+    if target:
         try:
-            result.extend(get_inputs_to_target(input))
-        except KeyError:
-            result.append(input)
-    result.append(target)
-    return(result)
-
-def get_steps_to_target(target):
-    global steps_by_target
-    result = []
-    for intermediate_target in get_inputs_to_target(target):
-        try:
-            intermediate_step = None
-            while "." in intermediate_target and intermediate_step is None:
-                # If "." in target, find "parent" of given target
-                if intermediate_target in steps_by_target:
-                    intermediate_step = steps_by_target[intermediate_target]
-                intermediate_target = strip_trailing_extension(
-                    intermediate_target
+            valuenames = set(values.keys())
+            step = nurmi.dag.get_step(target)
+            inputs = set(step.inputs)
+            all_inputs = inputs.union(set(step.optional_inputs))
+            # Add fulfilled input values to result
+            for key in valuenames & all_inputs:
+                result[key] = values[key]
+            # Process missing input values
+            for key in inputs - valuenames - dictkeys:
+                result[key] = create_target_value_structure(
+                    target=key,
+                    values=values,
                 )
-            if intermediate_step:
-                result.append(intermediate_step)
-        except KeyError:
-            pass
-    return result
-
-def get_all_valuenames():
-    global mandatory_inputs_of_targets
-    global optional_inputs_of_targets
-    result = set()
-    for target in {
-        **mandatory_inputs_of_targets,
-        **optional_inputs_of_targets
-    }:
-        result.add(target)
-        result.update(mandatory_inputs_of_targets[target])
-        result.update(optional_inputs_of_targets[target])
+        except AttributeError as ae:
+            raise AttributeError("No value for \""+target+"\"") from ae
     return result
 
 
-def run_target_with_values(target, *valuedicts):
-    steps = get_steps_to_target(target)
-    if len(steps) == 1:
-        return steps[0].run(*valuedicts)
-    else:
-        for step in steps:
-            step.run(*valuedicts)
+def run_target_with_values(target, values):
+    log.info(
+        "Running target \"" + target + "\" with values\n" +
+        pprint.pformat(values)
+    )
+    structure = create_target_value_structure(
+        target,
+        values,
+    )
+    result = run_target_value_structure(structure)
+    return result
+
+def flatten_values(values):
+    result = dict()
+    for key in values:
+        if type(values[key]) == dict:
+            result.update(flatten_values(values[key]))
+            try:
+                result[key] = values[key]["result"]
+                del(values[key]["result"])
+            except:
+                pass
+            try:
+                del(values[key]["startTime"])
+            except:
+                pass
+            try:
+                del(values[key]["endTime"])
+            except:
+                pass
+        else:
+            if key not in ("result", "startTime", "endTime"):
+                result[key] = values[key]
+    return result
+
+
+def run_target_value_structure(structure):
+    """ Run target-value-structure given as parameter.
+    Fills out "startTime", "result" and "endTime" keys for targets
+    from the execution.
+
+    :param structure: Dict based structure containing both targets and
+    the values used in their execution
+    :return: Filled structure from the execution.
+    """
+    values = dict()
+    for key in structure:
+        if type(structure[key]) == dict:
+            values[key] = run_target_value_structure(structure[key])
+            step = nurmi.dag.get_step(key)
+            start_time = time.time()
+            values[key]["result"] = step.run(flatten_values(values[key]))
+            values[key]["endTime"] = time.time()
+            values[key]["startTime"] = start_time
+        else:
+            values[key] = structure[key]
+    return values
+
+
+def postprocess_step_result(step, result, values):
+    resultdict = dict()
+    resultdict[step.target] = dict()
+    all_inputs = set(step.inputs)
+    all_inputs.update(set(step.optional_inputs))
+    for value in all_inputs & set(values.keys()):
+        resultdict[step.target][value] = values[value]
+    resultdict[step.target]["result"] = result
+    return resultdict

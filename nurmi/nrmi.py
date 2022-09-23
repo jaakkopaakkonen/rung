@@ -18,7 +18,8 @@ log.setLevel(1)
 import nurmi.framework
 import nurmi.util
 import nurmi.config
-import nurmi.values
+import nurmi.valuestack
+import nurmi.valuerunner
 
 
 colorama.init(autoreset=True)
@@ -62,6 +63,7 @@ def print_subgraph(target, prefixes=("", "")):
     if prefixes == ("", ""):
         print()
 
+
 def main():
     """The main entrypoint for the program
 
@@ -75,8 +77,8 @@ def main():
 
     else:
         # We have arguments
-        valuereader = nurmi.values.ValueRunner(nurmi.dag.all_valuenames)
-        valuereader.read_known_values_dict(dict(os.environ))
+        valuestack = nurmi.valuestack.ValueStack(nurmi.dag.all_valuenames)
+        valuestack.set_environment_values(dict(os.environ))
         # This holds the current input where value is going to be read next
         current_input = None
         i = 1
@@ -85,9 +87,14 @@ def main():
             separator_idx = argument.find("=")
             if argument.startswith("-f"):
                 i += 1
-                valuereader.read_json_file(sys.argv[i])
+                with open(sys.argv[i], "rb") as jsonfile:
+                    nurmi.valuerunner.run_object(
+                        json.load(jsonfile),
+                        valuestack
+                    )
+                i += 1
             elif separator_idx > 0:
-                valuereader.read_command_line(
+                valuestack.set_command_line_value(
                     argument[0:separator_idx],
                     argument[separator_idx+1:]
                 )
@@ -102,17 +109,24 @@ def main():
                     # suffix.
                     # For instance --recipient a --recipient b ->
                     #  recipients=[a,b]
-                    valuereader.read_command_line(
+                    valuestack.set_command_line_value(
                         current_input,
                         argument
                     )
                     current_input = None
                 # TODO: Array values with plural suffix "s"
                 else:
-                    valuereader.run_target(argument)
+                    result = nurmi.valuerunner.run_object(
+                        argument,
+                        valuestack,
+                    )
+                    pprint.pprint(result)
             i += 1
-        valuereader.run()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=1,
+        format="%(filename)s::%(funcName)s:%(lineno)d %(message)s"
+    )
     main()
