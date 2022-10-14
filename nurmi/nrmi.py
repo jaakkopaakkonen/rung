@@ -88,9 +88,20 @@ def main():
             if argument.startswith("-f"):
                 i += 1
                 with open(sys.argv[i], "rb") as jsonfile:
-                    nurmi.valuerunner.run_object(
-                        json.load(jsonfile),
-                        valuestack
+                    completed_values = \
+                        nurmi.dag.create_target_value_structure(
+                            json.load(jsonfile),
+                            valuestack.get_values(),
+                        )
+                    result = nurmi.dag.run_target_value_structure(
+                        completed_values
+                    )
+                    print(
+                        json.dumps(
+                            result,
+                            indent=2,
+                            default=lambda o: str(o)
+                        )
                     )
                 i += 1
             elif separator_idx > 0:
@@ -116,9 +127,13 @@ def main():
                     current_input = None
                 # TODO: Array values with plural suffix "s"
                 else:
-                    result = nurmi.valuerunner.run_object(
-                        argument,
-                        valuestack,
+                    completed_values = \
+                        nurmi.dag.create_target_value_structure(
+                            {argument: {}},
+                            valuestack.get_values(),
+                        )
+                    result = nurmi.dag.run_target_value_structure(
+                        completed_values
                     )
                     pprint.pprint(result)
             i += 1

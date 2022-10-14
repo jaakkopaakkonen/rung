@@ -5,6 +5,8 @@ import pprint
 log = logging.getLogger("nurmi")
 
 steps_dict_key = "steps"
+
+
 def run_object(object, valuestack):
     """
     :param object: Structure of lists and dicts etc. to be executed

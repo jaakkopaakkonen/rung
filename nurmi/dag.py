@@ -1,4 +1,5 @@
 import copy
+import pprint
 import time
 # This file contains everything related to managing the directed asyclic graph
 # containing all the inputs of all steps and their targets
@@ -105,46 +106,83 @@ def create_target_value_structure(
     values=dict(),
     target=None,
 ):
-    """ Calculates the target-value structure with all the input values in place
-    :param target: Target which' values to be set
+    """ Calculates the target-value structure with all the input values
+    in place
+    :param structure:
     :param values: The original values to insert to structure
+    :param target: Target which' values to be set
     :return: The actual target-value-substructure
     """
-    result = dict()
-    values = dict(values)
-    dictkeys = set()
-    for key in structure:
-        if type(structure[key]) == dict:
-            dictkeys.add(key)
-        else:
-            # First round, store only input values
-            values[key] = structure[key]
-    # Next process keys with dictionary value
-    for key in dictkeys:
-        result[key] = create_target_value_structure(
-            structure[key],
-            values=values,
-            target=key
-        )
-    # Process actual input of the target
-    if target:
+    if type(structure) == list:
+        result = list()
+        for item in structure:
+            result.append(
+                create_target_value_structure(item, values, target)
+            )
+        return result
+    elif type(structure) == dict:
+        values = dict(values)
+        dictkeys = set()
+        result = dict()
+        for key in structure:
+            if type(structure[key]) == dict:
+                dictkeys.add(key)
+            else:
+                # First round, store only input values
+                values[key] = structure[key]
+        # Next process keys with dictionary value
+        for key in dictkeys:
+            result[key] = create_target_value_structure(
+                structure[key],
+                values=values,
+                target=key
+            )
+        if "steps" in structure:
+            return create_target_value_structure(
+                structure["steps"],
+                values,
+                target,
+            )
+        # Process actual input of the target
+        if target:
+            try:
+                valuenames = set(values.keys())
+                step = nurmi.dag.get_step(target)
+                inputs = set(step.inputs)
+                all_inputs = inputs.union(set(step.optional_inputs))
+                # Add fulfilled input values to result
+                for key in valuenames & all_inputs:
+                    result[key] = values[key]
+                # Process missing input values
+                for key in inputs - valuenames - dictkeys:
+                    result[key] = create_target_value_structure(
+                        target=key,
+                        values=values,
+                    )
+            except AttributeError as ae:
+                log.error("No value for \""+target+"\"")
+                raise AttributeError("No value for \""+target+"\"") from ae
+        return result
+    else:
+        result = dict()
         try:
             valuenames = set(values.keys())
-            step = nurmi.dag.get_step(target)
+            step = nurmi.dag.get_step(structure)
             inputs = set(step.inputs)
             all_inputs = inputs.union(set(step.optional_inputs))
             # Add fulfilled input values to result
             for key in valuenames & all_inputs:
                 result[key] = values[key]
             # Process missing input values
-            for key in inputs - valuenames - dictkeys:
+            for key in inputs - valuenames:
                 result[key] = create_target_value_structure(
                     target=key,
                     values=values,
                 )
         except AttributeError as ae:
+            log.error("No value for \""+target+"\"")
             raise AttributeError("No value for \""+target+"\"") from ae
-    return result
+        return {structure: result}
 
 
 def run_target_with_values(target, values):
@@ -159,7 +197,9 @@ def run_target_with_values(target, values):
     result = run_target_value_structure(structure)
     return result
 
+
 def flatten_values(values):
+    values = copy.deepcopy(values)
     result = dict()
     for key in values:
         if type(values[key]) == dict:
@@ -167,15 +207,15 @@ def flatten_values(values):
             try:
                 result[key] = values[key]["result"]
                 del(values[key]["result"])
-            except:
+            except KeyError:
                 pass
             try:
                 del(values[key]["startTime"])
-            except:
+            except KeyError:
                 pass
             try:
                 del(values[key]["endTime"])
-            except:
+            except KeyError:
                 pass
         else:
             if key not in ("result", "startTime", "endTime"):
@@ -189,20 +229,25 @@ def run_target_value_structure(structure):
     from the execution.
 
     :param structure: Dict based structure containing both targets and
-    the values used in their execution
+        the values used in their execution.
     :return: Filled structure from the execution.
     """
-    values = dict()
-    for key in structure:
-        if type(structure[key]) == dict:
-            values[key] = run_target_value_structure(structure[key])
-            step = nurmi.dag.get_step(key)
-            start_time = time.time()
-            values[key]["result"] = step.run(flatten_values(values[key]))
-            values[key]["endTime"] = time.time()
-            values[key]["startTime"] = start_time
-        else:
-            values[key] = structure[key]
+    values = None
+    if type(structure) == dict:
+        values = dict()
+        for key in structure:
+            if type(structure[key]) == dict:
+                values[key] = run_target_value_structure(structure[key])
+                step = nurmi.dag.get_step(key)
+                values[key]["startTime"] = time.time()
+                values[key]["result"] = step.run(flatten_values(values[key]))
+                values[key]["endTime"] = time.time()
+            else:
+                values[key] = structure[key]
+    elif type(structure) == list:
+        values = list()
+        for item in structure:
+            values.append(run_target_value_structure(item))
     return values
 
 

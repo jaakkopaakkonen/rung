@@ -32,5 +32,3 @@ def read_external_modules():
             dest_directory += "/"
         module_path = dest_directory + module_name
         return glob.glob(module_path + "/*.py")
-
-
