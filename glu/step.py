@@ -1,10 +1,10 @@
 import logging
-log = logging.getLogger("nurmi")
+log = logging.getLogger("glu")
 log.setLevel(1)
 
-import nurmi.framework
-import nurmi.valuestack
-import nurmi.util
+import glu.framework
+import glu.valuestack
+import glu.util
 import pprint
 
 
@@ -48,7 +48,7 @@ class step:
         if type(target) != str:
             # Assume target is function
             # Dig out the functiona name and parameter names
-            inputs = nurmi.util.get_function_name_params(target)
+            inputs = glu.util.get_function_name_params(target)
             new_target = inputs.pop(0)
             signature = tuple([target] + inputs)
             target = new_target
@@ -90,10 +90,10 @@ class step:
                     ) - self.optional_inputs
                 self.callable_arguments = arguments
         self.target = target
-        nurmi.framework.add_step(self)
+        glu.framework.add_step(self)
 
     def get_missing_inputs(self, *valuedicts):
-        return self.inputs - nurmi.framework.keys_from_dicts(*valuedicts)
+        return self.inputs - glu.framework.keys_from_dicts(*valuedicts)
 
     def log_result(self, target, values):
         if target is None:
@@ -109,7 +109,7 @@ class step:
         if self.callable_arguments:
             for values in valuedicts:
                 call_args.update(
-                    nurmi.framework.argument_subset(
+                    glu.framework.argument_subset(
                         values,
                         self.callable_arguments
                     )
@@ -125,7 +125,7 @@ class step:
             return
         log.warning("Running " + self.target)
         log.warning("with values")
-        log.warning("\n"+nurmi.valuestack.values_as_string(call_args))
+        log.warning("\n"+glu.valuestack.values_as_string(call_args))
 
         if self.target is None:
             result = self.callable_implementation(**call_args)

@@ -3,7 +3,7 @@ import logging
 import os
 import types
 
-log = logging.getLogger("nurmi")
+log = logging.getLogger("glu")
 
 def get_function_name_params(function):
     """Returns the name of given function. Returns None if not applicaple
@@ -18,7 +18,7 @@ def get_function_name_params(function):
         if name == "__name__":
             result.append(value)
             break
-    for param  in inspect.signature(
+    for param in inspect.signature(
         function,
         follow_wrapped=False,
     ).parameters:

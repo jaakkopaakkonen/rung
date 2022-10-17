@@ -4,17 +4,17 @@ import glob
 import importlib.util
 import os
 import pathlib
-import nurmi.util
+import glu.util
 
 
 def read_external_modules():
     homedir = str(pathlib.Path.home())
-    config_file = homedir + "/.nurmi/config"
+    config_file = homedir + "/.glu/config"
     parser = configparser.ConfigParser()
     parser.read(config_file)
-    repo_url = parser.get("nurmi", "external_modules")
+    repo_url = parser.get("glu", "external_modules")
     if repo_url:
-        dest_directory = homedir + "/.nurmi/external_modules"
+        dest_directory = homedir + "/.glu/external_modules"
         try:
             os.mkdir(dest_directory)
         except:
@@ -27,7 +27,7 @@ def read_external_modules():
         finally:
             # Clean up repo object
             del(repo)
-        module_name = nurmi.util.get_basename_without_ext(repo_url)
+        module_name = glu.util.get_basename_without_ext(repo_url)
         if dest_directory[-1] != "/":
             dest_directory += "/"
         module_path = dest_directory + module_name

@@ -1,11 +1,11 @@
 import logging
 import pprint
 
-import nurmi.dag
-import nurmi.step
+import glu.dag
+import glu.step
 
 
-logging = logging.getLogger("nurmi")
+logging = logging.getLogger("glu")
 logging.setLevel(1)
 
 all_steps = []
@@ -13,7 +13,7 @@ all_inputs = set()
 
 
 def add_step(step):
-    nurmi.dag.add(step)
+    glu.dag.add(step)
 
 
 def get_steps_with_target(target):
@@ -100,6 +100,7 @@ def argument_subset(values, argument_names):
         elif argument in values:
             result[key] = values[argument]
     return result
+
 
 def run_target(
     target=None,

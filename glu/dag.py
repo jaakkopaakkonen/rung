@@ -5,9 +5,9 @@ import time
 # containing all the inputs of all steps and their targets
 
 import logging
-log = logging.getLogger("nurmi")
-from nurmi.util import strip_trailing_extension
-import nurmi.valuestack
+log = logging.getLogger("glu")
+from glu.util import strip_trailing_extension
+import glu.valuestack
 
 # Dictionary containing set of all targets
 # which can be fulfilled by the inputs.
@@ -147,7 +147,7 @@ def create_target_value_structure(
         if target:
             try:
                 valuenames = set(values.keys())
-                step = nurmi.dag.get_step(target)
+                step = glu.dag.get_step(target)
                 inputs = set(step.inputs)
                 all_inputs = inputs.union(set(step.optional_inputs))
                 # Add fulfilled input values to result
@@ -167,7 +167,7 @@ def create_target_value_structure(
         result = dict()
         try:
             valuenames = set(values.keys())
-            step = nurmi.dag.get_step(structure)
+            step = glu.dag.get_step(structure)
             inputs = set(step.inputs)
             all_inputs = inputs.union(set(step.optional_inputs))
             # Add fulfilled input values to result
@@ -238,7 +238,7 @@ def run_target_value_structure(structure):
         for key in structure:
             if type(structure[key]) == dict:
                 values[key] = run_target_value_structure(structure[key])
-                step = nurmi.dag.get_step(key)
+                step = glu.dag.get_step(key)
                 values[key]["startTime"] = time.time()
                 values[key]["result"] = step.run(flatten_values(values[key]))
                 values[key]["endTime"] = time.time()

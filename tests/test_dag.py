@@ -11,17 +11,17 @@ sys.path.append(
     ),
 )
 
-import nurmi.dag
-import nurmi.step
+import glu.dag
+import glu.step
 
 def test_steps():
-    bookkeeper = nurmi.dag.StepBookkeeper()
-    C = nurmi.step.step(target="C", inputs=["A", "B"])
+    bookkeeper = glu.dag.StepBookkeeper()
+    C = glu.step.step(target="C", inputs=["A", "B"])
     bookkeeper.add(C)
 
-    F = nurmi.step.step(target="F", inputs=["D", "E"])
+    F = glu.step.step(target="F", inputs=["D", "E"])
     bookkeeper.add(F)
-    H = nurmi.step.step(target="H", inputs=["C", "F", "G"])
+    H = glu.step.step(target="H", inputs=["C", "F", "G"])
     bookkeeper.add(H)
 
     assert bookkeeper.get_step("C", "A", "B") == C

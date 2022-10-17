@@ -12,11 +12,11 @@ sys.path.append(
     ),
 )
 
-import nurmi.valuestack
+import glu.valuestack
 
 
 def test_valuestack():
-    valuestack1 = nurmi.valuestack.ValueStack(
+    valuestack1 = glu.valuestack.ValueStack(
         ["ia", "ib", "ic", "id", "ie", "if", "ig"],
     )
     valuestack1.set_environment_values(

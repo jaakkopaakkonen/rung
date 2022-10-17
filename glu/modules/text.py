@@ -1,5 +1,5 @@
 import random
-from nurmi.step import *
+from glu.step import *
 
 def get_random_ascii_data(size=80):
     size = int(size)

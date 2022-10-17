@@ -2,8 +2,8 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name="nurmi",
-    description="Runs steps",
+    name="glu",
+    description="Framework for running and integrating tasks together",
     author="jaakko.t.paakkonen@gmail.com",
     version=1,
     requires=[],
@@ -13,8 +13,8 @@ setup(
     ),
     scripts=[],
     entry_points={
-        'console_scripts': ['nurmi=nurmi.nrmi:main'],
+        'console_scripts': ['glu=glu.glu:main'],
     },
     zip_safe=False,
-    tests_require=[]
+    tests_require=[],
 )

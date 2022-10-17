@@ -1,5 +1,3 @@
-import nurmi.dag
-
 def values_as_string(values):
     result = ""
     for key in values:

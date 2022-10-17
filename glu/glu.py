@@ -9,27 +9,26 @@ import sys
 import colorama
 from colorama import Fore as f
 
-log = logging.getLogger("nurmi")
+log = logging.getLogger("glu")
 log.setLevel(1)
 
 # Apply everything from modules
 
 
-import nurmi.framework
-import nurmi.util
-import nurmi.config
-import nurmi.valuestack
-import nurmi.valuerunner
+import glu.framework
+import glu.util
+import glu.config
+import glu.valuestack
 
 
 colorama.init(autoreset=True)
 
-from nurmi.modules import *
+from glu.modules import *
 
 
 # Read and import external modules
-for path in nurmi.config.read_external_modules():
-    module_name = nurmi.util.get_basename_without_ext(path)
+for path in glu.config.read_external_modules():
+    module_name = glu.util.get_basename_without_ext(path)
     spec = importlib.util.spec_from_file_location(module_name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
@@ -37,7 +36,7 @@ for path in nurmi.config.read_external_modules():
 
 
 def print_subgraph(target, prefixes=("", "")):
-    step = nurmi.dag.get_step(target)
+    step = glu.dag.get_step(target)
     if not step:
         print(prefixes[0] + f.RED + target)
     else:
@@ -72,12 +71,12 @@ def main():
 
     # TODO Print out targets and inputs if no command line arguments defined
     if len(sys.argv) == 1:
-        for target in sorted(nurmi.dag.final_targets()):
+        for target in sorted(glu.dag.final_targets()):
             print_subgraph(target)
 
     else:
         # We have arguments
-        valuestack = nurmi.valuestack.ValueStack(nurmi.dag.all_valuenames)
+        valuestack = glu.valuestack.ValueStack(glu.dag.all_valuenames)
         valuestack.set_environment_values(dict(os.environ))
         # This holds the current input where value is going to be read next
         current_input = None
@@ -89,11 +88,11 @@ def main():
                 i += 1
                 with open(sys.argv[i], "rb") as jsonfile:
                     completed_values = \
-                        nurmi.dag.create_target_value_structure(
+                        glu.dag.create_target_value_structure(
                             json.load(jsonfile),
                             valuestack.get_values(),
                         )
-                    result = nurmi.dag.run_target_value_structure(
+                    result = glu.dag.run_target_value_structure(
                         completed_values
                     )
                     print(
@@ -128,11 +127,11 @@ def main():
                 # TODO: Array values with plural suffix "s"
                 else:
                     completed_values = \
-                        nurmi.dag.create_target_value_structure(
+                        glu.dag.create_target_value_structure(
                             {argument: {}},
                             valuestack.get_values(),
                         )
-                    result = nurmi.dag.run_target_value_structure(
+                    result = glu.dag.run_target_value_structure(
                         completed_values
                     )
                     pprint.pprint(result)
