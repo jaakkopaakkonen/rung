@@ -6,7 +6,10 @@ setup(
     description="Framework for running and integrating tasks together",
     author="jaakko.t.paakkonen@gmail.com",
     version=1,
-    requires=[],
+    requires=[
+        "colorama",
+        "gitpython",
+    ],
     install_requires=["gitpython"],
     packages=find_packages(
         exclude=[]
