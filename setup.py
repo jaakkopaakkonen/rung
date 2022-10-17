@@ -7,7 +7,7 @@ setup(
     author="jaakko.t.paakkonen@gmail.com",
     version=1,
     requires=[
-        "colorama==0.4.1",
+        "colorama<=0.4.1",
         "gitpython",
     ],
     install_requires=["gitpython"],
