@@ -7,10 +7,13 @@ setup(
     author="jaakko.t.paakkonen@gmail.com",
     version=1,
     requires=[
-        "colorama<=0.4.1",
+        "colorama",
         "gitpython",
     ],
-    install_requires=["gitpython"],
+    install_requires=[
+        "gitpython",
+        "colorama",
+    ],
     packages=find_packages(
         exclude=[]
     ),
