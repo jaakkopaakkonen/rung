@@ -1,5 +1,5 @@
 import random
-from glu.step import *
+from rung.step import *
 
 def get_random_ascii_data(size=80):
     size = int(size)

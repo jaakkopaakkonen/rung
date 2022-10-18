@@ -1,7 +1,7 @@
 import random
 import smtplib
 
-from glu.step import *
+from rung.step import *
 
 def mail_contents(
     size,

@@ -11,17 +11,17 @@ sys.path.append(
     ),
 )
 
-import glu.dag
-import glu.step
+import rung.dag
+import rung.step
 
 def test_steps():
-    bookkeeper = glu.dag.StepBookkeeper()
-    C = glu.step.step(target="C", inputs=["A", "B"])
+    bookkeeper = rung.dag.StepBookkeeper()
+    C = rung.step.step(target="C", inputs=["A", "B"])
     bookkeeper.add(C)
 
-    F = glu.step.step(target="F", inputs=["D", "E"])
+    F = rung.step.step(target="F", inputs=["D", "E"])
     bookkeeper.add(F)
-    H = glu.step.step(target="H", inputs=["C", "F", "G"])
+    H = rung.step.step(target="H", inputs=["C", "F", "G"])
     bookkeeper.add(H)
 
     assert bookkeeper.get_step("C", "A", "B") == C

@@ -1,11 +1,11 @@
 import logging
 import pprint
 
-import glu.dag
-import glu.step
+import rung.dag
+import rung.step
 
 
-logging = logging.getLogger("glu")
+logging = logging.getLogger("rung")
 logging.setLevel(1)
 
 all_steps = []
@@ -13,7 +13,7 @@ all_inputs = set()
 
 
 def add_step(step):
-    glu.dag.add(step)
+    rung.dag.add(step)
 
 
 def get_steps_with_target(target):

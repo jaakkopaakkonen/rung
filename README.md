@@ -1,5 +1,5 @@
-# glu
-glu is a modular framework for testing and everyday operations based on simple small and independent scripts on command line level.
+# rung
+rung is a modular framework for testing and everyday operations based on simple small and independent scripts on command line level.
 
 ## Functionality
 The framework is divided in two separate but equally important parts. 
@@ -29,4 +29,5 @@ All these parameters have a string identifier or name describing the property.
 | 6  | Medium          | modules          | Create step to remove mails from imap inbox                                                                                                                                                                                                            |          |                | Depends on #5
 | 7  | Very important  | results          | Compare result values to predefined set of what they should be.                                                                                                                                                                                        | Medium   | Medium
 | 8  | Low             | all              | Remove dead code                                                                                                                                                                                                                                       | Small    | Easy
-| 9  |                 |                  | Check results incrementally while running to enable long/infinite sessions
+| 9  |                 |                  | Check results incrementally while running to enable long/infinite sessions                                                                                                                                                                             
+|10  | Low             | main             | Option for showing only possible targets with current set inputs

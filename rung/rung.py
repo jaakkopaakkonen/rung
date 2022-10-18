@@ -9,26 +9,26 @@ import sys
 import colorama
 from colorama import Fore as f
 
-log = logging.getLogger("glu")
+log = logging.getLogger("rung")
 log.setLevel(1)
 
 # Apply everything from modules
 
 
-import glu.framework
-import glu.util
-import glu.config
-import glu.valuestack
+import rung.framework
+import rung.util
+import rung.config
+import rung.valuestack
 
 
 colorama.init(autoreset=True)
 
-from glu.modules import *
+from rung.modules import *
 
 
 # Read and import external modules
-for path in glu.config.read_external_modules():
-    module_name = glu.util.get_basename_without_ext(path)
+for path in rung.config.read_external_modules():
+    module_name = rung.util.get_basename_without_ext(path)
     spec = importlib.util.spec_from_file_location(module_name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
@@ -36,7 +36,7 @@ for path in glu.config.read_external_modules():
 
 
 def print_subgraph(target, prefixes=("", "")):
-    step = glu.dag.get_step(target)
+    step = rung.dag.get_step(target)
     if not step:
         print(prefixes[0] + f.RED + target)
     else:
@@ -71,12 +71,12 @@ def main():
 
     # TODO Print out targets and inputs if no command line arguments defined
     if len(sys.argv) == 1:
-        for target in sorted(glu.dag.final_targets()):
+        for target in sorted(rung.dag.final_targets()):
             print_subgraph(target)
 
     else:
         # We have arguments
-        valuestack = glu.valuestack.ValueStack(glu.dag.all_valuenames)
+        valuestack = rung.valuestack.ValueStack(rung.dag.all_valuenames)
         valuestack.set_environment_values(dict(os.environ))
         # This holds the current input where value is going to be read next
         current_input = None
@@ -88,11 +88,11 @@ def main():
                 i += 1
                 with open(sys.argv[i], "rb") as jsonfile:
                     completed_values = \
-                        glu.dag.create_target_value_structure(
+                        rung.dag.create_target_value_structure(
                             json.load(jsonfile),
                             valuestack.get_values(),
                         )
-                    result = glu.dag.run_target_value_structure(
+                    result = rung.dag.run_target_value_structure(
                         completed_values
                     )
                     print(
@@ -127,11 +127,11 @@ def main():
                 # TODO: Array values with plural suffix "s"
                 else:
                     completed_values = \
-                        glu.dag.create_target_value_structure(
+                        rung.dag.create_target_value_structure(
                             {argument: {}},
                             valuestack.get_values(),
                         )
-                    result = glu.dag.run_target_value_structure(
+                    result = rung.dag.run_target_value_structure(
                         completed_values
                     )
                     pprint.pprint(result)

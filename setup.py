@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name="glu",
+    name="rung",
     description="Framework for running and integrating tasks together",
     author="jaakko.t.paakkonen@gmail.com",
     version=1,
@@ -19,7 +19,7 @@ setup(
     ),
     scripts=[],
     entry_points={
-        'console_scripts': ['glu=glu.glu:main'],
+        'console_scripts': ['rung=rung.rung:main'],
     },
     zip_safe=False,
     tests_require=[],

@@ -12,11 +12,11 @@ sys.path.append(
     ),
 )
 
-import glu.valuestack
+import rung.valuestack
 
 
 def test_valuestack():
-    valuestack1 = glu.valuestack.ValueStack(
+    valuestack1 = rung.valuestack.ValueStack(
         ["ia", "ib", "ic", "id", "ie", "if", "ig"],
     )
     valuestack1.set_environment_values(
@@ -99,5 +99,3 @@ def test_valuestack():
     assert valuestack1.is_valuename("ia") is True
     assert valuestack1.is_valuename("blah") is False
     assert valuestack1.is_valuename("blih") is False
-
-
