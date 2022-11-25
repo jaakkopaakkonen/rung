@@ -6,7 +6,11 @@ import rung.framework
 import rung.valuestack
 import rung.util
 import pprint
+import subprocess
 
+
+class NonZeroExitStatus(BaseException):
+    pass
 
 class step:
     """ Class to wrap executable parts and their arguments to
@@ -111,7 +115,7 @@ class step:
                 call_args.update(
                     rung.framework.argument_subset(
                         values,
-                        self.callable_arguments
+                        self.callable_arguments,
                     )
                 )
         fulfilled_dependencies = set(call_args.keys())
@@ -192,3 +196,37 @@ class step:
 
 def step_func(func):
     step(func)
+
+
+def step_shell_script(script_lines, *target_inputs):
+    # TODO Do we need add target to .formatting the command line?
+    target = target_inputs[0]
+    inputs = target_inputs[1:]
+
+    def run(**inputs):
+        nonlocal script_lines
+        completed_script_lines = script_lines.format(**inputs)
+        completed_script_lines = completed_script_lines.split("\n")
+        for line in completed_script_lines:
+            log.warning(line)
+            result = subprocess.run(
+                line,
+                shell=True,
+                encoding="UTF-8",
+                capture_output=True,
+            )
+            log.warning(result.stdout)
+            log.warning(result.stderr)
+
+            if result.returncode != 0:
+                raise NonZeroExitStatus(
+                    target + ": "+ str(result.returncode)
+                )
+        if len(completed_script_lines) == 1 and \
+           result.stdout:
+            return result.stdout.strip()
+        else:
+            return result.returncode == 0
+    step(target, (run,) + inputs)
+
+

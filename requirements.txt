@@ -1,2 +1,4 @@
 GitPython==latest
 colorama
+pytest~=5.3.5
+setuptools~=65.5.0

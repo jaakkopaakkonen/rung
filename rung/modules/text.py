@@ -1,4 +1,5 @@
 import random
+import time
 from rung.step import *
 
 def get_random_ascii_data(size=80):
@@ -20,5 +21,13 @@ step(
     signature=(
         get_random_ascii_data,
         "size",
+    ),
+)
+
+step(
+    target="sleep",
+    signature=(
+        lambda secs: time.sleep(float(secs)),
+        "secs",
     ),
 )

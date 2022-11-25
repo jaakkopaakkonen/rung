@@ -5,6 +5,7 @@ import types
 
 log = logging.getLogger("rung")
 
+
 def get_function_name_params(function):
     """Returns the name of given function. Returns None if not applicaple
 

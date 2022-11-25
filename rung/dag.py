@@ -101,6 +101,16 @@ def final_targets():
     return all_targets - all_inputs
 
 
+def retrieve_value(key, values):
+    value = values[key]
+    try:
+        if type(value) == str:
+            nextvalue = retrieve_value(value, values)
+            value = nextvalue
+    except KeyError:
+        pass
+    return value
+
 def create_target_value_structure(
     structure=dict(),
     values=dict(),
@@ -152,7 +162,7 @@ def create_target_value_structure(
                 all_inputs = inputs.union(set(step.optional_inputs))
                 # Add fulfilled input values to result
                 for key in valuenames & all_inputs:
-                    result[key] = values[key]
+                    result[key] = retrieve_value(key, values)
                 # Process missing input values
                 for key in inputs - valuenames - dictkeys:
                     result[key] = create_target_value_structure(

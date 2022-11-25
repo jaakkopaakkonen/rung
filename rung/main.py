@@ -36,6 +36,8 @@ for path in rung.config.read_external_modules():
 
 
 def print_subgraph(target, prefixes=("", "")):
+    # TODO Turn inputs to left and targets to right
+    # TODO consider alphabetic order
     step = rung.dag.get_step(target)
     if not step:
         print(prefixes[0] + f.RED + target)
@@ -69,11 +71,11 @@ def main():
     :return:
     """
 
-    # TODO Print out targets and inputs if no command line arguments defined
+    # TODO print relevant inputs before starting on target(s)
     if len(sys.argv) == 1:
+        # TODO Print also already provided inputs
         for target in sorted(rung.dag.final_targets()):
             print_subgraph(target)
-
     else:
         # We have arguments
         valuestack = rung.valuestack.ValueStack(rung.dag.all_valuenames)

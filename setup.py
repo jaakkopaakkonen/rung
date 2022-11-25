@@ -19,7 +19,7 @@ setup(
     ),
     scripts=[],
     entry_points={
-        'console_scripts': ['rung=rung.rung:main'],
+        'console_scripts': ['rung=rung.main:main'],
     },
     zip_safe=False,
     tests_require=[],
