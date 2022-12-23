@@ -1,20 +1,20 @@
 import git
 import logging
 
-from rung.step import step_func, step_shell_script
+from taskgraph.task import task_func, task_shell_script
 
 
-log = logging.getLogger("rung")
+log = logging.getLogger("taskgraph")
 
 
-step_shell_script(
+task_shell_script(
     "cd {git_repo_path};git branch --show-current",
     "branch",
     "git_repo_path",
 )
 
 
-step_shell_script(
+task_shell_script(
     "cd {git_repo_path};"
     " git push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{target_branch}",
     "push_to_gitlab",
@@ -25,9 +25,11 @@ step_shell_script(
 )
 
 
-step_shell_script(
+task_shell_script(
     "cd {git_repo_path};"
     " git remote",
     "remote",
     "git_repo_path",
 )
+
+

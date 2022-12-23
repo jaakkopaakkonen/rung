@@ -12,11 +12,11 @@ sys.path.append(
     ),
 )
 
-import rung.valuestack
+import taskgraph.valuestack
 
 
 def test_valuestack():
-    valuestack1 = rung.valuestack.ValueStack(
+    valuestack1 = taskgraph.valuestack.ValueStack(
         ["ia", "ib", "ic", "id", "ie", "if", "ig"],
     )
     valuestack1.set_environment_values(

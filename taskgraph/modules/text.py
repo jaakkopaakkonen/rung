@@ -1,6 +1,6 @@
 import random
 import time
-from rung.step import *
+from taskgraph.task import *
 
 def get_random_ascii_data(size=80):
     size = int(size)
@@ -16,16 +16,16 @@ def get_random_ascii_data(size=80):
     return result
 
 # Get random ascii data based on defined length in bytes
-step(
-    target="data",
+Task(
+    name="data",
     signature=(
         get_random_ascii_data,
         "size",
     ),
 )
 
-step(
-    target="sleep",
+Task(
+    name="sleep",
     signature=(
         lambda secs: time.sleep(float(secs)),
         "secs",

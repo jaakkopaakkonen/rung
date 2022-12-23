@@ -4,7 +4,7 @@ import sys
 import time
 import imaplib
 
-from rung.step import *
+from taskgraph.task import *
 
 
 def get_email_data(length=1000):
@@ -85,7 +85,7 @@ def mail_body(
     result += get_email_data(size-len(result))
     return result
 
-step(
+Task(
     mail_body,
     optional_inputs=[
         "priority",
@@ -94,8 +94,8 @@ step(
 )
 
 # Send smtp mail
-step(
-    target="send_smtp_mail",
+Task(
+    name="send_smtp_mail",
     signature=(
         lambda host, From, To, mail_body:
             smtplib.SMTP(host=host,).sendmail(
@@ -110,7 +110,7 @@ step(
     ),
 )
 
-@step_func
+@task_func
 def get_imap_mails(username, password, host):
     result=[]
     try:
@@ -136,7 +136,7 @@ def get_imap_mails(username, password, host):
     return result
 
 
-@step_func
+@task_func
 def remove_all_imap_mails(username, password, host):
     result=[]
     try:

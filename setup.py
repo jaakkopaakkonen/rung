@@ -2,10 +2,10 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name="rung",
+    name="taskgraph",
     description="Framework for running and integrating tasks together",
     author="jaakko.t.paakkonen@gmail.com",
-    version=1,
+    version="1",
     requires=[
         "colorama",
         "gitpython",
@@ -19,7 +19,7 @@ setup(
     ),
     scripts=[],
     entry_points={
-        'console_scripts': ['rung=rung.main:main'],
+        'console_scripts': ['tg=taskgraph.main:main'],
     },
     zip_safe=False,
     tests_require=[],

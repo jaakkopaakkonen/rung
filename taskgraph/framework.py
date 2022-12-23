@@ -1,36 +1,36 @@
 import logging
 import pprint
 
-import rung.dag
-import rung.step
+import taskgraph.dag
+import taskgraph.task
 
 
-logging = logging.getLogger("rung")
+logging = logging.getLogger("taskgraph")
 logging.setLevel(1)
 
-all_steps = []
+all_tasks = []
 all_inputs = set()
 
 
-def add_step(step):
-    rung.dag.add(step)
+def add_task(task):
+    taskgraph.dag.add(task)
 
 
-def get_steps_with_target(target):
-    global all_steps
-    steps = []
-    for candidate in all_steps:
-        if candidate.target == target:
-            steps.append(candidate)
-    return steps
+def get_tasks_with_name(name):
+    global all_tasks
+    tasks = []
+    for candidate in all_taks:
+        if candidate.name == name:
+            tasks.append(candidate)
+    return tasks
 
 
 def get_all_missing_input_build_chains(
-    step,
+    task,
     *valuedicts
 ):
     build_chains = []
-    missing_inputs = step.get_missing_inputs(
+    missing_inputs = task.get_missing_inputs(
         *valuedicts,
     )
     for prerequisite in missing_inputs:
@@ -46,19 +46,19 @@ def get_all_missing_input_build_chains(
 
 
 def get_build_chains(
-    target=None,
+    name=None,
     *valuedicts,
 ):
-    """ Get chain of steps which will fulfill target.
+    """ Get chain of tasks which will end lead (and include) name.
 
-        When multiple steps are defined with with same required target,
-        the step which has most inputs and
+        When multiple tasks are defined with with same required name,
+        the task which has most inputs and
         still can be fulfilled with valuedicts is used
     """
     current_build_chain = []
-    # Get steps with most inputs first
+    # Get tasks with most inputs first
     candidates = sorted(
-        get_steps_with_target(target),
+        get_tasks_with_name(name),
         reverse=True,
     )
     if not candidates:
@@ -79,8 +79,8 @@ def get_build_chains(
         current_build_chain.append(candidate)
         current_build_chain.extend(chain)
     logging.warning(
-        "get_build_chains("+target+"): "+
-        " ".join([s.target for s in current_build_chain])
+        "get_build_chains(" + name + "): " +
+        " ".join([s.name for s in current_build_chain])
     )
     return current_build_chain
 
@@ -102,20 +102,20 @@ def argument_subset(values, argument_names):
     return result
 
 
-def run_target(
-    target=None,
+def run_task(
+    name=None,
     *valuedicts,
 ):
-    # logging.warning("run_target("+target+")")
+    # logging.warning("run_task("+name+")")
     # logging.warning("with values")
     # logging.warning(pprint.pformat(valuedicts))
     return_value = None
     build_chains = get_build_chains(
-        target,
+        name,
         *valuedicts,
     )
     if not build_chains:
-        logging.error("Could not find target " + str(target))
+        logging.error("Could not find task " + str(name))
         logging.error("fitting values ")
         logging.error(pprint.pformat(*valuedicts))
     else:

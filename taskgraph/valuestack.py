@@ -23,13 +23,13 @@ class ValueStack:
     # Dictionary containing values defined on the command line
     command_line_values = dict()
 
-    # Dictionary of result values when running steps
+    # Dictionary of result values when running tasks
     result_values = dict()
 
     def __init__(self, value_names=None):
         """ New instance.
 
-        :param value_names: List of names used as target or input names
+        :param value_names: List of names used as name or input names
         """
         self.value_names = value_names
         self.internal_values = [dict()]
@@ -49,7 +49,7 @@ class ValueStack:
         cls.command_line_values[input_name] = value
 
     def set_internal_value(self, input_name, value):
-        """Set value inside a set of targets to run, eg. a json file"""
+        """Set value inside a set of tasks to run, eg. a json file"""
 
         # Setting input value to None blocks it from existence altogether
         # in this instance and every instance
@@ -90,8 +90,8 @@ class ValueStack:
         return name in self.value_names
 
     @classmethod
-    def set_result_value(cls, target_name, value):
-        cls.result_values[target_name] = value
+    def set_result_value(cls, name, value):
+        cls.result_values[name] = value
 
     @classmethod
     def reset(cls):

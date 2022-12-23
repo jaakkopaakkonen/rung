@@ -1,9 +1,10 @@
+import fcntl
 import inspect
 import logging
 import os
 import types
 
-log = logging.getLogger("rung")
+log = logging.getLogger("taskgraph")
 
 
 def get_function_name_params(function):
@@ -123,3 +124,9 @@ def is_substructure_of(substructure, superstructure):
             )
         except (KeyError, TypeError):
             return False
+
+
+def set_stream_nonblocking(stream):
+    fileno = stream.fileno()
+    flags = fcntl.fcntl(fileno, fcntl.F_GETFL)
+    fcntl.fcntl(fileno, fcntl.F_SETFL, flags|os.O_NONBLOCK)

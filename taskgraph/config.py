@@ -4,17 +4,17 @@ import glob
 import importlib.util
 import os
 import pathlib
-import rung.util
+import taskgraph.util
 
 
 def read_external_modules():
     homedir = str(pathlib.Path.home())
-    config_file = homedir + "/.rung/config"
+    config_file = homedir + "/.taskgraph/config"
     parser = configparser.ConfigParser()
     parser.read(config_file)
-    repo_url = parser.get("rung", "external_modules")
+    repo_url = parser.get("taskgraph", "external_modules")
     if repo_url:
-        dest_directory = homedir + "/.rung/external_modules"
+        dest_directory = homedir + "/.taskgraph/external_modules"
         try:
             os.mkdir(dest_directory)
         except:
@@ -27,7 +27,7 @@ def read_external_modules():
         finally:
             # Clean up repo object
             del(repo)
-        module_name = rung.util.get_basename_without_ext(repo_url)
+        module_name = taskgraph.util.get_basename_without_ext(repo_url)
         if dest_directory[-1] != "/":
             dest_directory += "/"
         module_path = dest_directory + module_name
