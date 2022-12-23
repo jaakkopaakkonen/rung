@@ -2,9 +2,10 @@ import logging
 log = logging.getLogger("taskgraph")
 log.setLevel(1)
 
-import taskgraph.framework
+import taskgraph.dag
 import taskgraph.valuestack
 import taskgraph.util
+
 
 import fcntl
 import pprint
@@ -16,6 +17,7 @@ import sys
 
 class NonZeroExitStatus(BaseException):
     pass
+
 
 class Task:
     """ Class to wrap executable parts and their arguments to
@@ -99,10 +101,7 @@ class Task:
                     ) - self.optional_inputs
                 self.callable_arguments = arguments
         self.name = name
-        taskgraph.framework.add_task(self)
-
-    def get_missing_inputs(self, *valuedicts):
-        return self.inputs - taskgraph.framework.keys_from_dicts(*valuedicts)
+        taskgraph.dag.add(self)
 
     def log_result(self, name, values):
         if name is None:
@@ -118,7 +117,7 @@ class Task:
         if self.callable_arguments:
             for values in valuedicts:
                 call_args.update(
-                    taskgraph.framework.argument_subset(
+                    taskgraph.util.argument_subset(
                         values,
                         self.callable_arguments,
                     )

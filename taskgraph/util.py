@@ -130,3 +130,27 @@ def set_stream_nonblocking(stream):
     fileno = stream.fileno()
     flags = fcntl.fcntl(fileno, fcntl.F_GETFL)
     fcntl.fcntl(fileno, fcntl.F_SETFL, flags|os.O_NONBLOCK)
+
+
+def argument_subset(values, argument_names):
+    """ Construct and return a subset of dictionary values
+        containing only keys listed in argument_names.
+    """
+    result = {}
+    for argument in argument_names:
+        key = argument
+        if isinstance(argument_names, dict):
+            argument = argument_names[argument]
+            if argument in values:
+                argument = values[argument]
+                result[key] = argument
+        elif argument in values:
+            result[key] = values[argument]
+    return result
+
+
+def keys_from_dicts(*valuedicts):
+    inputs = set()
+    for d in valuedicts:
+        inputs.update(d.keys())
+    return inputs

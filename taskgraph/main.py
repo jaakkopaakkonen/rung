@@ -15,7 +15,6 @@ log.setLevel(1)
 # Apply everything from modules
 
 
-import taskgraph.framework
 import taskgraph.util
 import taskgraph.config
 import taskgraph.valuestack
@@ -26,7 +25,6 @@ colorama.init(autoreset=True)
 # TODO
 # Use same scheme as below with reading external modules so that we can nimport
 # them with full name
-# https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path
 # https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path
 from taskgraph.modules import *
 
