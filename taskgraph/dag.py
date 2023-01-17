@@ -2,6 +2,8 @@ import copy
 import pprint
 import time
 
+import taskgraph.results
+
 # This file contains everything related to managing the directed asyclic graph
 # containing all the inputs of all tasks and their names
 
@@ -255,8 +257,13 @@ def run_task_value_structure(structure):
                 values[key]["startTime"] = time.time()
                 values[key]["result"] = task.run(flatten_values(values[key]))
                 values[key]["endTime"] = time.time()
+                taskgraph.results.add(key, values[key])
             else:
-                values[key] = structure[key]
+                value = taskgraph.results.get(structure[key])
+                if value is None:
+                    value = structure[key]
+                values[key] = value
+
     elif type(structure) == list:
         values = list()
         for item in structure:

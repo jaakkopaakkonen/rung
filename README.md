@@ -15,10 +15,17 @@ Tasks can be python functions or shell scripts for now.
 
 You can write your own task or use the tasks coming with the framework.
 
-Each task has set of zero or more inputs , eachi mandatory or optional, 
+Each task has set of zero or more inputs , mandatory or optional, 
 a name and executable part (python function, command or shell script).
 
 All tasks have a string name. Inputs are name value pairs, both are strings.
+
+### Result store
+You can use results of earlier executed tasks as input by using task name
+(and possible keys and indexes if result is dictionary or list) as input value.
+
+
+
 
 # Development
 
@@ -35,3 +42,4 @@ All tasks have a string name. Inputs are name value pairs, both are strings.
 | 9   |                 |                  | Check results incrementally while running to enable long/infinite sessions                                                                                                                                                                             
 | 10  | Low             | main             | Option for showing only possible tasks with current set inputs                                                                                                                                                                                       
 | 11  | Very important  | dag tasks        | Name spaces based on modules for inputs. Eg. `jenkins.username`                                                                                                                                                                                        | Big      | Hard
+| 12  | Quite Important | task             | Enable default input to make `tg task_name=value`

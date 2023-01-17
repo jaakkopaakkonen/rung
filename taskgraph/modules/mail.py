@@ -56,10 +56,15 @@ def mail_body(
     size,
     priority=None,
     Subject=None,
+    Date=None,
 ):
     size = int(size)
     result = b""
 
+    if Date:
+        if type(Date) == str:
+            Date = Date.encode("utf-8")
+        result += b"Date: " + Date + b"\r\n"
     if priority:
         priority = int(priority)
         try:
@@ -90,6 +95,7 @@ Task(
     optional_inputs=[
         "priority",
         "Subject",
+        "Date",
     ]
 )
 

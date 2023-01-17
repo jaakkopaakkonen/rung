@@ -240,7 +240,11 @@ def run_commands(commands):
                     prefix = "ERR "
                 output = outstream.read(READ_SIZE)
                 if output:
-                    output = prefix + re.sub("\n\([^$]\)","\n\1" + prefix, output)
+                    output = prefix + re.sub(
+                        "\n\([^$]\)",
+                        "\n\1" + prefix,
+                        output,
+                    )
                     print(output, end='', file=outhandle)
 
 
