@@ -18,6 +18,7 @@ log.setLevel(1)
 import taskgraph.util
 import taskgraph.config
 import taskgraph.valuestack
+import taskgraph.runner
 
 
 colorama.init(autoreset=True)
@@ -74,24 +75,30 @@ def print_subgraph(name, values=dict(), prefixes=("", "")):
         print()
 
 
+def print_values(values=dict()):
+    for name in sorted(values):
+        print(name + "=" + values[name])
+
+
 def main():
     """The main entrypoint for the program
 
     :return:
     """
     valuestack = taskgraph.valuestack.ValueStack(
-        taskgraph.dag.all_valuenames
+        taskgraph.dag.all_valuenames,
     )
     valuestack.set_environment_values(dict(os.environ))
     # TODO print relevant inputs before starting on task(s)
     if len(sys.argv) == 1:
         # TODO Print also already provided inputs
         values = valuestack.get_values()
+        print_values(values)
+        print("\n")
         for name in sorted(taskgraph.dag.final_tasks()):
             print_subgraph(name, values=values)
     else:
         # We have arguments
-
         # This holds the current input where value is going to be read next
         current_input = None
         i = 1
@@ -101,26 +108,20 @@ def main():
             if argument.startswith("-f"):
                 i += 1
                 with open(sys.argv[i], "rb") as jsonfile:
-                    completed_values = \
-                        taskgraph.dag.create_task_value_structure(
-                            json.load(jsonfile),
-                            valuestack.get_values(),
-                        )
-                    result = taskgraph.dag.run_task_value_structure(
-                        completed_values,
-                    )
+                    runner = taskgraph.runner.TaskRunner(valuestack.get_values())
+                    result = runner.run_tasks(json.load(jsonfile))
                     print(
                         json.dumps(
                             result,
                             indent=2,
-                            default=lambda o: str(o)
+                            default=lambda o: str(o),
                         )
                     )
                 i += 1
             elif separator_idx > 0:
                 valuestack.set_command_line_value(
                     argument[0:separator_idx],
-                    argument[separator_idx+1:]
+                    argument[separator_idx+1:],
                 )
             elif argument.startswith("--"):
                 # Value names are prefixed with --
@@ -140,15 +141,15 @@ def main():
                     current_input = None
                 # TODO: Array values with plural suffix "s"
                 else:
-                    completed_values = \
-                        taskgraph.dag.create_task_value_structure(
-                            {argument: {}},
-                            valuestack.get_values(),
+                    runner = taskgraph.runner.TaskRunner(valuestack.get_values())
+                    result = runner.run_task(argument)
+                    print(
+                        json.dumps(
+                            result,
+                            indent=2,
+                            default=lambda o: str(o),
                         )
-                    result = taskgraph.dag.run_task_value_structure(
-                        completed_values,
                     )
-                    pprint.pprint(result)
             i += 1
 
 
