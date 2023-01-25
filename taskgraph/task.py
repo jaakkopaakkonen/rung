@@ -3,6 +3,7 @@ log = logging.getLogger("taskgraph")
 log.setLevel(1)
 
 import taskgraph.dag
+import taskgraph.results
 import taskgraph.valuestack
 import taskgraph.util
 
@@ -13,6 +14,7 @@ import re
 import select
 import subprocess
 import sys
+import time
 
 
 class NonZeroExitStatus(BaseException):
@@ -112,23 +114,22 @@ class Task:
             else:
                 log.warning(name + "=\"" + values+"\"")
 
-    def run(self, *valuedicts):
+    def run(self, values, valuestack):
         call_args = dict()
         if self.callable_arguments:
-            for values in valuedicts:
-                call_args.update(
-                    taskgraph.util.argument_subset(
-                        values,
-                        self.callable_arguments,
-                    )
+            call_args.update(
+                taskgraph.util.argument_subset(
+                    values,
+                    self.callable_arguments,
                 )
+            )
         fulfilled_dependencies = set(call_args.keys())
         missing_dependencies = self.inputs - fulfilled_dependencies
         if missing_dependencies:
             # Not all parameters fullfilled
             log.warning("Not running " + self.name)
             log.warning(
-                "Missing dependencies: " + " ".join(list(missing_dependencies))
+                "Missing dependencies: " + " ".join(list(missing_dependencies)),
             )
             return
         log.warning("Running " + self.name)
@@ -203,49 +204,75 @@ def task_func(func):
     return Task(func)
 
 
-def run_commands(commands):
+def run_commands(name, commands):
     READ_SIZE = 8192
+    results = list()
     for command in commands:
-        print("CMD " + command, file=sys.stderr)
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            encoding="utf-8",
-        )
-        taskgraph.util.set_stream_nonblocking(process.stdout)
-        taskgraph.util.set_stream_nonblocking(process.stderr)
-        stdout_fileno = process.stdout.fileno()
-        stderr_fileno = process.stderr.fileno()
-        prefix = ""
-        while process.poll() is None:
-            outstream_list, _, _ = select.select(
-                [
-                    process.stdout,
-                    process.stderr,
-                ],
-                [],
-                [],
+        command = command.strip()
+        if command:
+            command_result = dict()
+            command_result["startTime"] = time.time()
+            command_result["command"] = command
+            command_result["log"] = list()
+            print("CMD " + command, file=sys.stderr)
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                encoding="utf-8",
             )
+            taskgraph.util.set_stream_nonblocking(process.stdout)
+            taskgraph.util.set_stream_nonblocking(process.stderr)
+            stdout_fileno = process.stdout.fileno()
+            stderr_fileno = process.stderr.fileno()
+            prefix = ""
+            while process.poll() is None:
+                outstream_list, _, _ = select.select(
+                    [
+                        process.stdout,
+                        process.stderr,
+                    ],
+                    [],
+                    [],
+                )
+                for outstream in outstream_list:
+                    log_item = dict()
+                    outhandle = None
+                    out_fileno = outstream.fileno()
+                    if out_fileno == stdout_fileno:
+                        outhandle = sys.stdout
+                        log_item["stream"] = "stdout"
+                    elif out_fileno == stderr_fileno:
+                        outhandle = sys.stderr
+                        log_item["stream"] = "stderr"
+                    output = outstream.read(READ_SIZE)
+                    # # Dig out possible values
+                    # try:
+                    #     for extractor in taskgraph.results.LogValueExtractor.extractors[name]:
+                    #         extracted_value = extractor.process_line(output)
+                    #         if extracted_value is not None:
+                    #             pass
+                    # except KeyError:
+                    #     pass
 
-            for outstream in outstream_list:
-                outhandle = None
-                out_fileno = outstream.fileno()
-                if out_fileno == stdout_fileno:
-                    outhandle = sys.stdout
-                    prefix = "OUT "
-                elif out_fileno == stderr_fileno:
-                    outhandle = sys.stderr
-                    prefix = "ERR "
-                output = outstream.read(READ_SIZE)
-                if output:
-                    output = prefix + re.sub(
-                        "\n\([^$]\)",
-                        "\n\1" + prefix,
-                        output,
-                    )
-                    print(output, end='', file=outhandle)
+                    if output:
+                        log_item["time"] = time.time() - command_result["startTime"]
+                        log_item["data"] = output
+                        command_result["log"].append(log_item)
+                        # Add stream identifier prefix and p
+                        output = prefix + re.sub(
+                            "\n\([^$]\)",
+                            "\n\1" + prefix,
+                            output,
+                        )
+                        # print output
+                        print(output, end='', file=outhandle)
+        command_result["pid"] = process.pid
+        command_result["return_code"] = process.returncode
+        command_result["endTime"] = time.time()
+        results.append(command_result)
+    return results
 
 
 def task_shell_script(script_lines, *task_inputs):
@@ -257,5 +284,5 @@ def task_shell_script(script_lines, *task_inputs):
         nonlocal script_lines
         completed_script_lines = script_lines.format(**inputs)
         completed_script_lines = completed_script_lines.split("\n")
-        run_commands(completed_script_lines)
+        return run_commands(name, completed_script_lines)
     return Task(name, (run,) + inputs)

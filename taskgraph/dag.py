@@ -10,7 +10,6 @@ import taskgraph.results
 import logging
 log = logging.getLogger("taskgraph")
 from taskgraph.util import strip_trailing_extension
-import taskgraph.valuestack
 
 # Dictionary containing set of all task names
 # which can be fulfilled by the inputs.

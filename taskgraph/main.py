@@ -108,7 +108,9 @@ def main():
             if argument.startswith("-f"):
                 i += 1
                 with open(sys.argv[i], "rb") as jsonfile:
-                    runner = taskgraph.runner.TaskRunner(valuestack.get_values())
+                    runner = taskgraph.runner.TaskRunner(
+                        valuestack,
+                    )
                     result = runner.run_tasks(json.load(jsonfile))
                     print(
                         json.dumps(
@@ -141,7 +143,9 @@ def main():
                     current_input = None
                 # TODO: Array values with plural suffix "s"
                 else:
-                    runner = taskgraph.runner.TaskRunner(valuestack.get_values())
+                    runner = taskgraph.runner.TaskRunner(
+                        valuestack,
+                    )
                     result = runner.run_task(argument)
                     print(
                         json.dumps(
@@ -151,7 +155,7 @@ def main():
                         )
                     )
             i += 1
-
+        valuestack.print_result_values()
 
 if __name__ == "__main__":
     logging.basicConfig(

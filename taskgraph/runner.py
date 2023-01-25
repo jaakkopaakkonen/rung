@@ -33,25 +33,23 @@ def flatten_values(values):
 
 
 class TaskRunner:
-    def __init__(self, values=dict()):
-        self.values = values
+    def __init__(self, valuestack=None):
+        self.valuestack = valuestack
         self.resolved_keys = set()
 
     def run_tasks(self, structure):
+        values = dict()
+        if self.valuestack:
+            values = self.valuestack.get_values()
         return self._run_task_value_structure(
             self._create_task_value_structure(
-                structure=stucture,
-                values=copy.deepcopy(self.values),
-            )
+                structure=structure,
+                values=values,
+            ),
         )
 
     def run_task(self, task_name):
-        return self._run_task_value_structure(
-            self._create_task_value_structure(
-                structure={task_name: {}},
-                values=copy.deepcopy(self.values),
-            ),
-        )
+        return self.run_tasks({task_name: {}})
 
     def _resolve_value(self, key, values):
         value = values[key]
@@ -165,9 +163,16 @@ class TaskRunner:
                     values[key] = self._run_task_value_structure(structure[key])
                     task = taskgraph.dag.get_task(key)
                     values[key]["startTime"] = time.time()
-                    values[key]["result"] = task.run(flatten_values(values[key]))
+                    values[key]["result"] = task.run(
+                        flatten_values(values[key]),
+                        self.valuestack,
+                    )
                     values[key]["endTime"] = time.time()
-                    taskgraph.results.add(key, values[key])
+                    log_values = taskgraph.results.process_results(
+                        key,
+                        values[key],
+                    )
+                    self.valuestack.set_result_values(log_values)
                 else:
                     value = taskgraph.results.get(structure[key])
                     if value is None:

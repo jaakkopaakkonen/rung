@@ -31,11 +31,6 @@ def test_valuestack():
     valuestack1.set_command_line_value("ic", "three")
     valuestack1.set_command_line_value("id", "four")
 
-    valuestack1.set_internal_value("ic", "hundred")
-    valuestack1.set_internal_value("id", "hundred")
-    valuestack1.set_internal_value("ie", "ten")
-    valuestack1.set_internal_value("ig", "seven")
-
     assert valuestack1.get_values() == {
         "ia": "one",
         "ib": "two",
