@@ -207,8 +207,10 @@ def task_func(func):
 def run_commands(name, commands):
     READ_SIZE = 8192
     results = list()
-    for command in commands:
-        command = command.strip()
+
+    cmd_idx = 0
+    while cmd_idx < len(commands):
+        command = commands[cmd_idx].strip()
         if command:
             command_result = dict()
             command_result["startTime"] = time.time()
@@ -268,10 +270,14 @@ def run_commands(name, commands):
                         )
                         # print output
                         print(output, end='', file=outhandle)
-        command_result["pid"] = process.pid
-        command_result["return_code"] = process.returncode
-        command_result["endTime"] = time.time()
-        results.append(command_result)
+            command_result["endTime"] = time.time()
+            command_result["pid"] = process.pid
+            command_result["return_code"] = process.returncode
+            results.append(command_result)
+            # Non-zero exit status, break loop
+            if command_result["return_code"]:
+                cmd_idx = len(commands)
+        cmd_idx += 1
     return results
 
 

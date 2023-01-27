@@ -69,6 +69,15 @@ def get(path, structure=None):
     return result
 
 
+def executed_successfully(structure):
+    # Check values returned from task execution whether the execution was successful
+    # Applies only to shell scripts
+    return "result" not in structure or \
+        len(structure["result"]) == 0 or \
+        "return_code" not in structure["result"][-1] or \
+        not structure["result"][-1]["return_code"]
+
+
 class LogValueExtractor:
     # Task name to list of extractors mapping
     extractors = dict()

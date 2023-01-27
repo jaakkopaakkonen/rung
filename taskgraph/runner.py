@@ -2,6 +2,7 @@ import copy
 import logging
 import time
 import taskgraph.dag
+import taskgraph.results
 
 log = logging.getLogger("taskgraph")
 
@@ -173,12 +174,13 @@ class TaskRunner:
                         values[key],
                     )
                     self.valuestack.set_result_values(log_values)
+                    if not taskgraph.results.executed_successfully(values[key]):
+                        break
                 else:
                     value = taskgraph.results.get(structure[key])
                     if value is None:
                         value = structure[key]
                     values[key] = value
-
         elif type(structure) == list:
             values = list()
             for item in structure:
