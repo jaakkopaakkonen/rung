@@ -16,3 +16,10 @@ task_shell_script(
     "SSID",
     "password",
 )
+
+
+task_shell_script(
+    "ssh -A -o StrictHostKeyChecking=accept-new {host}",
+    "ssh",
+    "host",
+)

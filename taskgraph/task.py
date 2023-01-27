@@ -249,26 +249,15 @@ def run_commands(name, commands):
                         outhandle = sys.stderr
                         log_item["stream"] = "stderr"
                     output = outstream.read(READ_SIZE)
-                    # # Dig out possible values
-                    # try:
-                    #     for extractor in taskgraph.results.LogValueExtractor.extractors[name]:
-                    #         extracted_value = extractor.process_line(output)
-                    #         if extracted_value is not None:
-                    #             pass
-                    # except KeyError:
-                    #     pass
-
                     if output:
                         log_item["time"] = time.time() - command_result["startTime"]
                         log_item["data"] = output
                         command_result["log"].append(log_item)
-                        # Add stream identifier prefix and p
-                        output = prefix + re.sub(
-                            "\n\([^$]\)",
-                            "\n\1" + prefix,
+                        output = re.sub(
+                            "\n",
+                            "\r\n",
                             output,
                         )
-                        # print output
                         print(output, end='', file=outhandle)
             command_result["endTime"] = time.time()
             command_result["pid"] = process.pid
