@@ -74,6 +74,7 @@ def executed_successfully(structure):
     # Applies only to shell scripts
     return "result" not in structure or \
         structure["result"] is None or \
+        type(structure["result"]) != list or \
         len(structure["result"]) == 0 or \
         "return_code" not in structure["result"][-1] or \
         not structure["result"][-1]["return_code"]

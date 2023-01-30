@@ -250,7 +250,8 @@ def run_commands(name, commands):
                         log_item["stream"] = "stderr"
                     output = outstream.read(READ_SIZE)
                     if output:
-                        log_item["time"] = time.time() - command_result["startTime"]
+                        log_item["time"] = time.time() - \
+                            command_result["startTime"]
                         log_item["data"] = output
                         command_result["log"].append(log_item)
                         output = re.sub(
