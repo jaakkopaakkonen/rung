@@ -2,6 +2,7 @@ import fcntl
 import inspect
 import logging
 import os
+import pathlib
 import types
 
 log = logging.getLogger("taskgraph")
@@ -154,3 +155,15 @@ def keys_from_dicts(*valuedicts):
     for d in valuedicts:
         inputs.update(d.keys())
     return inputs
+
+
+def get_matching_file_basenames(dir, pattern='*'):
+    """ Return set of file names matching pattern dir stripped of their path and suffix.
+
+    :param dir: Directory as pathlib.Path
+    :return: set of strings of file names stripped of suffixes
+    """
+    basenames = set()
+    for path in dir.glob(pattern):
+        basenames.add(path.stem)
+    return basenames
