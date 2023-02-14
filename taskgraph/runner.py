@@ -184,5 +184,5 @@ class TaskRunner:
         elif type(structure) == list:
             values = list()
             for item in structure:
-                values.append(run_task_value_structure(item))
+                values.append(self._run_task_value_structure(item))
         return values

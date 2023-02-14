@@ -107,7 +107,7 @@ def main():
             separator_idx = argument.find("=")
             if argument.startswith("-f"):
                 i += 1
-                with open(sys.argv[i], "rb") as jsonfile:
+                with open(os.path.expanduser(sys.argv[i]), "rb") as jsonfile:
                     runner = taskgraph.runner.TaskRunner(
                         valuestack,
                     )
