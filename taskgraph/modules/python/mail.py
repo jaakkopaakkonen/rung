@@ -90,7 +90,7 @@ def mail_body(
     result += get_email_data(size-len(result))
     return result
 
-Task(
+task(
     mail_body,
     optional_inputs=[
         "priority",
@@ -100,7 +100,7 @@ Task(
 )
 
 # Send smtp mail
-Task(
+task(
     name="send_smtp_mail",
     signature=(
         lambda host, From, To, mail_body:

@@ -22,7 +22,7 @@ import taskgraph.valuestack
 def test_python_task_return_value():
     name = "test_normal_python_task"
     return_value = "return_value"
-    taskgraph.task.Task(
+    taskgraph.task.task(
         name=name,
         signature=(
             lambda: return_value,
