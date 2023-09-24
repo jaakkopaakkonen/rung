@@ -23,15 +23,14 @@ import taskgraph.runner
 
 colorama.init(autoreset=True)
 
-# TODO
-# Use same scheme as below with reading external modules so that we can nimport
+# TODO: Use same scheme as below with reading external modules so that we can import
 # them with full name
 # https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path
-from taskgraph.modules import *
+from taskgraph.modules.python import *
 
 
 # Read and import external modules
-for path in taskgraph.config.read_external_modules():
+for path in taskgraph.config.read_external_python_modules():
     module_name = taskgraph.util.get_basename_without_ext(path)
     spec = importlib.util.spec_from_file_location(module_name, path)
     module = importlib.util.module_from_spec(spec)
