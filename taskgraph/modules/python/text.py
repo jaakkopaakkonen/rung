@@ -16,7 +16,7 @@ def get_random_ascii_data(size=80):
     return result
 
 # Get random ascii data based on defined length in bytes
-task(
+Task(
     name="data",
     signature=(
         get_random_ascii_data,
@@ -24,7 +24,7 @@ task(
     ),
 )
 
-task(
+Task(
     name="wait",
     signature=(
         lambda secs: time.sleep(float(secs)),

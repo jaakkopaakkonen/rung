@@ -103,6 +103,7 @@ class Task:
                     ) - self.optional_inputs
                 self.callable_arguments = arguments
         self.name = name
+        taskgraph.dag.add(self)
 
     def log_result(self, name, values):
         if name is None:
@@ -200,9 +201,7 @@ class Task:
 
 
 def task_func(func):
-    task = Task(func)
-    taskgraph.dag.add(task)
-    return task
+    return Task(func)
 
 
 def run_commands(name, commands):
@@ -282,19 +281,4 @@ def task_shell_script(script_lines, *task_inputs):
         completed_script_lines = script_lines.format(**inputs)
         completed_script_lines = completed_script_lines.split("\n")
         return run_commands(name, completed_script_lines)
-    task = Task(name, (run,) + inputs)
-    taskgraph.dag.add(task)
-    return task
-
-
-def task(name=None, signature=(), inputs=[], optional_inputs=[]):
-    """
-    Craete task and regiseter it
-    :param name:
-    :param signature:
-    :param inputs:
-    :param optional_inputs:
-    :return:
-    """
-    task = Task(name, signature, inputs, optional_inputs)
-    taskgraph.dag.add(task)
+    return Task(name, (run,) + inputs)

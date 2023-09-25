@@ -19,7 +19,7 @@ import taskgraph.util
 import taskgraph.config
 import taskgraph.valuestack
 import taskgraph.runner
-
+import taskgraph.modules
 
 colorama.init(autoreset=True)
 
@@ -37,6 +37,9 @@ for path in taskgraph.config.read_external_python_modules():
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
 
+# Read and import json modules
+taskgraph.modules.refresh_path_executables()
+taskgraph.modules.register_json_modules()
 
 def print_subgraph(name, values=dict(), prefixes=("", "")):
     # TODO Turn inputs to left and tasks to right
