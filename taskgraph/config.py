@@ -25,7 +25,7 @@ def read_external_python_modules():
     homedir = str(pathlib.Path.home())
     config_file = homedir + "/.taskgraph/config"
     if os.path.isfile(config_file) and \
-       access(config_file, os.access.R_OK):
+       os.access(config_file, os.R_OK):
         # Parse config file name
         parser = configparser.ConfigParser()
         parser.read(config_file)

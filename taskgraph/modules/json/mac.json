@@ -1,0 +1,12 @@
+[
+  {
+    "target": "lock_screen",
+    "executable": "pmset",
+    "command_line_arguments": "displaysleepnow"
+  },
+  {
+    "target": "sleep",
+    "executable": "pmset",
+    "command_line_arguments": "sleepnow"
+  }
+]

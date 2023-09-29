@@ -52,7 +52,6 @@ class ValueStack:
     def is_valuename(self, name):
         return name in self.value_names
 
-
     def set_result_values(self, result_values):
         self.result_values.update(result_values)
 

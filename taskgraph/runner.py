@@ -109,11 +109,15 @@ class TaskRunner:
             # Process actual input of the task
             if name:
                 try:
-                    valuenames = set(values.keys())
                     task = taskgraph.dag.get_task(name)
+                    # Inherit values from parent main (later) task to
+                    # sub (preliminary) task
+                    if task.values:
+                        values.update(task.values)
                     inputs = set(task.inputs)
                     all_inputs = inputs.union(set(task.optional_inputs))
                     # Add fulfilled input values to result
+                    valuenames = set(values.keys())
                     for key in valuenames & all_inputs:
                         result[key] = self._resolve_value(key, values)
                     # Process missing input values

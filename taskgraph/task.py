@@ -32,6 +32,7 @@ class Task:
         signature=(),
         inputs=[],
         optional_inputs=[],
+        values=None,
     ):
         """Add and register new task to be used as input for other tasks
         :param Name to be used for executing the task specifically via run_task
@@ -103,6 +104,7 @@ class Task:
                     ) - self.optional_inputs
                 self.callable_arguments = arguments
         self.name = name
+        self.values = values
         taskgraph.dag.add(self)
 
     def log_result(self, name, values):
@@ -275,7 +277,6 @@ def task_shell_script(script_lines, *task_inputs):
     # TODO Do we need add name to .formatting the command line?
     name = task_inputs[0]
     inputs = task_inputs[1:]
-
     def run(**inputs):
         nonlocal script_lines
         completed_script_lines = script_lines.format(**inputs)
