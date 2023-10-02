@@ -67,20 +67,20 @@ class TaskRunner:
         self,
         structure=dict(),
         values=dict(),
-        name=None,
+        target=None,
     ):
         """ Calculates the task-value structure with all the input values
         in place
         :param structure:
         :param values: The original values to insert to structure
-        :param name: task's name which' values to be set
-        :return: The actual task name-input-substructure
+        :param target: task's target which' values to be set
+        :return: The actual task target-input-substructure
         """
         if type(structure) == list:
             result = list()
             for item in structure:
                 result.append(
-                    self._create_task_value_structure(item, values, name)
+                    self._create_task_value_structure(item, values, target)
                 )
             return result
         elif type(structure) == dict:
@@ -98,18 +98,18 @@ class TaskRunner:
                 result[key] = self._create_task_value_structure(
                     structure[key],
                     values=values,
-                    name=key,
+                    target=key,
                 )
             if "tasks" in structure:
                 return self._create_task_value_structure(
                     structure["tasks"],
                     values,
-                    name,
+                    target,
                 )
             # Process actual input of the task
-            if name:
+            if target:
                 try:
-                    task = taskgraph.dag.get_task(name)
+                    task = taskgraph.dag.get_task(target)
                     # Inherit values from parent main (later) task to
                     # sub (preliminary) task
                     if task.values:
@@ -123,12 +123,12 @@ class TaskRunner:
                     # Process missing input values
                     for key in inputs - valuenames - dictkeys:
                         result[key] = self._create_task_value_structure(
-                            name=key,
+                            target=key,
                             values=values,
                         )
                 except AttributeError as ae:
-                    log.error("No value for \""+name+"\"")
-                    raise AttributeError("No value for \""+name+"\"") from ae
+                    log.error("No value for \""+target+"\"")
+                    raise AttributeError("No value for \""+target+"\"") from ae
             return result
         else:
             result = dict()
@@ -143,12 +143,12 @@ class TaskRunner:
                 # Process missing input values
                 for key in inputs - valuenames:
                     result[key] = self._create_task_value_structure(
-                        name=key,
+                        target=key,
                         values=values,
                     )
             except AttributeError as ae:
-                log.error("No value for \""+name+"\"")
-                raise AttributeError("No value for \""+name+"\"") from ae
+                log.error("No value for \""+target+"\"")
+                raise AttributeError("No value for \""+target+"\"") from ae
             return {structure: result}
 
     def _run_task_value_structure(self, structure):
@@ -170,7 +170,6 @@ class TaskRunner:
                     values[key]["startTime"] = time.time()
                     values[key]["result"] = task.run(
                         flatten_values(values[key]),
-                        self.valuestack,
                     )
                     values[key]["endTime"] = time.time()
                     log_values = taskgraph.results.process_results(

@@ -1,0 +1,24 @@
+[
+  {
+    "target": "branch",
+    "executable": "git",
+    "command_line_arguments": "branch --show-current"
+  },
+  {
+    "target": "remote",
+    "executable": "git",
+    "command_line_arguments": "remote"
+  },
+  {
+    "target": "add_updated_to_git",
+    "executable": "git",
+    "command_line_arguments": "add --update"
+  },
+  {
+    "target": "push_to_gitlab",
+    "executable": "git",
+    "command_line_arguments": "push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{target_branch}",
+    "inputs": ["branch", "target_branch", "remote"]
+  }
+]
+

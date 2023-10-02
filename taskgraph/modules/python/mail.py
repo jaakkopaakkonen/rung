@@ -51,7 +51,7 @@ def get_int(min, max):
     else:
         return random.randrange(min, max + 1)
 
-
+@task_func
 def mail_body(
     size,
     priority=None,
@@ -90,31 +90,15 @@ def mail_body(
     result += get_email_data(size-len(result))
     return result
 
-Task(
-    mail_body,
-    optional_inputs=[
-        "priority",
-        "Subject",
-        "Date",
-    ]
-)
 
 # Send smtp mail
-Task(
-    name="send_smtp_mail",
-    signature=(
-        lambda host, From, To, mail_body:
-            smtplib.SMTP(host=host,).sendmail(
-                from_addr=From,
-                to_addrs=To,
-                msg=mail_body,
-            ),
-        "host",
-        "From",
-        "To",
-        "mail_body",
-    ),
-)
+@task_func
+def send_smtp_mail(host, From, To, mail_body):
+     return smtplib.SMTP(host=host,).sendmail(
+        from_addr=From,
+        to_addrs=To,
+        msg=mail_body,
+    )
 
 @task_func
 def get_imap_mails(username, password, host):

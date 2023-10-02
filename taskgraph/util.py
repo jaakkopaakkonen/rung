@@ -14,18 +14,37 @@ def get_function_name_params(function):
     :param function:
     :return:
     """
-    result = []
+    signature_list = list()
+    signature_list.append(function)
+    values = dict()
     if not inspect.isfunction(function):
         return None
     for name, value in inspect.getmembers(function):
-        if name == "__name__":
-            result.append(value)
+        values[name] = value
+        if "__defaults__" in values and "__name__" in values:
             break
+    # result["__defaults__"] tuple
+    # result["__name__"] str
+    result = dict()
+    result["target"] = values["__name__"]
+    callable_arguments = list()
+    default_values = values["__defaults__"]
+    default_idx = 0
     for param in inspect.signature(
         function,
         follow_wrapped=False,
     ).parameters:
-        result.append(param)
+        signature_list.append(param)
+        if default_values and len(default_values) > default_idx:
+            if not "optional_inputs" in result:
+                result["optional_inputs"] = list()
+            result["optional_inputs"].append(param)
+        else:
+            if not "inputs" in result:
+                result["inputs"] = list()
+            result["inputs"].append(param)
+        default_idx += 1
+    result["signature"] = tuple(signature_list)
     return result
 
 

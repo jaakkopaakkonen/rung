@@ -10,7 +10,7 @@ The framework is divided in two separate but equally important parts.
 The scripts aka. tasks which describe *what* is to be done with the input values, 
 and input values themselves which' control which scripts are to be executed in which order.
 
-### Tasks
+## Tasks
 Tasks can be python functions or shell scripts for now.
 
 You can write your own task or use the tasks coming with the framework.
@@ -19,6 +19,30 @@ Each task has set of zero or more inputs , mandatory or optional,
 a name and executable part (python function, command or shell script).
 
 All tasks have a string name. Inputs are name value pairs, both are strings.
+
+
+`task_func` creates task with executable content (the function contents),
+target name (the function name) and inputs.
+
+The inputs will be the function parameters the way they are.
+
+```
+from taskgraph.task import task_func
+
+@taskfunc
+def myfunction(myfirstparameter, mysecondparameter)
+    print(myfirstparameter)
+    print(mysecondparameter)
+
+```
+
+Inputs are 
+
+### Runnable part of the task
+The runnable part of the task is relayed in tuple as `Task` constructor second parameter.
+The first 
+
+
 
 ### Result store
 You can use results of earlier executed tasks as input by using task name

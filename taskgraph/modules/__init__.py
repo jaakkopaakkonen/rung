@@ -60,41 +60,10 @@ def struct_to_task(struct):
         for substruct in struct:
             struct_to_task(substruct)
     elif isinstance(struct, dict):
-        target = None
-        inputs = []
-        optional_inputs = []
-        values = None
-        if "target" in struct:
-            target = struct["target"]
-        if "inputs" in struct:
-            inputs = struct["inputs"]
-        if "optional_inputs" in struct:
-            optional_inputs = struct["optional_inputs"]
-        if "values" in struct:
-            values = struct["values"]
-        if "executable" in struct:
-            if struct["executable"] in command_to_full_path:
-                # Executable in PATH
-                executable = struct["executable"]
-                command_line_arguments = ""
-                if "command_line_arguments" in struct:
-                    command_line_arguments = struct["command_line_arguments"]
-                taskgraph.task.task_shell_script(
-                    ' '.join([executable, command_line_arguments]),
-                    target,
-                    *inputs,
-                )
-            else:
-                # Executable not in PATH
-                log.warning(
-                    "Task \"" + target + "\"" +
-                    " executable: \"" + struct["executable"] + "\"" +
-                    " could not be found in PATH. Ignoring",
-                )
+        if "executable" not in struct:
+            taskgraph.task.Task(**struct)
+        elif struct["executable"] in command_to_full_path:
+                taskgraph.task.task_shell_script(**struct)
         else:
-            taskgraph.task.Task(
-                name=target,
-                inputs=inputs,
-                optional_inputs=optional_inputs,
-                values=values,
-            )
+            log.warning("Not registering task " +struct["target"] + ". Executable " + struct["executable"] + " missing from PATH.")
+

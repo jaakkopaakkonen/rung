@@ -5,16 +5,16 @@ import time
 import taskgraph.results
 
 # This file contains everything related to managing the directed asyclic graph
-# containing all the inputs of all tasks and their names
+# containing all the inputs of all tasks and their target names
 
 import logging
 log = logging.getLogger("taskgraph")
 from taskgraph.util import strip_trailing_extension
 
-# Dictionary containing set of all task names
+# Dictionary containing set of all task target names
 # which can be fulfilled by the inputs.
 # Key is inputs as frozenset.
-# Value is set of task names.
+# Value is set of task target names.
 task_names_by_complete_inputs = dict()
 
 # Dictionary of mandatory inputs by task name.
@@ -31,8 +31,8 @@ optional_inputs_of_tasks = dict()
 # All tasks as set in value having single input as key
 tasks_having_input = dict()
 
-# Task by their name
-# Key is task name
+# Task by their target name
+# Key is task target name
 # Value is Task object itself
 tasks_by_name = dict()
 
@@ -52,42 +52,42 @@ def add(task):
     global all_valuenames
     global tasks_having_input
 
-    name = task.name
+    target = task.target
     inputs = frozenset(task.inputs)
 
-    all_valuenames.add(name)
+    all_valuenames.add(target)
     all_valuenames.update(inputs)
     all_valuenames.update(task.optional_inputs)
 
     # task_names_by_complete_inputs
     if inputs not in task_names_by_complete_inputs:
         task_names_by_complete_inputs[inputs] = set()
-    task_names_by_complete_inputs[inputs].add(name)
+    task_names_by_complete_inputs[inputs].add(target)
 
     # inputs_of_tasks
-    mandatory_inputs_of_tasks[name] = inputs
-    optional_inputs_of_tasks[name] = task.optional_inputs
+    mandatory_inputs_of_tasks[target] = inputs
+    optional_inputs_of_tasks[target] = task.optional_inputs
 
     # tasks_having_input
     for input in inputs:
         if input not in tasks_having_input:
             tasks_having_input[input] = set()
-        tasks_having_input[input].add(name)
-    tasks_by_name[name] = task
+        tasks_having_input[input].add(target)
+    tasks_by_name[target] = task
 
-def get_task(name):
+def get_task(target):
     """Retrieves the task based on it's name and all non-optional inputs
        Returns None if not found
     """
     global tasks_by_name
 
     try:
-        return tasks_by_name[name]
+        return tasks_by_name[target]
     except KeyError:
         return None
 
 def final_tasks():
-    """Get all taskss which are not inputs to any other task
+    """Get all tasks which are not inputs to any other task
 
     """
     global mandatory_inputs_of_tasks

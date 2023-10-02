@@ -1,11 +1,4 @@
-def values_as_string(values):
-    result = ""
-    for key in values:
-        value = values[key]
-        if type(value) == str and len(value) > 80:
-            value = value[0:80]
-        result += key+"="+str(value)+"\n"
-    return result
+
 
 
 class ValueStack:

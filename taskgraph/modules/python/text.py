@@ -2,6 +2,7 @@ import random
 import time
 from taskgraph.task import *
 
+@task_func
 def get_random_ascii_data(size=80):
     size = int(size)
     result = ""
@@ -16,18 +17,8 @@ def get_random_ascii_data(size=80):
     return result
 
 # Get random ascii data based on defined length in bytes
-Task(
-    name="data",
-    signature=(
-        get_random_ascii_data,
-        "size",
-    ),
-)
 
-Task(
-    name="wait",
-    signature=(
-        lambda secs: time.sleep(float(secs)),
-        "secs",
-    ),
-)
+@task_func
+def wait(secs):
+    time.sleep(float(secs))
+

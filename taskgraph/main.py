@@ -41,33 +41,33 @@ for path in taskgraph.config.read_external_python_modules():
 taskgraph.modules.refresh_path_executables()
 taskgraph.modules.register_json_modules()
 
-def print_subgraph(name, values=dict(), prefixes=("", "")):
+def print_subgraph(target, values=dict(), prefixes=("", "")):
     # TODO Turn inputs to left and tasks to right
     # TODO consider alphabetic order
-    task = taskgraph.dag.get_task(name)
+    task = taskgraph.dag.get_task(target)
     if not task:
         # name is input, not a task
-        if name in values:
-            print(prefixes[0] + f.GREEN + name)
+        if target in values:
+            print(prefixes[0] + f.GREEN + target)
         else:
-            print(prefixes[0] + f.RED + name)
+            print(prefixes[0] + f.RED + target)
     else:
         all_inputs = sorted(task.inputs) + sorted(task.optional_inputs)
         if not all_inputs:
-            print(prefixes[0] + f.GREEN + name)
+            print(prefixes[0] + f.GREEN + target)
         else:
-            print(prefixes[0] + name)
+            print(prefixes[0] + target)
         i = 0
         while i < len(all_inputs):
             if i < (len(all_inputs) - 1):
                 print_subgraph(
-                    name=all_inputs[i],
+                    target=all_inputs[i],
                     values=values,
                     prefixes=(prefixes[1] + " ├─", prefixes[1] + " │ ")
                 )
             else:
                 print_subgraph(
-                    name=all_inputs[i],
+                    target=all_inputs[i],
                     values=values,
                     prefixes=(prefixes[1] + " └─", prefixes[1] + "   ")
                 )
@@ -97,8 +97,8 @@ def main():
         values = valuestack.get_values()
         print_values(values)
         print("\n")
-        for name in sorted(taskgraph.dag.final_tasks()):
-            print_subgraph(name, values=values)
+        for target in sorted(taskgraph.dag.final_tasks()):
+            print_subgraph(target, values=values)
     else:
         # We have arguments
         # This holds the current input where value is going to be read next

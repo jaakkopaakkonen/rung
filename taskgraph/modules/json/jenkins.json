@@ -1,0 +1,8 @@
+[
+  {
+    "target": "start_build",
+    "executable": "curl",
+    "command_line_arguments": "-verbose http://{jenkins_url}/job/{job}/job/{REVISION}-{VARIANT}-{RELEASE}-build/buildWithParameters --user {username}:${apitoken} --form CLEAN_BUILD=false",
+    "inputs": ["jenkins_url","job","REVISION","VARIANT","RELEASE","username","apitoken"]
+  }
+]
