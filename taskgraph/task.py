@@ -190,12 +190,10 @@ def run_commands(target, commands):
 
     cmd_idx = 0
     while cmd_idx < len(commands):
+        output_lines = ""
+        line = ""
         command = commands[cmd_idx].strip()
         if command:
-            command_result = dict()
-            command_result["startTime"] = time.time()
-            command_result["command"] = command
-            command_result["log"] = list()
             print("CMD " + command, file=sys.stderr)
             process = subprocess.Popen(
                 command,
@@ -219,36 +217,52 @@ def run_commands(target, commands):
                     [],
                 )
                 for outstream in outstream_list:
-                    log_item = dict()
                     outhandle = None
                     out_fileno = outstream.fileno()
                     if out_fileno == stdout_fileno:
                         outhandle = sys.stdout
-                        log_item["stream"] = "stdout"
                     elif out_fileno == stderr_fileno:
                         outhandle = sys.stderr
-                        log_item["stream"] = "stderr"
-                    output = outstream.read(READ_SIZE)
-                    if output:
-                        log_item["time"] = time.time() - \
-                            command_result["startTime"]
-                        log_item["data"] = output
-                        command_result["log"].append(log_item)
-                        output = re.sub(
+                    line += outstream.read(READ_SIZE)
+                    if line:
+                        output_lines += line
+                        line = re.sub(
                             "\n",
                             "\r\n",
-                            output,
+                            line,
                         )
-                        print(output, end='', file=outhandle)
-            command_result["endTime"] = time.time()
-            command_result["pid"] = process.pid
-            command_result["return_code"] = process.returncode
-            results.append(command_result)
+                        print(line, end='', file=outhandle)
+                        line = ""
+            outstream_list, _, _ = select.select(
+                [
+                    process.stdout,
+                    process.stderr,
+                ],
+                [],
+                [],
+            )
+            for outstream in outstream_list:
+                outhandle = None
+                out_fileno = outstream.fileno()
+                if out_fileno == stdout_fileno:
+                    outhandle = sys.stdout
+                elif out_fileno == stderr_fileno:
+                    outhandle = sys.stderr
+                line = outstream.read(READ_SIZE)
+                if line:
+                    output_lines += line
+                    line = re.sub(
+                        "\n",
+                        "\r\n",
+                        line,
+                    )
+                    print(line, end='', file=outhandle)
+                    line = ""
             # Non-zero exit status, break loop
-            if command_result["return_code"]:
+            if process.returncode:
                 cmd_idx = len(commands)
         cmd_idx += 1
-    return results
+    return output_lines.strip()
 
 
 def task_shell_script(**task_struct):
@@ -269,5 +283,4 @@ def task_shell_script(**task_struct):
 
     if "optional_inputs" in task_struct:
         task_params["optional_inputs"] = task_struct["optional_inputs"]
-
     return Task(**task_params)

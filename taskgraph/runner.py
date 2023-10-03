@@ -167,18 +167,9 @@ class TaskRunner:
                 if type(structure[key]) == dict:
                     values[key] = self._run_task_value_structure(structure[key])
                     task = taskgraph.dag.get_task(key)
-                    values[key]["startTime"] = time.time()
-                    values[key]["result"] = task.run(
+                    values[key] = task.run(
                         flatten_values(values[key]),
                     )
-                    values[key]["endTime"] = time.time()
-                    log_values = taskgraph.results.process_results(
-                        key,
-                        values[key],
-                    )
-                    self.valuestack.set_result_values(log_values)
-                    if not taskgraph.results.executed_successfully(values[key]):
-                        break
                 else:
                     value = taskgraph.results.get(structure[key])
                     if value is None:

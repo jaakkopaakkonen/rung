@@ -156,15 +156,6 @@ def main():
                             default=lambda o: str(o),
                         )
                     )
-                    if not taskgraph.results.executed_successfully(
-                        result[argument],
-                    ):
-                        # Failed command, end of loop
-                        i = len(sys.argv)
-                        print(
-                            "Executing target " + argument +
-                            " returned non-zero exit code. Aborting.",
-                        )
             i += 1
         valuestack.print_result_values()
 

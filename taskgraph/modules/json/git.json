@@ -17,8 +17,8 @@
   {
     "target": "push_to_gitlab",
     "executable": "git",
-    "command_line_arguments": "push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{target_branch}",
-    "inputs": ["branch", "target_branch", "remote"]
+    "command_line_arguments": "push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{feature_branch}",
+    "inputs": ["branch", "feature_branch", "target_branch", "remote"]
   }
 ]
 
