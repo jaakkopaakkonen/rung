@@ -5,7 +5,7 @@ import time
 import taskgraph.results
 
 # This file contains everything related to managing the directed asyclic graph
-# containing all the inputs of all tasks and their target names
+# containing all the input names of all tasks and their target names
 
 import logging
 log = logging.getLogger("taskgraph")
@@ -53,11 +53,11 @@ def add(task):
     global tasks_having_input
 
     target = task.target
-    inputs = frozenset(task.inputs)
+    inputs = frozenset(task.input_names)
 
     all_valuenames.add(target)
     all_valuenames.update(inputs)
-    all_valuenames.update(task.optional_inputs)
+    all_valuenames.update(task.optional_input_names)
 
     # task_names_by_complete_inputs
     if inputs not in task_names_by_complete_inputs:
@@ -66,7 +66,7 @@ def add(task):
 
     # inputs_of_tasks
     mandatory_inputs_of_tasks[target] = inputs
-    optional_inputs_of_tasks[target] = task.optional_inputs
+    optional_inputs_of_tasks[target] = task.optional_input_names
 
     # tasks_having_input
     for input in inputs:

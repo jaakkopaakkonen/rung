@@ -8,7 +8,7 @@
     "target": "vpn",
     "executable": "nmcli",
     "command_line_arguments": "connection up {vpn_network}",
-    "inputs": ["vpn_network"]
+    "input_names": ["vpn_network"]
   },
   {
     "target": "wifi",
@@ -19,6 +19,6 @@
     "target": "connect_wifi_network",
     "executable": "nmcli",
     "command_line_arguments": "device wifi connect {SSID} password \"{password}\"",
-    "inputs": ["SSID", "password"]
+    "input_names": ["SSID", "password"]
   }
 ]

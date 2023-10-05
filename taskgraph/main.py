@@ -52,7 +52,7 @@ def print_subgraph(target, values=dict(), prefixes=("", "")):
         else:
             print(prefixes[0] + f.RED + target)
     else:
-        all_inputs = sorted(task.inputs) + sorted(task.optional_inputs)
+        all_inputs = sorted(task.input_names) + sorted(task.optional_input_names)
         if not all_inputs:
             print(prefixes[0] + f.GREEN + target)
         else:

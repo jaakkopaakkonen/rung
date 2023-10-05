@@ -2,5 +2,5 @@
   "target": "send_dbus_message",
   "executable": "dbus-send",
   "command_line_arguments": "--type={type} --dest={destination} {contents}",
-  "inputs": ["type", "destination", "contents"]
+  "input_names": ["type", "destination", "contents"]
 }

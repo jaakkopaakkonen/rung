@@ -114,8 +114,8 @@ class TaskRunner:
                     # sub (preliminary) task
                     if task.values:
                         values.update(task.values)
-                    inputs = set(task.inputs)
-                    all_inputs = inputs.union(set(task.optional_inputs))
+                    inputs = set(task.input_names)
+                    all_inputs = inputs.union(set(task.optional_input_names))
                     # Add fulfilled input values to result
                     valuenames = set(values.keys())
                     for key in valuenames & all_inputs:
@@ -135,8 +135,8 @@ class TaskRunner:
             try:
                 valuenames = set(values.keys())
                 task = taskgraph.dag.get_task(structure)
-                inputs = set(task.inputs)
-                all_inputs = inputs.union(set(task.optional_inputs))
+                inputs = set(task.input_names)
+                all_inputs = inputs.union(set(task.optional_input_names))
                 # Add fulfilled input values to result
                 for key in valuenames & all_inputs:
                     result[key] = values[key]

@@ -36,7 +36,22 @@ def myfunction(myfirstparameter, mysecondparameter)
 
 ```
 
-Inputs are 
+### Command line arguments
+Command line arguments can be specified as groups containing zero or more inputs
+or optional inputs by specifying them as list of strings in `command_line_arguments`
+
+When running the task, of the elements of command line arguments list are included
+if it doesn't contain neither kind of input, it contains mandatory input or it contains
+optional input which is specified among the values.
+```
+{
+    "target": "commit",
+    "executable": "git",
+    "command_line_arguments": ["commit --dry-run", "--file={commit_message_file}", "--message=\"{commit_message}\""],
+    "optional_input_names" : ["commit_message_file", "commit_message"]
+  },
+```
+
 
 ### Runnable part of the task
 The runnable part of the task is relayed in tuple as `Task` constructor second parameter.

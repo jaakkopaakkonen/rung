@@ -14,8 +14,9 @@ def get_function_name_params(function):
     :param function:
     :return:
     """
-    signature_list = list()
-    signature_list.append(function)
+    result = dict()
+    result["callable"] = function
+    result["input_names"] =  list()
     values = dict()
     if not inspect.isfunction(function):
         return None
@@ -23,28 +24,20 @@ def get_function_name_params(function):
         values[name] = value
         if "__defaults__" in values and "__name__" in values:
             break
-    # result["__defaults__"] tuple
-    # result["__name__"] str
-    result = dict()
     result["target"] = values["__name__"]
-    callable_arguments = list()
-    default_values = values["__defaults__"]
-    default_idx = 0
-    for param in inspect.signature(
-        function,
-        follow_wrapped=False,
-    ).parameters:
-        signature_list.append(param)
-        if default_values and len(default_values) > default_idx:
-            if not "optional_inputs" in result:
-                result["optional_inputs"] = list()
-            result["optional_inputs"].append(param)
-        else:
-            if not "inputs" in result:
-                result["inputs"] = list()
-            result["inputs"].append(param)
-        default_idx += 1
-    result["signature"] = tuple(signature_list)
+    all_params = list(
+        inspect.signature(
+            function,
+            follow_wrapped=False,
+        ).parameters,
+    )
+    defaults_len = 0
+    if "__defaults__" in values and values["__defaults__"]:
+        defaults_len = len(values["__defaults__"])
+    result["input_names"] = all_params[:-defaults_len]
+    result["optional_input_names"] = all_params[
+        len(all_params) - defaults_len:
+    ]
     return result
 
 
@@ -155,6 +148,10 @@ def set_stream_nonblocking(stream):
 def argument_subset(values, argument_names):
     """ Construct and return a subset of dictionary values
         containing only keys listed in argument_names.
+        :param values The dictionary which' matching values are to be returnec
+        :param argument_names List or strings and/or dictionaries to be included
+               in returned dictionary.
+               If list item is a dictionary
     """
     result = {}
     for argument in argument_names:
@@ -166,6 +163,21 @@ def argument_subset(values, argument_names):
                 result[key] = argument
         elif argument in values:
             result[key] = values[argument]
+    return result
+
+
+def strip_dictionary_to_keys(d, keylist):
+    """ Construct and return a subset of dictionary values
+        containing only keys listed in argument_names.
+        :param values The dictionary which' matching values are to be returnec
+        :param argument_names List or strings and/or dictionaries to be included
+               in returned dictionary.
+               If list item is a dictionary
+    """
+    result = {}
+    for key in keylist:
+        if key in d:
+            result[key] = d[key]
     return result
 
 

@@ -15,10 +15,16 @@
     "command_line_arguments": "add --update"
   },
   {
+    "target": "commit",
+    "executable": "git",
+    "command_line_arguments": ["commit", "--file={commit_message_file}", "--message=\"{commit_message}\""],
+    "optional_input_names" : ["commit_message_file", "commit_message"]
+  },
+  {
     "target": "push_to_gitlab",
     "executable": "git",
     "command_line_arguments": "push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{feature_branch}",
-    "inputs": ["branch", "feature_branch", "target_branch", "remote"]
+    "input_names": ["branch", "feature_branch", "target_branch", "remote"]
   }
 ]
 
