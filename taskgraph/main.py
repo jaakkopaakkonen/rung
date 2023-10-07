@@ -123,10 +123,31 @@ def main():
                     )
                 i += 1
             elif separator_idx > 0:
-                valuestack.set_command_line_value(
-                    argument[0:separator_idx],
-                    argument[separator_idx+1:],
-                )
+                name = argument[0:separator_idx]
+                value = argument[separator_idx+1:]
+                input_name = taskgraph.dag.get_assignable_target_input_name(name)
+                if input_name is not None:
+                    target = name
+                    valuestack.set_command_line_value(
+                        input_name,
+                        value,
+                    )
+                    runner = taskgraph.runner.TaskRunner(
+                        valuestack,
+                    )
+                    result = runner.run_task(target)
+                    print(
+                        json.dumps(
+                            result,
+                            indent=2,
+                            default=lambda o: str(o),
+                            )
+                        )
+                else:
+                    valuestack.set_command_line_value(
+                        name,
+                        value,
+                    )
             elif argument.startswith("--"):
                 # Value names are prefixed with --
                 # Strip -- prefix

@@ -39,6 +39,9 @@ tasks_by_name = dict()
 
 all_valuenames = set()
 
+all_input_names = set()
+
+all_target_names = set()
 
 def add(task):
     """ Add task to this bookkeeper
@@ -50,11 +53,15 @@ def add(task):
     global optional_inputs_of_tasks
     global tasks_by_name
     global all_valuenames
+    global all_input_names
+    global all_target_names
     global tasks_having_input
 
     target = task.target
     inputs = frozenset(task.input_names)
 
+    all_target_names.add(target)
+    all_input_names.add(inputs)
     all_valuenames.add(target)
     all_valuenames.update(inputs)
     all_valuenames.update(task.optional_input_names)
@@ -74,6 +81,32 @@ def add(task):
             tasks_having_input[input] = set()
         tasks_having_input[input].add(target)
     tasks_by_name[target] = task
+
+
+def get_all_value_names():
+    global all_valuenames
+    return all_valuenames
+
+
+def get_all_target_names():
+    global all_target_names
+    return all_target_names
+
+
+def get_all_input_names():
+    global all_input_names
+    return all_input_names
+
+
+def get_assignable_target_input_name(target_name):
+    if target_name in all_target_names and \
+        target_name not in all_input_names:
+        task = get_task(target_name)
+        if len(task.input_names) == 1:
+            result, = task.input_names
+            return result
+    return None
+
 
 def get_task(target):
     """Retrieves the task based on it's name and all non-optional inputs

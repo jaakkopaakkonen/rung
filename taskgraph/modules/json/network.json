@@ -1,22 +1,23 @@
 [
   {
-    "target": "list_connections",
+    "target": "listNetworkConnections",
     "executable": "nmcli",
     "command_line_arguments": "-terse connection"
   },
   {
-    "target": "vpn",
+    "target": "networkConnection",
     "executable": "nmcli",
-    "command_line_arguments": "connection up {vpn_network}",
-    "input_names": ["vpn_network"]
+    "command_line_arguments": "connection up {connection}",
+    "input_names": ["connection"]
   },
   {
     "target": "wifi",
     "executable": "nmcli",
-    "command_line_arguments": "radio wifi on"
+    "command_line_arguments": "radio wifi {state}",
+    "input_names": ["state"]
   },
   {
-    "target": "connect_wifi_network",
+    "target": "connectWifi",
     "executable": "nmcli",
     "command_line_arguments": "device wifi connect {SSID} password \"{password}\"",
     "input_names": ["SSID", "password"]
