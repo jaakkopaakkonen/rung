@@ -10,21 +10,21 @@
     "command_line_arguments": "remote"
   },
   {
-    "target": "add_updated_to_git",
+    "target": "addUpdatedToGit",
     "executable": "git",
     "command_line_arguments": "add --update"
   },
   {
     "target": "commit",
     "executable": "git",
-    "command_line_arguments": ["commit", "--file={commit_message_file}", "--message=\"{commit_message}\""],
-    "optional_input_names" : ["commit_message_file", "commit_message"]
+    "command_line_arguments": ["commit", "--file={commitMessageFile}", "--message=\"{commitMessage}\""],
+    "optional_input_names" : ["commitMessageFile", "commitMessage"]
   },
   {
-    "target": "push_to_gitlab",
+    "target": "pushToGitlab",
     "executable": "git",
-    "command_line_arguments": "push -o merge_request.create -o merge_request.target={target_branch} {remote} {branch}:{feature_branch}",
-    "input_names": ["branch", "feature_branch", "target_branch", "remote"]
+    "command_line_arguments": "push -o merge_request.create -o merge_request.target={targetBranch} {remote} {branch}:{featureBranch}",
+    "input_names": ["branch", "featureBranch", "targetBranch", "remote"]
   }
 ]
 

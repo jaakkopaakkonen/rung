@@ -15,6 +15,7 @@ log.setLevel(1)
 # Apply everything from modules
 
 
+import taskgraph.exception
 import taskgraph.util
 import taskgraph.config
 import taskgraph.valuestack
@@ -103,82 +104,87 @@ def main():
         # We have arguments
         # This holds the current input where value is going to be read next
         current_input = None
-        i = 1
-        while i < len(sys.argv):
-            argument = sys.argv[i]
-            separator_idx = argument.find("=")
-            if argument.startswith("-f"):
-                i += 1
-                with open(os.path.expanduser(sys.argv[i]), "rb") as jsonfile:
-                    runner = taskgraph.runner.TaskRunner(
-                        valuestack,
-                    )
-                    result = runner.run_tasks(json.load(jsonfile))
-                    print(
-                        json.dumps(
-                            result,
-                            indent=2,
-                            default=lambda o: str(o),
+        try:
+            i = 1
+            while i < len(sys.argv):
+                argument = sys.argv[i]
+                separator_idx = argument.find("=")
+                if argument.startswith("-f"):
+                    i += 1
+                    with open(os.path.expanduser(sys.argv[i]), "rb") as jsonfile:
+                        runner = taskgraph.runner.TaskRunner(
+                            valuestack,
                         )
-                    )
-                i += 1
-            elif separator_idx > 0:
-                name = argument[0:separator_idx]
-                value = argument[separator_idx+1:]
-                input_name = taskgraph.dag.get_assignable_target_input_name(name)
-                if input_name is not None:
-                    target = name
-                    valuestack.set_command_line_value(
-                        input_name,
-                        value,
-                    )
-                    runner = taskgraph.runner.TaskRunner(
-                        valuestack,
-                    )
-                    result = runner.run_task(target)
-                    print(
-                        json.dumps(
-                            result,
-                            indent=2,
-                            default=lambda o: str(o),
+                        result = runner.run_tasks(json.load(jsonfile))
+                        print(
+                            json.dumps(
+                                result,
+                                indent=2,
+                                default=lambda o: str(o),
                             )
                         )
-                else:
-                    valuestack.set_command_line_value(
-                        name,
-                        value,
-                    )
-            elif argument.startswith("--"):
-                # Value names are prefixed with --
-                # Strip -- prefix
-                current_input = argument[2:]
-            else:
-                # No argument name, perhaps it's a value or task
-                if current_input:
-                    # Make possible to create argument lists with plural s
-                    # suffix.
-                    # For instance --recipient a --recipient b ->
-                    #  recipients=[a,b]
-                    valuestack.set_command_line_value(
-                        current_input,
-                        argument,
-                    )
-                    current_input = None
-                # TODO: Array values with plural suffix "s"
-                else:
-                    runner = taskgraph.runner.TaskRunner(
-                        valuestack,
-                    )
-                    result = runner.run_task(argument)
-                    print(
-                        json.dumps(
-                            result,
-                            indent=2,
-                            default=lambda o: str(o),
+                    i += 1
+                elif separator_idx > 0:
+                    name = argument[0:separator_idx]
+                    value = argument[separator_idx+1:]
+                    input_name = taskgraph.dag.get_assignable_target_input_name(name)
+                    if input_name is not None:
+                        target = name
+                        valuestack.set_command_line_value(
+                            input_name,
+                            value,
                         )
-                    )
-            i += 1
-        valuestack.print_result_values()
+                        runner = taskgraph.runner.TaskRunner(
+                            valuestack,
+                        )
+                        result = runner.run_task(target)
+                        print(
+                            json.dumps(
+                                result,
+                                indent=2,
+                                default=lambda o: str(o),
+                                )
+                            )
+                    else:
+                        valuestack.set_command_line_value(
+                            name,
+                            value,
+                        )
+                elif argument.startswith("--"):
+                    # Value names are prefixed with --
+                    # Strip -- prefix
+                    current_input = argument[2:]
+                else:
+                    # No argument name, perhaps it's a value or task
+                    if current_input:
+                        # Make possible to create argument lists with plural s
+                        # suffix.
+                        # For instance --recipient a --recipient b ->
+                        #  recipients=[a,b]
+                        valuestack.set_command_line_value(
+                            current_input,
+                            argument,
+                        )
+                        current_input = None
+                    # TODO: Array values with plural suffix "s"
+                    else:
+                        runner = taskgraph.runner.TaskRunner(
+                            valuestack,
+                        )
+                        result = runner.run_task(argument)
+                        print(
+                            json.dumps(
+                                result,
+                                indent=2,
+                                default=lambda o: str(o),
+                            )
+                        )
+                i += 1
+        except taskgraph.exception.FailedCommand as ex:
+            print(ex)
+            exit(1)
+        finally:
+            valuestack.print_result_values()
 
 
 if __name__ == "__main__":

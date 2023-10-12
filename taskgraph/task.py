@@ -6,9 +6,10 @@ import taskgraph.dag
 import taskgraph.results
 import taskgraph.valuestack
 import taskgraph.util
-
+import taskgraph.exception
 
 import fcntl
+import os
 import pprint
 import re
 import select
@@ -101,7 +102,6 @@ class Task:
         log.warning("Running " + self.target)
         log.warning("with values")
         log.warning("\n" + values_as_string(call_args))
-
 
         result = self.callable(**call_args)
         self.log_result(self.target, result)
@@ -234,7 +234,7 @@ def run_commands(target, commands):
                     line = ""
             # Non-zero exit status, break loop
             if process.returncode:
-                cmd_idx = len(commands)
+                raise(taskgraph.exception.FailedCommand(output_lines.strip()))
         cmd_idx += 1
     return output_lines.strip()
 
@@ -289,10 +289,10 @@ def task_shell_script(
 
         if type(command_line_arguments) == list:
             completed_script_lines = format_argument_list(
-                command_line_arguments,
-                resolved_input_values,
-                input_names,
-                optional_input_names,
+                argument_list=command_line_arguments,
+                input_values=resolved_input_values,
+                input_names=input_names,
+                optional_input_names=optional_input_names,
             )
         else:
             completed_script_lines = command_line_arguments.format(**resolved_input_values)

@@ -1,0 +1,14 @@
+[
+  {
+    "target": "init",
+    "executable": "repo",
+    "command_line_arguments": "init --manifest-url={url} --manifest-branch={branch} --manifest-name={manifest} --platform=auto --current-branch",
+    "input_names": ["url", "branch", "manifest"]
+  },
+  {
+    "target": "sync",
+    "executable": "repo",
+    "command_line_arguments": "sync"
+  }
+]
+

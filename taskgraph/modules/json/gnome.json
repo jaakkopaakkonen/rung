@@ -1,9 +1,16 @@
-{
-  "target": "lock_screen",
-  "input_names": ["send_dbus_message"],
-  "values": {
-    "type":  "method_call",
-    "destination": "org.gnome.ScreenSaver",
-    "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
+[
+  {
+    "target": "lockScreen",
+    "input_names": ["sendDbusMessage"],
+    "values": {
+      "type":  "method_call",
+      "destination": "org.gnome.ScreenSaver",
+      "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
+    }
+  },
+  {
+    "target": "terminalWindow",
+    "executable": "gnome-terminal",
+    "command_line_arguments": "--window"
   }
-}
+]
