@@ -17,14 +17,25 @@
   {
     "target": "commit",
     "executable": "git",
-    "command_line_arguments": ["commit", "--file={commitMessageFile}", "--message=\"{commitMessage}\""],
+    "command_line_arguments": [
+      "commit",
+      " --file={commitMessageFile}",
+      " --message=\"{commitMessage}\""
+    ],
     "optional_input_names" : ["commitMessageFile", "commitMessage"]
   },
   {
     "target": "pushToGitlab",
     "executable": "git",
-    "command_line_arguments": "push -o merge_request.create -o merge_request.target={targetBranch} {remote} {branch}:{featureBranch}",
-    "input_names": ["branch", "featureBranch", "targetBranch", "remote"]
+    "command_line_arguments": [
+      "push",
+      " -o merge_request.create ",
+      " -o merge_request.target={targetBranch}",
+      " {remote}",
+      " {branch}",
+      ":{featureBranch}"
+    ],
+    "optional_input_names": ["branch", "featureBranch", "targetBranch", "remote"]
   }
 ]
 

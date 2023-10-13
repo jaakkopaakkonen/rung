@@ -271,7 +271,7 @@ def format_argument_list(
         else:
             result_argument_list.append(argument_list[arg_idx])
         arg_idx += 1
-    return " ".join(result_argument_list)
+    return "".join(result_argument_list)
 
 
 def task_shell_script(
