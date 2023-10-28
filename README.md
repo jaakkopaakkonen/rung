@@ -1,8 +1,25 @@
-# taskgraph
-taskgraph (graph of tasks by their interrelated dependencies) is 
-a modular framework for testing and everyday operations based on 
-simple small and independent scripts on command line level, 
-and their inter dependencies.
+# Task
+Task is a single piece or module of execution which always has a name, or
+target, in string format.
+
+
+## Content
+Task always has also content of what it actually does.
+The actual work implementation of the task can be defined in a shell script, python 
+code or with json configuration files.
+
+## Inputs
+Tasks may have either optional or mandatory inputs. 
+Input consists of input name and value.
+
+If the value of some input is not known when it is needed, tasks with same name as 
+needed input are executed as needed. 
+
+These tasks will then provide the correct values as inputs for the actual target task 
+to be executed.
+
+## Json configuration
+
 
 ## Functionality
 The framework is divided in two separate but equally important parts. 
@@ -29,7 +46,7 @@ The inputs will be the function parameters the way they are.
 ```
 from taskgraph.task import task_func
 
-@taskfunc
+@taskfunc[network.json](taskgraph%2Fmodules%2Fjson%2Fnetwork.json)
 def myfunction(myfirstparameter, mysecondparameter)
     print(myfirstparameter)
     print(mysecondparameter)

@@ -274,6 +274,30 @@ def format_argument_list(
     return "".join(result_argument_list)
 
 
+def postprocessOutput(output_lines, postprocess_rules):
+    regexps = dict()
+    results = list()
+    current_result = dict()
+    for key in postprocess_rules:
+        regexps[key] = re.compile(postprocess_rules[key])
+    for line in output_lines.split('\n'):
+        for key in regexps:
+            match = regexps[key].search(line)
+            if match:
+                try:
+                    if key in current_result:
+                        # Already result value in place
+                        results.append(current_result)
+                        current_result = dict()
+                    current_result[key] = match.group(1)
+                except IndexError:
+                    pass
+    results.append(current_result)
+    if len(results) == 1:
+        results = results[0]
+    return results
+
+
 def task_shell_script(
     target=None,
     executable=None,
@@ -281,11 +305,13 @@ def task_shell_script(
     input_names=[],
     optional_input_names=[],
     values=None,
+    postprocess=None,
 ):
     def callable(**resolved_input_values):
         nonlocal target
         nonlocal executable
         nonlocal command_line_arguments
+        nonlocal postprocess
 
         if type(command_line_arguments) == list:
             completed_script_lines = format_argument_list(
@@ -300,5 +326,9 @@ def task_shell_script(
         # Add the executable to the beginning of the first line
         completed_script_lines[0] = executable + ' ' + completed_script_lines[0]
         # Run commands
-        return run_commands(target, completed_script_lines)
+        result = run_commands(target, completed_script_lines)
+        if postprocess is not None:
+            result = postprocessOutput(result, postprocess)
+        return result
+
     return Task(target, callable, input_names, optional_input_names, values)

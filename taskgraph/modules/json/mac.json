@@ -1,6 +1,6 @@
 [
   {
-    "target": "lock_screen",
+    "target": "lockScreen",
     "executable": "pmset",
     "command_line_arguments": "displaysleepnow"
   },
@@ -8,5 +8,15 @@
     "target": "sleep",
     "executable": "pmset",
     "command_line_arguments": "sleepnow"
+  },
+  {
+    "target": "networkInterfaces",
+    "executable": "networksetup",
+    "command_line_arguments": "-listallhardwareports",
+    "postprocess": {
+      "name": "^Hardware Port: (.*)",
+      "interface": "^Device: (.*)",
+      "macAddress": "^Ethernet Address: (.*)"
+    }
   }
 ]
