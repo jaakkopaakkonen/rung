@@ -1,7 +1,7 @@
 [
   {
     "target": "lockScreen",
-    "input_names": ["sendDbusMessage"],
+    "inputs": ["sendDbusMessage"],
     "values": {
       "type":  "method_call",
       "destination": "org.gnome.ScreenSaver",
@@ -11,6 +11,6 @@
   {
     "target": "terminalWindow",
     "executable": "gnome-terminal",
-    "command_line_arguments": "--window"
+    "commandLineArguments": "--window"
   }
 ]

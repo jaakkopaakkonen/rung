@@ -2,32 +2,32 @@
   {
     "target": "branch",
     "executable": "git",
-    "command_line_arguments": "branch --show-current"
+    "commandLineArguments": "branch --show-current"
   },
   {
     "target": "remote",
     "executable": "git",
-    "command_line_arguments": "remote"
+    "commandLineArguments": "remote"
   },
   {
     "target": "addUpdatedToGit",
     "executable": "git",
-    "command_line_arguments": "add --update"
+    "commandLineArguments": "add --update"
   },
   {
     "target": "commit",
     "executable": "git",
-    "command_line_arguments": [
+    "commandLineArguments": [
       "commit",
       " --file={commitMessageFile}",
       " --message=\"{commitMessage}\""
     ],
-    "optional_input_names" : ["commitMessageFile", "commitMessage"]
+    "optionalInputs" : ["commitMessageFile", "commitMessage"]
   },
   {
     "target": "pushToGitlab",
     "executable": "git",
-    "command_line_arguments": [
+    "commandLineArguments": [
       "push",
       " -o merge_request.create ",
       " -o merge_request.target={targetBranch}",
@@ -35,7 +35,8 @@
       " {branch}",
       ":{featureBranch}"
     ],
-    "optional_input_names": ["branch", "featureBranch", "targetBranch", "remote"]
+    "inputs": ["remote"],
+    "optionalInputs": ["branch", "featureBranch", "targetBranch"]
   }
 ]
 

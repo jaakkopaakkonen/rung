@@ -99,13 +99,10 @@ def get_all_input_names():
 
 
 def get_assignable_target_input_name(target_name):
-    if target_name in all_target_names and \
-       target_name not in all_input_names:
-        task = get_task(target_name)
-        if len(task.input_names) == 1:
-            result, = task.input_names
-            return result
-    return None
+    task = get_task(target_name)
+    if not task:
+        return None
+    return task.default_input
 
 
 def get_task(target):

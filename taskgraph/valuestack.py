@@ -1,6 +1,4 @@
 
-
-
 class ValueStack:
     """ValueStack stores and manages input values from several different layers
     and sources, and is responsible to providing them with correct overriding

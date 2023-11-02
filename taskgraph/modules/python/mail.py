@@ -52,7 +52,7 @@ def get_int(min, max):
         return random.randrange(min, max + 1)
 
 @task_func
-def mail_body(
+def mailBody(
     size,
     priority=None,
     Subject=None,
@@ -93,7 +93,7 @@ def mail_body(
 
 # Send smtp mail
 @task_func
-def send_smtp_mail(host, From, To, mail_body):
+def sendSmtpMail(host, From, To, mailBody):
      return smtplib.SMTP(host=host,).sendmail(
         from_addr=From,
         to_addrs=To,
@@ -101,7 +101,7 @@ def send_smtp_mail(host, From, To, mail_body):
     )
 
 @task_func
-def get_imap_mails(username, password, host):
+def getImapMails(username, password, host):
     result=[]
     try:
         imap = imaplib.IMAP4(host, 143)
@@ -127,7 +127,7 @@ def get_imap_mails(username, password, host):
 
 
 @task_func
-def remove_all_imap_mails(username, password, host):
+def removeAllImapMails(username, password, host):
     result=[]
     try:
         imap = imaplib.IMAP4(host, 143)

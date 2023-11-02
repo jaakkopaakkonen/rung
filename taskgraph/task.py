@@ -40,8 +40,9 @@ class Task:
         self,
         target=None,
         callable=None,
-        input_names=[],
-        optional_input_names=[],
+        inputs=[],
+        optionalInputs=[],
+        defaultInput=None,
         values=None,
     ):
         """Add and register new task to be used as input for other tasks
@@ -65,10 +66,10 @@ class Task:
         # from the first parameter in signature
 
         # Other mandatory input names or prerequisites for this task
-        self.input_names = frozenset(input_names)
+        self.input_names = frozenset(inputs)
         # Optional input names or prerequisites for this task
-        self.optional_input_names = frozenset(optional_input_names)
-
+        self.optional_input_names = frozenset(optionalInputs)
+        self.default_input = defaultInput
         self.values = values
         self.callable = callable
         taskgraph.dag.add(self)
@@ -301,27 +302,28 @@ def postprocessOutput(output_lines, postprocess_rules):
 def task_shell_script(
     target=None,
     executable=None,
-    command_line_arguments=None,
-    input_names=[],
-    optional_input_names=[],
+    commandLineArguments=None,
+    inputs=[],
+    optionalInputs=[],
+    defaultInput=None,
     values=None,
     postprocess=None,
 ):
     def callable(**resolved_input_values):
         nonlocal target
         nonlocal executable
-        nonlocal command_line_arguments
+        nonlocal commandLineArguments
         nonlocal postprocess
 
-        if type(command_line_arguments) == list:
+        if type(commandLineArguments) == list:
             completed_script_lines = format_argument_list(
-                argument_list=command_line_arguments,
+                argument_list=commandLineArguments,
                 input_values=resolved_input_values,
-                input_names=input_names,
-                optional_input_names=optional_input_names,
+                input_names=inputs,
+                optional_input_names=optionalInputs,
             )
         else:
-            completed_script_lines = command_line_arguments.format(**resolved_input_values)
+            completed_script_lines = commandLineArguments.format(**resolved_input_values)
         completed_script_lines = completed_script_lines.split("\n")
         # Add the executable to the beginning of the first line
         completed_script_lines[0] = executable + ' ' + completed_script_lines[0]
@@ -330,5 +332,11 @@ def task_shell_script(
         if postprocess is not None:
             result = postprocessOutput(result, postprocess)
         return result
-
-    return Task(target, callable, input_names, optional_input_names, values)
+    return Task(
+        target=target,
+        callable=callable,
+        inputs=inputs,
+        optionalInputs=optionalInputs,
+        defaultInput=defaultInput,
+        values=values,
+    )

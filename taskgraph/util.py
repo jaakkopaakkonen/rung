@@ -16,7 +16,7 @@ def get_function_name_params(function):
     """
     result = dict()
     result["callable"] = function
-    result["input_names"] =  list()
+    result["inputs"] =  list()
     values = dict()
     if not inspect.isfunction(function):
         return None
@@ -34,10 +34,13 @@ def get_function_name_params(function):
     defaults_len = 0
     if "__defaults__" in values and values["__defaults__"]:
         defaults_len = len(values["__defaults__"])
-    result["input_names"] = all_params[:-defaults_len]
-    result["optional_input_names"] = all_params[
-        len(all_params) - defaults_len:
-    ]
+    if defaults_len == 0:
+        result["inputs"] = all_params
+    else:
+        result["inputs"] = all_params[:-defaults_len]
+        result["optionalInputs"] = all_params[
+            len(all_params) - defaults_len:
+        ]
     return result
 
 

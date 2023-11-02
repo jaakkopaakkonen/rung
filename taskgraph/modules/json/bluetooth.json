@@ -1,7 +1,7 @@
 {
   "target": "bluetooth",
   "executable": "bluetoothctl",
-  "command_line_arguments": "power {state}",
-  "input_names": ["state"]
+  "commandLineArguments": "power {state}",
+  "inputs": ["state"]
 }
 

@@ -2,29 +2,29 @@
   {
     "target": "ssh",
     "executable": "ssh",
-    "command_line_arguments": "-A -o StrictHostKeyChecking=accept-new {host}",
-    "input_names": ["host"]
+    "commandLineArguments": "-A -o StrictHostKeyChecking=accept-new {host}",
+    "inputs": ["host"]
   },
   {
     "target": "scp",
     "executable": "scp",
-    "command_line_arguments": [
+    "commandLineArguments": [
       "{sourceHost}:", "{sourceFile}", " ",
       "{destinationHost}:","{destinationFile}"
     ],
-    "input_names": ["sourceFile"],
-    "optional_input_names": ["sourceHost", "destinationHost", "destinationFile"]
+    "inputs": ["sourceFile"],
+    "optionalInputs": ["sourceHost", "destinationHost", "destinationFile"]
   },
   {
     "target": "updateSshKey",
     "executable": "ssh-keyscan",
-    "command_line_arguments": "{host} >> ~/.ssh/known_hosts",
-    "input_names": ["host"]
+    "commandLineArguments": "{host} >> ~/.ssh/known_hosts",
+    "inputs": ["host"]
   },
   {
     "target": "removeSshKey",
     "executable": "ssh-keygen",
-    "command_line_arguments": "-f ~/.ssh/known_hosts -R {host}",
-    "input_names": ["host"]
+    "commandLineArguments": "-f ~/.ssh/known_hosts -R {host}",
+    "inputs": ["host"]
   }
 ]

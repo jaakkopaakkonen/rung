@@ -18,6 +18,18 @@ needed input are executed as needed.
 These tasks will then provide the correct values as inputs for the actual target task 
 to be executed.
 
+Task can have one special default input which' value can be provided without explicitly 
+defining the input name by:
+``` tg targetName=defaultInputValue```
+
+For instance target `networkConnection` has only one input, which is also the default input, 
+called `connection`. Since the only input is defined also as default input, instead of 
+
+`tg connection=MyConnection networkConnection`,
+
+ you can just write 
+ 
+`tg networkConnection=MyConnection`. 
 ## Json configuration
 
 
@@ -64,8 +76,8 @@ optional input which is specified among the values.
 {
     "target": "commit",
     "executable": "git",
-    "command_line_arguments": ["commit --dry-run", "--file={commit_message_file}", "--message=\"{commit_message}\""],
-    "optional_input_names" : ["commit_message_file", "commit_message"]
+    "commandLineArguments": ["commit --dry-run", "--file={commit_message_file}", "--message=\"{commit_message}\""],
+    "optionalInputs" : ["commit_message_file", "commit_message"]
   },
 ```
 
