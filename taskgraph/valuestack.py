@@ -19,7 +19,6 @@ class ValueStack:
         :param value_names: List of names used as name or input names
         """
         self.value_names = value_names
-        self.blocked_values = set()
         # Dictionary containing values defined in system environment variables
         self.environment_values = dict()
         self.result_values = dict()

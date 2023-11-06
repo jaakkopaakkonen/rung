@@ -127,7 +127,9 @@ def main():
                 elif separator_idx > 0:
                     name = argument[0:separator_idx]
                     value = argument[separator_idx+1:]
-                    input_name = taskgraph.dag.get_assignable_target_input_name(name)
+                    input_name = taskgraph.dag.get_assignable_target_input_name(
+                        name,
+                    )
                     if input_name is not None:
                         target = name
                         valuestack.set_command_line_value(
@@ -143,13 +145,18 @@ def main():
                                 result,
                                 indent=2,
                                 default=lambda o: str(o),
-                                )
                             )
-                    else:
-                        valuestack.set_command_line_value(
-                            name,
-                            value,
                         )
+                    else:
+                        runner = taskgraph.runner.TaskRunner(valuestack)
+                        if runner.is_runnable(value):
+                            result = runner.run_task(value)
+                            valuestack.set_result_values({name: result[value]})
+                        else:
+                            valuestack.set_command_line_value(
+                                name,
+                                value,
+                            )
                 elif argument.startswith("--"):
                     # Value names are prefixed with --
                     # Strip -- prefix

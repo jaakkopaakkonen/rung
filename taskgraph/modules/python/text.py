@@ -18,7 +18,7 @@ def get_random_ascii_data(size=80):
 
 # Get random ascii data based on defined length in bytes
 
-@task_func
+@task_func(defaultInput="secs")
 def wait(secs):
     time.sleep(float(secs))
 

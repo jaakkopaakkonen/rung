@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import pprint
+import subprocess
 
 import taskgraph.task
 
@@ -21,7 +22,7 @@ def is_executable(filepath):
 
 # Dictionary with simple command as key and full path to executable as value
 command_to_full_path = collections.OrderedDict()
-
+builtin_commands = set()
 
 def refresh_path_executables(paths=None):
     global command_to_full_path
@@ -38,7 +39,7 @@ def refresh_path_executables(paths=None):
             for filepath in dir.iterdir():
                 if is_executable(filepath):
                     command = filepath.name
-                    if not command in command_to_full_path:
+                    if command not in command_to_full_path:
                         command_to_full_path[command] = filepath
 
 
@@ -50,8 +51,12 @@ def register_json_modules(directory=None):
         directory = pathlib.Path(directory).resolve()
     for jsonfile in (directory / "json").iterdir():
         with jsonfile.open(mode="rb") as fp:
-            taskstruct = json.load(fp)
-        struct_to_task(taskstruct)
+            try:
+                taskstruct = json.load(fp)
+                struct_to_task(taskstruct)
+            except json.decoder.JSONDecodeError:
+                log.warning("Could not parse " + str(jsonfile))
+
 
 
 def struct_to_task(struct):

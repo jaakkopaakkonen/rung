@@ -10,7 +10,7 @@ def flatten_values(values):
     values = copy.deepcopy(values)
     result = dict()
     for key in values:
-        if type(values[key]) == dict:
+        if isinstance(values[key], dict):
             result.update(
                 flatten_values(values[key])
             )
@@ -37,17 +37,30 @@ class TaskRunner:
     def __init__(self, valuestack=None):
         self.valuestack = valuestack
         self.resolved_keys = set()
+        self.task_value_structure = None
+
+    def is_runnable(self, task_name):
+        result = False
+        try:
+            self.task_value_structure = self.create_task_value_structure(
+                structure={task_name:{}},
+                values = self.valuestack.get_values(),
+            )
+            result = True
+        except AttributeError:
+            pass
+        return result
 
     def run_tasks(self, structure):
         values = dict()
         if self.valuestack:
             values = self.valuestack.get_values()
-        return self._run_task_value_structure(
-            self._create_task_value_structure(
+        if self.task_value_structure is None:
+            self.task_value_structure = self.create_task_value_structure(
                 structure=structure,
                 values=values,
-            ),
-        )
+            )
+        return self._run_task_value_structure(self.task_value_structure)
 
     def run_task(self, task_name):
         return self.run_tasks({task_name: {}})
@@ -63,7 +76,7 @@ class TaskRunner:
             pass
         return value
 
-    def _create_task_value_structure(
+    def create_task_value_structure(
         self,
         structure=dict(),
         values=dict(),
@@ -80,7 +93,7 @@ class TaskRunner:
             result = list()
             for item in structure:
                 result.append(
-                    self._create_task_value_structure(item, values, target)
+                    self.create_task_value_structure(item, values, target)
                 )
             return result
         elif type(structure) == dict:
@@ -88,20 +101,20 @@ class TaskRunner:
             dictkeys = set()
             result = dict()
             for key in structure:
-                if type(structure[key]) == dict:
+                if isinstance(structure[key], dict):
                     dictkeys.add(key)
                 else:
                     # First round, store only input values
                     values[key] = structure[key]
             # Next process keys with dictionary value
             for key in dictkeys:
-                result[key] = self._create_task_value_structure(
+                result[key] = self.create_task_value_structure(
                     structure[key],
                     values=values,
                     target=key,
                 )
             if "tasks" in structure:
-                return self._create_task_value_structure(
+                return self.create_task_value_structure(
                     structure["tasks"],
                     values,
                     target,
@@ -122,7 +135,7 @@ class TaskRunner:
                         result[key] = self._resolve_value(key, values)
                     # Process missing input values
                     for key in inputs - valuenames - dictkeys:
-                        result[key] = self._create_task_value_structure(
+                        result[key] = self.create_task_value_structure(
                             target=key,
                             values=values,
                         )
@@ -142,7 +155,7 @@ class TaskRunner:
                     result[key] = values[key]
                 # Process missing input values
                 for key in inputs - valuenames:
-                    result[key] = self._create_task_value_structure(
+                    result[key] = self.create_task_value_structure(
                         target=key,
                         values=values,
                     )

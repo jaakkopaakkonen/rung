@@ -54,9 +54,9 @@ class Task:
             in values is different from the argument actual argument name.
             If dictionary format is used, the argument actual argument name
             for the executable is key and input as value.
-        :param input_names: Additional input names as list, tuple or separate parameters,
-            which are neccessary for this task but are not relayed to the
-            signature executable call.
+        :param input_names: Additional input names as list,
+            tuple or separate parameters, which are neccessary for this task
+            but are not relayed to the signature executable call.
         """
         # The name of this task to bue used by run_task
         self.target = target
@@ -163,9 +163,9 @@ def run_commands(target, commands):
     READ_SIZE = 8192
     results = list()
 
+    output_lines = ""
     cmd_idx = 0
     while cmd_idx < len(commands):
-        output_lines = ""
         line = ""
         command = commands[cmd_idx].strip()
         if command:
@@ -315,18 +315,24 @@ def task_shell_script(
         nonlocal commandLineArguments
         nonlocal postprocess
 
-        if type(commandLineArguments) == list:
-            completed_script_lines = format_argument_list(
-                argument_list=commandLineArguments,
-                input_values=resolved_input_values,
-                input_names=inputs,
-                optional_input_names=optionalInputs,
-            )
+        if not commandLineArguments:
+            completed_script_lines = [executable]
         else:
-            completed_script_lines = commandLineArguments.format(**resolved_input_values)
-        completed_script_lines = completed_script_lines.split("\n")
-        # Add the executable to the beginning of the first line
-        completed_script_lines[0] = executable + ' ' + completed_script_lines[0]
+            if type(commandLineArguments) == list:
+                completed_script_lines = format_argument_list(
+                    argument_list=commandLineArguments,
+                    input_values=resolved_input_values,
+                    input_names=inputs,
+                    optional_input_names=optionalInputs,
+                )
+            else:
+                completed_script_lines = commandLineArguments.format(
+                    **resolved_input_values,
+                )
+            completed_script_lines = completed_script_lines.split("\n")
+            # Add the executable to the beginning of the first line
+            completed_script_lines[0] = executable + ' ' + \
+                completed_script_lines[0]
         # Run commands
         result = run_commands(target, completed_script_lines)
         if postprocess is not None:

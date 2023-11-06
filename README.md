@@ -2,11 +2,15 @@
 Task is a single piece or module of execution which always has a name, or
 target, in string format.
 
-
-## Content
 Task always has also content of what it actually does.
-The actual work implementation of the task can be defined in a shell script, python 
+
+The content, the actual work implementation of the task can be defined in a shell script, python 
 code or with json configuration files.
+
+Json configuration files for task definitions end up calling executable binaries in the system with different argument values.
+Python task definitions usually do not call external executables but stay in the python domain.
+
+You can write your own task or use the tasks coming with the framework.
 
 ## Inputs
 Tasks may have either optional or mandatory inputs. 
@@ -30,25 +34,21 @@ called `connection`. Since the only input is defined also as default input, inst
  you can just write 
  
 `tg networkConnection=MyConnection`. 
-## Json configuration
 
 
-## Functionality
-The framework is divided in two separate but equally important parts. 
+## Assigning variables
+You can assign the target value of the target to a new variable with
+```
+tg previousDirectory=currentDirectory
+```
+The `currentDirectory` task is executed and it's content is stored to new variable 
+which can be used as input to other task later on by:
 
-The scripts aka. tasks which describe *what* is to be done with the input values, 
-and input values themselves which' control which scripts are to be executed in which order.
+```
+tg changeDirectory=previousDirectory
+```
 
-## Tasks
-Tasks can be python functions or shell scripts for now.
-
-You can write your own task or use the tasks coming with the framework.
-
-Each task has set of zero or more inputs , mandatory or optional, 
-a name and executable part (python function, command or shell script).
-
-All tasks have a string name. Inputs are name value pairs, both are strings.
-
+## Python functions
 
 `task_func` creates task with executable content (the function contents),
 target name (the function name) and inputs.
