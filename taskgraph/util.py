@@ -1,9 +1,13 @@
+import colorama
 import fcntl
 import inspect
 import logging
 import os
 import pathlib
 import types
+
+
+import taskgraph.matrix
 
 log = logging.getLogger("taskgraph")
 
@@ -201,3 +205,87 @@ def get_matching_file_basenames(dir, pattern='*'):
     for path in dir.glob(pattern):
         basenames.add(path.stem)
     return basenames
+
+
+def get_crossing_char(left, up, right, down):
+    if left and not up and right and not down:
+        return '─'
+    if not left and up and not right and down:
+        return '│'
+    if left and not up and not right and down:
+        return '┐'
+    if left and up and right and not down:
+        return '┴'
+    if left and up and not right and down:
+        return '┤'
+    return ' '
+
+
+def transpose(matrix):
+    result = list()
+    taskgraph.matrix.fill_matrix_none_to_width(matrix)
+    for row in matrix:
+        row = list(row)
+        row.reverse()
+        result.insert(0, row)
+    return taskgraph.matrix.remove_trailing_none(result)
+
+
+def format_tree_box(row_items, runner):
+    row_items = transpose(row_items)
+    # get column widths
+    column_lengths = [0] * len(row_items[-1])
+    for row in row_items:
+        col_idx = 0
+        while col_idx < len(row):
+            item = row[col_idx]
+            if item:
+                item_length = runner.get_printable_len(item)
+                if column_lengths[col_idx] < item_length:
+                    column_lengths[col_idx] = item_length
+            col_idx += 1
+    # get row lengths
+    row_lengths = [0] * len(row_items)
+    row_idx = 0
+    while row_idx < len(row_items):
+        row_lengths[row_idx] = len(row_items[row_idx])
+        row_idx += 1
+    coming_down_columns = [False] * max(row_lengths)
+    # Create tree graph
+    output = ""
+    row_idx = 0
+    while row_idx < len(row_items):
+        row = row_items[row_idx]
+        col_idx = 0
+        while col_idx < len(coming_down_columns):
+            if col_idx < len(row):
+                item = row[col_idx]
+                pad_length = column_lengths[col_idx]
+                up = coming_down_columns[col_idx]
+                if item is None:
+                    output += pad_length * ' '
+                    down = up
+                    left = False
+                    right = False
+                else:
+                    # Create map graphics
+                    pad_length -= runner.get_printable_len(item)
+                    output += runner.get_printable_form(item)
+                    output += pad_length * '─'
+                    left = True
+                    right = (col_idx + 1) < row_lengths[row_idx]
+                    down = not right and \
+                       (col_idx < (len(column_lengths)-1)) and \
+                       (row_idx < (len(row_items)-1))
+                    coming_down_columns[col_idx] = down
+            else:
+                output += column_lengths[col_idx] * ' '
+                left = False
+                right = False
+                up = coming_down_columns[col_idx]
+                down = up
+            output += get_crossing_char(left, up, right, down)
+            col_idx += 1
+        output += '\n'
+        row_idx += 1
+    return output

@@ -66,9 +66,9 @@ class Task:
         # from the first parameter in signature
 
         # Other mandatory input names or prerequisites for this task
-        self.input_names = frozenset(inputs)
+        self.input_names = list(inputs)
         # Optional input names or prerequisites for this task
-        self.optional_input_names = frozenset(optionalInputs)
+        self.optional_input_names = list(optionalInputs)
         self.default_input = defaultInput
         self.values = values
         self.callable = callable
@@ -88,11 +88,11 @@ class Task:
         call_args.update(
             taskgraph.util.argument_subset(
                 values,
-                self.input_names.union(self.optional_input_names),
+                self.input_names + self.optional_input_names,
             )
         )
         fulfilled_dependencies = set(call_args.keys())
-        missing_dependencies = self.input_names - fulfilled_dependencies
+        missing_dependencies = set(self.input_names) - fulfilled_dependencies
         if missing_dependencies:
             # Not all parameters fullfilled
             log.warning("Not running " + self.target)

@@ -9,7 +9,6 @@ import taskgraph.results
 
 import logging
 log = logging.getLogger("taskgraph")
-from taskgraph.util import strip_trailing_extension
 
 # Dictionary containing set of all task target names
 # which can be fulfilled by the inputs.
@@ -82,6 +81,10 @@ def add(task):
         tasks_having_input[input].add(target)
     tasks_by_name[target] = task
 
+
+def is_task(name):
+    global tasks_by_name
+    return name in tasks_by_name
 
 def get_all_value_names():
     global all_valuenames

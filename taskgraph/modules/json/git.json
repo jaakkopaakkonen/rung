@@ -37,6 +37,13 @@
     ],
     "inputs": ["remote"],
     "optionalInputs": ["branch", "featureBranch", "targetBranch"]
+  },
+  {
+    "target": "commitId",
+    "executable": "git",
+    "commandLineArguments": [
+      "rev-parse HEAD"
+    ]
   }
 ]
 

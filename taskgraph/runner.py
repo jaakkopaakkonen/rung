@@ -1,3 +1,4 @@
+import colorama
 import copy
 import logging
 import time
@@ -39,12 +40,38 @@ class TaskRunner:
         self.resolved_keys = set()
         self.task_value_structure = None
 
+    def is_value(self, name):
+        return self.valuestack.is_valuename(name)
+
+    def get_value(self, valuename):
+        if self.is_value(valuename):
+            return self.valuestack.get_value(valuename)
+
+    def get_printable_len(self, name):
+        value = self.get_value(name)
+        if value is not None:
+            return len(name) + 1 + len(value)
+        return len(name)
+
+    def get_printable_form(self, name):
+        value = self.get_value(name)
+        if value is not None:
+            return colorama.Fore.GREEN + \
+               name + \
+               '=' + value + \
+               colorama.Fore.RESET
+        if not taskgraph.dag.is_task(name):
+            return colorama.Fore.RED + \
+             name + \
+             colorama.Fore.RESET
+        return name
+
     def is_runnable(self, task_name):
         result = False
         try:
             self.task_value_structure = self.create_task_value_structure(
                 structure={task_name:{}},
-                values = self.valuestack.get_values(),
+                values=self.valuestack.get_values(),
             )
             result = True
         except AttributeError:
@@ -68,7 +95,7 @@ class TaskRunner:
     def _resolve_value(self, key, values):
         value = values[key]
         try:
-            if value not in self.resolved_keys and type(value) == str:
+            if value not in self.resolved_keys and isinstance(value, str):
                 self.resolved_keys.add(key)
                 nextvalue = self._resolve_value(value, values)
                 value = nextvalue
@@ -160,7 +187,7 @@ class TaskRunner:
                         values=values,
                     )
             except AttributeError as ae:
-                log.error("No value for \""+target+"\"")
+                log.error("No value for \"" + target + "\"")
                 raise AttributeError("No value for \""+target+"\"") from ae
             return {structure: result}
 

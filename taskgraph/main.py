@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import glob
 import importlib.util
 import json
 import logging
@@ -21,61 +22,49 @@ import taskgraph.config
 import taskgraph.valuestack
 import taskgraph.runner
 import taskgraph.modules
+import taskgraph.matrix
 
 colorama.init(autoreset=True)
 
 # TODO: Use same scheme as below with reading external modules so that we can import
 # them with full name
 # https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path
+
+taskgraph.modules.refresh_path_executables()
+
 from taskgraph.modules.python import *
 
 
-# Read and import external modules
-for path in taskgraph.config.read_external_python_modules():
-    module_name = taskgraph.util.get_basename_without_ext(path)
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
+external_module_path = taskgraph.config.initialize_external_modules()
 
+
+if external_module_path:
+    # Read and import external python modules
+    for path in glob.glob(external_module_path + "/python/*.py"):
+        module_name = taskgraph.util.get_basename_without_ext(path)
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+    # Read and register external json modules
+    taskgraph.modules.register_json_modules(
+        directory=external_module_path + "/json",
+    )
+
+
+# Read and import external json modules
 # Read and import json modules
-taskgraph.modules.refresh_path_executables()
 taskgraph.modules.register_json_modules()
 
-def print_subgraph(target, values=dict(), prefixes=("", "")):
-    # TODO Turn inputs to left and tasks to right
-    # TODO consider alphabetic order
-    task = taskgraph.dag.get_task(target)
-    if not task:
-        # name is input, not a task
-        if target in values:
-            print(prefixes[0] + f.GREEN + target)
-        else:
-            print(prefixes[0] + f.RED + target)
-    else:
-        all_inputs = sorted(task.input_names) + sorted(task.optional_input_names)
-        if not all_inputs:
-            print(prefixes[0] + f.GREEN + target)
-        else:
-            print(prefixes[0] + target)
-        i = 0
-        while i < len(all_inputs):
-            if i < (len(all_inputs) - 1):
-                print_subgraph(
-                    target=all_inputs[i],
-                    values=values,
-                    prefixes=(prefixes[1] + " ├─", prefixes[1] + " │ ")
-                )
-            else:
-                print_subgraph(
-                    target=all_inputs[i],
-                    values=values,
-                    prefixes=(prefixes[1] + " └─", prefixes[1] + "   ")
-                )
-            i += 1
-    # Print empty line after every major task
-    if prefixes == ("", ""):
-        print()
+
+def print_target_tree(runner):
+    for target in sorted(taskgraph.dag.final_tasks()):
+        print(
+            taskgraph.util.format_tree_box(
+                taskgraph.matrix.task_to_matrix(target),
+                runner,
+            ),
+        )
 
 
 def print_values(values=dict()):
@@ -98,8 +87,8 @@ def main():
         values = valuestack.get_values()
         print_values(values)
         print("\n")
-        for target in sorted(taskgraph.dag.final_tasks()):
-            print_subgraph(target, values=values)
+        runner = taskgraph.runner.TaskRunner(valuestack)
+        print_target_tree(runner)
     else:
         # We have arguments
         # This holds the current input where value is going to be read next
@@ -111,7 +100,9 @@ def main():
                 separator_idx = argument.find("=")
                 if argument.startswith("-f"):
                     i += 1
-                    with open(os.path.expanduser(sys.argv[i]), "rb") as jsonfile:
+                    with open(
+                        os.path.expanduser(sys.argv[i]), "rb",
+                    ) as jsonfile:
                         runner = taskgraph.runner.TaskRunner(
                             valuestack,
                         )

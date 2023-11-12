@@ -46,10 +46,10 @@ def refresh_path_executables(paths=None):
 def register_json_modules(directory=None):
     global command_to_full_path
     if directory is None:
-        directory = pathlib.Path(__file__).parent.resolve()
+        directory = pathlib.Path(__file__).parent.resolve() / "json"
     else:
         directory = pathlib.Path(directory).resolve()
-    for jsonfile in (directory / "json").iterdir():
+    for jsonfile in directory.iterdir():
         with jsonfile.open(mode="rb") as fp:
             try:
                 taskstruct = json.load(fp)
@@ -58,10 +58,10 @@ def register_json_modules(directory=None):
                 log.warning("Could not parse " + str(jsonfile))
 
 
-
 def struct_to_task(struct):
     """Check whether struct contains executable and it is in PATH.
-       If no executable or it is in PATH, relay task forward to task_shell_script
+       If no executable or it is in PATH, relay task forward to
+       task_shell_script
 
     :param struct:
     :return:
@@ -74,8 +74,11 @@ def struct_to_task(struct):
         if "executable" not in struct:
             taskgraph.task.Task(**struct)
         elif struct["executable"] in command_to_full_path:
-                # Executable exists in PATH
-                taskgraph.task.task_shell_script(**struct)
+            # Executable exists in PATH
+            taskgraph.task.task_shell_script(**struct)
         else:
-            log.warning("Not registering task " +struct["target"] + ". Executable " + struct["executable"] + " missing from PATH.")
-
+            log.warning(
+                "Not registering task " + struct["target"] +
+                ". Executable " + struct["executable"] +
+                " missing from PATH.",
+            )

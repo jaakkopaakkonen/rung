@@ -7,20 +7,19 @@ import pathlib
 import taskgraph.util
 
 
-def read_external_python_modules():
+def initialize_external_modules():
     """
     Reads file under user home directory ~/.taskgraph/config
     and search for
     [taskgraph]
-    external_modules_python = giturl
+    externalModules = giturl
 
     in that config file.
-    Creates ~/.taskgraph/external_modules/python directory and clones given git url to that directory.
+    Creates ~/.taskgraph/externalModules/girepo directory and clones given git url to that directory.
     Adds modules cloned from that to taskgraph
     :return: List of modules downloaded from git repo
     """
 
-    # TODO: Implement json modules also
     # Find the config file name
     homedir = str(pathlib.Path.home())
     config_file = homedir + "/.taskgraph/config"
@@ -30,12 +29,12 @@ def read_external_python_modules():
         parser = configparser.ConfigParser()
         parser.read(config_file)
     #    try:
-        repo_url = parser.get("taskgraph", "external_modules_python")
+        repo_url = parser.get("taskgraph", "externalModules")
         # TODO: Add functionality to handle circumstances on updates from one side or another
         # TODO: Make sure git repo is not uselessly cloned
         if repo_url:
             # Create directory
-            dest_directory = homedir + "/.taskgraph/external_modules/python"
+            dest_directory = homedir + "/.taskgraph/externalModules"
             try:
                 os.mkdir(dest_directory)
             except:
@@ -44,7 +43,7 @@ def read_external_python_modules():
             repo = git.Git(dest_directory)
             try:
                 repo.clone(repo_url)
-            except git.exc.GitCommandError:
+            except git.exc.GitCommandError as gegce:
                 pass
             finally:
                 # Clean up repo object
@@ -54,7 +53,8 @@ def read_external_python_modules():
             module_name = taskgraph.util.get_basename_without_ext(repo_url)
             if dest_directory[-1] != "/":
                 dest_directory += "/"
-            module_path = dest_directory + module_name
-            return glob.glob(module_path + "/*.py")
+            return dest_directory + module_name
     #    except configparser.NoSectionError:
-    return []
+    return None
+
+

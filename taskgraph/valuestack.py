@@ -39,6 +39,14 @@ class ValueStack:
         result.update(self.result_values)
         return result
 
+    def get_value(self, name):
+        if name in self.result_values:
+            return self.result_values[name]
+        if name in self.__class__.command_line_values:
+            return self.__class__.command_line_values[name]
+        if name in self.environment_values:
+            return self.environment_values[name]
+
     def is_valuename(self, name):
         return name in self.value_names
 
