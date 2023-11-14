@@ -72,7 +72,13 @@ def struct_to_task(struct):
             struct_to_task(substruct)
     elif isinstance(struct, dict):
         if "executable" not in struct:
-            taskgraph.task.Task(**struct)
+            try:
+                taskgraph.task.Task(**struct)
+            except TypeError as te:
+                log.exception(
+                    "Task " + struct["target"] +
+                    " defined commandLineArguments but didn't define execuable"
+                )
         elif struct["executable"] in command_to_full_path:
             # Executable exists in PATH
             taskgraph.task.task_shell_script(**struct)

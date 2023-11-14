@@ -19,10 +19,12 @@
     "executable": "git",
     "commandLineArguments": [
       "commit",
-      " --file={commitMessageFile}",
+      " --file={readableFile({commitMessageFile})}",
       " --message=\"{commitMessage}\""
     ],
-    "optionalInputs" : ["commitMessageFile", "commitMessage"]
+    "optionalInputs" : [
+      "commitMessage", "commitMessageFile", "readableFile"
+    ]
   },
   {
     "target": "pushToGitlab",

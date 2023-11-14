@@ -48,6 +48,54 @@ which can be used as input to other task later on by:
 tg changeDirectory=previousDirectory
 ```
 
+## Defining tasks json modules
+
+Modules are defined as json dictionary which can optionally be stored in a list, 
+defined inside a json file.
+
+Json based tasks execute command line executables, so the executable name is the
+only mandatory field in addition to the `target`
+
+Example:
+```
+{
+    "target": "hostname",
+    "executable": "hostname"
+}
+```
+
+Before any execution or even parsing the tasks from json and python files,
+framework examines all the executable binaries available in `PATH` variable 
+and ignores all tasks which have defined executable which is not in the `PATH`
+and cannot be therefore successfully executed.
+
+Inputs and optional inputs are defined in list with respective names: `inputs`, `optionalInputs`.
+
+If you want to enable the default input execution by only target name from the
+command line, the default input must be defined in both `inputs` and 
+string value `defaultInput`.
+
+Example:
+```
+[
+  {
+    "target": "wifi",
+    "executable": "nmcli",
+    "commandLineArguments": "radio wifi {state}",
+    "inputs": ["state"],
+    "defaultInput": "state"
+  }
+]
+```
+With above definition wifi can be turned on just by:
+```
+tg wifi=on
+```
+instead of 
+```
+tg state=on wifi
+```
+
 ## Python functions
 
 `task_func` creates task with executable content (the function contents),
@@ -65,7 +113,7 @@ def myfunction(myfirstparameter, mysecondparameter)
 
 ```
 
-### Command line arguments
+## Command line arguments
 Command line arguments can be specified as groups containing zero or more inputs
 or optional inputs by specifying them as list of strings in `command_line_arguments`
 

@@ -104,8 +104,10 @@ class Task:
         log.warning("with values")
         log.warning("\n" + values_as_string(call_args))
 
-        result = self.callable(**call_args)
-        self.log_result(self.target, result)
+        result = ""
+        if self.callable:
+            result = self.callable(**call_args)
+            self.log_result(self.target, result)
         return result
 
     def is_predecessor_of(self, task):
@@ -251,14 +253,15 @@ def format_argument_list(
     result_argument_list = []
     combined_inputs = set(input_names).union(set(optional_input_names))
     while arg_idx < len(argument_list):
+        argument = argument_list[arg_idx]
         matched_arguments = set()
         for input_name in combined_inputs:
-            if '{' + input_name + '}' in argument_list[arg_idx]:
+            if '{' + input_name + '}' in argument:
                 matched_arguments.add(input_name)
         if matched_arguments:
             try:
                 result_argument_list.append(
-                    argument_list[arg_idx].format(
+                    argument.format(
                         **taskgraph.util.strip_dictionary_to_keys(
                             input_values,
                             matched_arguments,
@@ -335,8 +338,18 @@ def task_shell_script(
                 completed_script_lines[0]
         # Run commands
         result = run_commands(target, completed_script_lines)
-        if postprocess is not None:
-            result = postprocessOutput(result, postprocess)
+        
+        if isinstance(postprocess, dict) and postprocess:
+            # Resolve possible inputs in postprocess regexp pattern
+            completed_inputs = dict()
+            for name in postprocess:
+                completed_inputs[name] = format_argument_list(
+                    argument_list=[postprocess[name]],
+                    input_values=resolved_input_values,
+                    input_names=inputs,
+                    optional_input_names=optionalInputs,
+                )
+            result = postprocessOutput(result, completed_inputs)
         return result
     return Task(
         target=target,
