@@ -1,0 +1,11 @@
+[
+  {
+    "target": "readableFile",
+    "executable": "bash",
+    "inputs": ["file"],
+    "defaultInput": "file",
+    "commandLineArguments": [
+      "-c \"if [[ -r {file} ]]; then echo {file}; fi\""
+    ]
+  }
+]
