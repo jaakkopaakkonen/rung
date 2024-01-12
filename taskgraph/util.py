@@ -19,7 +19,7 @@ def get_function_name_params(function):
     :return:
     """
     result = dict()
-    result["callable"] = function
+    result["runnable"] = function
     result["inputs"] =  list()
     values = dict()
     if not inspect.isfunction(function):

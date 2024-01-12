@@ -77,7 +77,7 @@ def struct_to_task(struct):
             except TypeError as te:
                 log.exception(
                     "Task " + struct["target"] +
-                    " defined commandLineArguments but didn't define execuable"
+                    " parameters are not correct"
                 )
         elif struct["executable"] in command_to_full_path:
             # Executable exists in PATH

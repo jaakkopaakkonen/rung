@@ -49,10 +49,10 @@ tg changeDirectory=previousDirectory
 ```
 
 ## Defining tasks json modules
-
 Modules are defined as json dictionary which can optionally be stored in a list, 
 defined inside a json file.
 
+### Executable
 Json based tasks execute command line executables, so the executable name is the
 only mandatory field in addition to the `target`
 
@@ -69,6 +69,7 @@ framework examines all the executable binaries available in `PATH` variable
 and ignores all tasks which have defined executable which is not in the `PATH`
 and cannot be therefore successfully executed.
 
+### Inputs
 Inputs and optional inputs are defined in list with respective names: `inputs`, `optionalInputs`.
 
 If you want to enable the default input execution by only target name from the
@@ -96,6 +97,23 @@ instead of
 tg state=on wifi
 ```
 
+### Dependencies between inputs
+If task defines inputs, there may be situations where you may want to define 
+execution order within the inputs, or dependencies between then.
+
+```
+[
+  {
+    ...
+    "inputDependencides": {
+      "input1": "secondlevelinput1",
+      "input2": "secondlevelinput2",
+      "input3": "input1"
+    }
+  }
+]
+```
+
 ## Python functions
 
 `task_func` creates task with executable content (the function contents),
@@ -106,7 +124,7 @@ The inputs will be the function parameters the way they are.
 ```
 from taskgraph.task import task_func
 
-@taskfunc[network.json](taskgraph%2Fmodules%2Fjson%2Fnetwork.json)
+@taskfunc
 def myfunction(myfirstparameter, mysecondparameter)
     print(myfirstparameter)
     print(mysecondparameter)
@@ -144,6 +162,14 @@ You can use results of earlier executed tasks as input by using task name
 
 
 # Development
+
+## Philosophy
+When looking at how things work, you might get the feeling "that could be done with a lot less keypresses", and you would be right.
+
+The main big idea around the framework is to make things very explicit and specific and reduce the possiblity
+of misunderstandings, and NOT to try to extrapolate and compute things from smaller stack of information.
+
+
 
 ## TODO
 | id  | Importance      | Component        | Task                                                                                                                                                                                                                                                   | Size     | Difficulty     | Current Status

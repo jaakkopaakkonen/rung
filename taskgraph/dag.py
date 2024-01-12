@@ -101,7 +101,7 @@ def get_all_input_names():
     return all_input_names
 
 
-def get_assignable_target_input_name(target_name):
+def get_default_input_name(target_name):
     task = get_task(target_name)
     if not task:
         return None

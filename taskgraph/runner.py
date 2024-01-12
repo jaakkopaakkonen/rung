@@ -116,25 +116,25 @@ class TaskRunner:
         :param target: task's target which' values to be set
         :return: The actual task target-input-substructure
         """
-        if type(structure) == list:
+        if isinstance(structure, list):
             result = list()
             for item in structure:
                 result.append(
                     self.create_task_value_structure(item, values, target)
                 )
             return result
-        elif type(structure) == dict:
+        elif isinstance(structure, dict):
             values = dict(values)
-            dictkeys = set()
+            structure_keys = set()
             result = dict()
             for key in structure:
                 if isinstance(structure[key], dict):
-                    dictkeys.add(key)
+                    structure_keys.add(key)
                 else:
                     # First round, store only input values
                     values[key] = structure[key]
             # Next process keys with dictionary value
-            for key in dictkeys:
+            for key in structure_keys:
                 result[key] = self.create_task_value_structure(
                     structure[key],
                     values=values,
@@ -142,9 +142,9 @@ class TaskRunner:
                 )
             if "tasks" in structure:
                 return self.create_task_value_structure(
-                    structure["tasks"],
-                    values,
-                    target,
+                    structure=structure["tasks"],
+                    values=values,
+                    target=target,
                 )
             # Process actual input of the task
             if target:
@@ -161,7 +161,7 @@ class TaskRunner:
                     for key in valuenames & all_inputs:
                         result[key] = self._resolve_value(key, values)
                     # Process missing input values
-                    for key in inputs - valuenames - dictkeys:
+                    for key in inputs - valuenames - structure_keys:
                         result[key] = self.create_task_value_structure(
                             target=key,
                             values=values,
@@ -193,30 +193,37 @@ class TaskRunner:
 
     def _run_task_value_structure(self, structure):
         """ Run task-value-structure given as parameter.
-        Fills out "startTime", "result" and "endTime" keys for tasks
-        from the execution.
+            Returns exactly same structure with completed values
 
         :param structure: Dict based structure containing both tasks and
             the values used in their execution.
         :return: Filled structure from the execution.
         """
-        values = None
-        if type(structure) == dict:
-            values = dict()
+        result = None
+        if isinstance(structure, dict):
+            result = dict()
             for key in structure:
-                if type(structure[key]) == dict:
-                    values[key] = self._run_task_value_structure(structure[key])
+                if isinstance(structure[key], dict):
+                    result[key] = self._run_task_value_structure(structure[key])
                     task = taskgraph.dag.get_task(key)
-                    values[key] = task.run(
-                        flatten_values(values[key]),
-                    )
+                    if (task is None or task.runnable is None) \
+                       and len(result[key])==1:
+                        result[key] = next(iter(result[key].values()))
+                    else:
+                        result[key] = task.run(
+                            flatten_values(result[key]),
+                        )
                 else:
-                    value = taskgraph.results.get(structure[key])
-                    if value is None:
-                        value = structure[key]
-                    values[key] = value
-        elif type(structure) == list:
-            values = list()
+                    task = taskgraph.dag.get_task(structure[key])
+                    if task:
+                        result[key] = task.run({})
+                    else:
+                        value = taskgraph.results.get(structure[key])
+                        if value is None:
+                            value = structure[key]
+                        result[key] = value
+        elif isinstance(structure, list):
+            result = list()
             for item in structure:
-                values.append(self._run_task_value_structure(item))
-        return values
+                result.append(self._run_task_value_structure(item))
+        return result

@@ -26,8 +26,8 @@ import taskgraph.matrix
 
 colorama.init(autoreset=True)
 
-# TODO: Use same scheme as below with reading external modules so that we can import
-# them with full name
+# TODO: Use same scheme as below with reading external modules so that
+#  we can import them with full name
 # https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path
 
 taskgraph.modules.refresh_path_executables()
@@ -118,7 +118,7 @@ def main():
                 elif separator_idx > 0:
                     name = argument[0:separator_idx]
                     value = argument[separator_idx+1:]
-                    input_name = taskgraph.dag.get_assignable_target_input_name(
+                    input_name = taskgraph.dag.get_default_input_name(
                         name,
                     )
                     if input_name is not None:
@@ -142,7 +142,9 @@ def main():
                         runner = taskgraph.runner.TaskRunner(valuestack)
                         if runner.is_runnable(value):
                             result = runner.run_task(value)
-                            valuestack.set_result_values({name: result[value]})
+                            valuestack.set_result_values(
+                                {name: result[value]},
+                            )
                         else:
                             valuestack.set_command_line_value(
                                 name,
@@ -181,8 +183,6 @@ def main():
         except taskgraph.exception.FailedCommand as ex:
             print(ex)
             exit(1)
-        finally:
-            valuestack.print_result_values()
 
 
 if __name__ == "__main__":

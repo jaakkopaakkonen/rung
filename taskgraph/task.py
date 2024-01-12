@@ -39,15 +39,15 @@ class Task:
     def __init__(
         self,
         target=None,
-        callable=None,
+        runnable=None,
         inputs=[],
         optionalInputs=[],
         defaultInput=None,
-        values=None,
+        values=[],
     ):
         """Add and register new task to be used as input for other tasks
         :param target to be used for executing the task specifically via run_task
-        :param Callable: The actual executable call (function or lambda)
+        :param runnable: The actual executable call (function or lambda)
             and it's argument names as list or tuple of strings, or as
             dictionary of strings,
             when the input name either as task target of earlier task or name
@@ -62,7 +62,7 @@ class Task:
         self.target = target
         log.info("Registering task "+str(target))
 
-        # The actual callable implementation extracted
+        # The actual runnable implementation extracted
         # from the first parameter in signature
 
         # Other mandatory input names or prerequisites for this task
@@ -70,8 +70,33 @@ class Task:
         # Optional input names or prerequisites for this task
         self.optional_input_names = list(optionalInputs)
         self.default_input = defaultInput
+        self.runnable = runnable
+        # Check values if they contain inputs to be completed
+        # Mapping to generate inline tasks.
+        # Key is the pattern to be matched with input values
+        # which is also used as target name.
+        # Value is the list of the inputs for the task to be created
+        # which names are used in the pattern.
+        inline_tasks = dict()
+        for value_name in values:
+            pattern = values[value_name]
+            for input in inputs:
+                if '{' + input + '}' in pattern:
+                    if pattern in inline_tasks:
+                        inline_tasks[pattern].append(input)
+                    else:
+                        inline_tasks[pattern] = [input]
+        # Resolve inline tasks having input dependencies
+        if inline_tasks:
+            for pattern in inline_tasks:
+                def inline_runnable(**kwargs):
+                    return pattern.format(**kwargs)
+                Task(
+                    target=pattern,
+                    runnable=inline_runnable,
+                    inputs=inline_tasks[pattern],
+                )
         self.values = values
-        self.callable = callable
         taskgraph.dag.add(self)
 
     def log_result(self, target, values):
@@ -105,8 +130,8 @@ class Task:
         log.warning("\n" + values_as_string(call_args))
 
         result = ""
-        if self.callable:
-            result = self.callable(**call_args)
+        if self.runnable:
+            result = self.runnable(**call_args)
             self.log_result(self.target, result)
         return result
 
@@ -123,7 +148,7 @@ class Task:
             return False
         if not self.optional_input_names == other.optional_input_names:
             return False
-        if self.callable != other.callable:
+        if self.runnable != other.runnable:
             return False
         return True
 
@@ -151,8 +176,8 @@ class Task:
 
 
 def task_func(*args, **kwargs):
-    def inner_func(callable):
-        determined_values =  taskgraph.util.get_function_name_params(callable)
+    def inner_func(runnable):
+        determined_values =  taskgraph.util.get_function_name_params(runnable)
         determined_values.update(kwargs)
         Task(**determined_values)
     if args:
@@ -208,7 +233,7 @@ def run_commands(target, commands):
                             "\r\n",
                             line,
                         )
-                        print(line, end='', file=outhandle)
+                        # print(line, end='', file=outhandle)
                         line = ""
             outstream_list, _, _ = select.select(
                 [
@@ -233,7 +258,6 @@ def run_commands(target, commands):
                         "\r\n",
                         line,
                     )
-                    print(line, end='', file=outhandle)
                     line = ""
             # Non-zero exit status, break loop
             if process.returncode:
@@ -309,10 +333,11 @@ def task_shell_script(
     inputs=[],
     optionalInputs=[],
     defaultInput=None,
-    values=None,
+    inputDependencies=None,
+    values=[],
     postprocess=None,
 ):
-    def callable(**resolved_input_values):
+    def runnable(**resolved_input_values):
         nonlocal target
         nonlocal executable
         nonlocal commandLineArguments
@@ -321,7 +346,7 @@ def task_shell_script(
         if not commandLineArguments:
             completed_script_lines = [executable]
         else:
-            if type(commandLineArguments) == list:
+            if isinstance(commandLineArguments, list):
                 completed_script_lines = format_argument_list(
                     argument_list=commandLineArguments,
                     input_values=resolved_input_values,
@@ -338,7 +363,6 @@ def task_shell_script(
                 completed_script_lines[0]
         # Run commands
         result = run_commands(target, completed_script_lines)
-        
         if isinstance(postprocess, dict) and postprocess:
             # Resolve possible inputs in postprocess regexp pattern
             completed_inputs = dict()
@@ -353,7 +377,7 @@ def task_shell_script(
         return result
     return Task(
         target=target,
-        callable=callable,
+        runnable=runnable,
         inputs=inputs,
         optionalInputs=optionalInputs,
         defaultInput=defaultInput,

@@ -51,7 +51,7 @@ def get(path, structure=None):
             except KeyError:
                 pass
         else:
-            if type(structure) == list:
+            if isinstance(structure, list):
                 # Strip out surrounding brackets [ ]
                 key = re.sub(
                     r"\[([-0-9]*)\]",
