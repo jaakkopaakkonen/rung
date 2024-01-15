@@ -62,8 +62,8 @@ class Task:
             but are not relayed to the signature executable call.
         """
         # The name of this task to bue used by run_task
-        self.target = target
         log.info("Registering task "+str(target))
+        self.target = target
 
         # The actual runnable implementation extracted
         # from the first parameter in signature
@@ -82,7 +82,7 @@ class Task:
         # Value is the list of the inputs for the task to be created
         # which names are used in the pattern.
         for value_name in values:
-            input_value = values[value_name]
+            input_value = str(values[value_name])
             input_name_match = self.__class__.inline_regexp.search(
                 input_value,
             )
