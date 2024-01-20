@@ -1,7 +1,36 @@
-{
-  "target": "bluetooth",
-  "executable": "bluetoothctl",
-  "commandLineArguments": "power {state}",
-  "inputs": ["state"]
-}
-
+[
+  {
+    "target": "bluetooth",
+    "executable": "bluetoothctl",
+    "inputs": ["state"],
+    "defaultInput": "state",
+    "commandLineArguments": "power {state}"
+  },
+  {
+    "target": "pairedDevices",
+    "executable": "bluetoothctl",
+    "commandLineArguments": "paired-devices"
+  },
+  {
+    "target": "deviceAddress",
+    "inputs": ["searchPattern"],
+    "values": {
+      "pattern": "^Device ([A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]) {deviceName}",
+      "text": "pairedDevices"
+    }
+  },
+  {
+    "target": "connect",
+    "inputs": ["deviceAddress"],
+    "defaultInput": "deviceAddress",
+    "executable": "bluetoothctl",
+    "commandLineArguments": "connect {deviceAddress}"
+  },
+  {
+    "target": "disconnect",
+    "inputs": ["deviceAddress"],
+    "defaultInput": "deviceAddress",
+    "executable": "bluetoothctl",
+    "commandLineArguments": "disconnect {deviceAddress}"
+  }
+]

@@ -42,7 +42,7 @@ class TaskWithInputs:
 
     def __init__(self, target, inputs):
         """Creates TaskWithInputs instance from task and given dict of inputs.
-        Makes a copy of inputs and tores only inputs
+        Makes a copy of inputs and stores only inputs
         required for the execution of the task.
 
         :param target: The task name of the actual task used.
@@ -106,7 +106,6 @@ class TaskWithInputs:
             new_inputs[input_name] = copy.deepcopy(input_value, memo)
         result = type(self)(self.target, new_inputs)
         return result
-
 
 
 class TaskRunner:

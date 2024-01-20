@@ -118,19 +118,20 @@ def main():
                 elif separator_idx > 0:
                     name = argument[0:separator_idx]
                     value = argument[separator_idx+1:]
-                    input_name = taskgraph.dag.get_default_input_name(
+                    default_input = taskgraph.dag.get_default_input_name(
                         name,
                     )
-                    if input_name is not None:
+                    if default_input is not None:
+                        # We have default input
                         target = name
                         valuestack.set_command_line_value(
-                            input_name,
+                            default_input,
                             value,
                         )
-                        runner = taskgraph.runner.TaskRunner(
-                            valuestack,
-                        )
-                        result = runner.run_task(target)
+                        result = taskgraph.runner.TaskWithInputs(
+                            target=target,
+                            inputs=valuestack.get_values(),
+                        ).run()
                         print(
                             json.dumps(
                                 result,
@@ -168,17 +169,11 @@ def main():
                         current_input = None
                     # TODO: Array values with plural suffix "s"
                     else:
-                        runner = taskgraph.runner.TaskRunner(
-                            valuestack,
-                        )
-                        result = runner.run_task(argument)
-                        print(
-                            json.dumps(
-                                result,
-                                indent=2,
-                                default=lambda o: str(o),
-                            )
-                        )
+                        result = taskgraph.runner.TaskWithInputs(
+                            target=argument,
+                            inputs=valuestack.get_values(),
+                        ).run()
+                        print(result)
                 i += 1
         except taskgraph.exception.FailedCommand as ex:
             print(ex)

@@ -9,3 +9,9 @@ def changeDirectory(directory):
 @task_func
 def currentDirectory():
     return os.getcwd()
+
+
+@task_func(defaultInput="file")
+def readFile(file):
+    with open(file, "r") as fd:
+        return fd.read()

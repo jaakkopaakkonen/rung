@@ -95,6 +95,7 @@ class Task:
                         # to prevent it's value inside inline_runnable
                         # to change
                         input_value_container = (input_value, )
+
                         def inline_runnable(**kwargs):
                             return input_value_container[0].format(**kwargs)
                         Task(
