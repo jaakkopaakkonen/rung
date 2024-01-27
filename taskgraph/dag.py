@@ -57,7 +57,7 @@ def add(task):
     global tasks_having_input
 
     target = task.target
-    inputs = frozenset(task.input_names)
+    inputs = frozenset(tuple(task.input_names))
 
     all_target_names.add(target)
     all_input_names.add(inputs)

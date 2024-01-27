@@ -36,7 +36,20 @@ class Task:
         more controlled entities to enable testing
     """
 
-    inline_regexp = re.compile("{([a-zA-Z0-9_]*)}")
+    inline_regexp = re.compile("{([^}]*)}")
+
+    @classmethod
+    def extract_input_names(cls, input_value):
+        """
+        Extracts patterns matching inline_regexp from string
+        and returns them as list
+        :param text:
+        :return:
+        """
+        inputs = []
+        for input_name_match in cls.inline_regexp.finditer(input_value):
+            inputs.append(input_name_match.groups()[0])
+        return inputs
 
     def __init__(
         self,
@@ -45,7 +58,7 @@ class Task:
         inputs=[],
         optionalInputs=[],
         defaultInput=None,
-        values={},
+        providedValues={},
     ):
         """Add and register new task to be used as input for other tasks
         :param target to be used for executing
@@ -58,8 +71,10 @@ class Task:
             If dictionary format is used, the argument actual argument name
             for the executable is key and input as value.
         :param input_names: Additional input names as list,
-            tuple or separate parameters, which are neccessary for this task
+            tuple or separate pa rameters, which are neccessary for this task
             but are not relayed to the signature executable call.
+        :param providedValues: Dictionary of input names and their values to
+               be provided further down to input tasks
         """
         # The name of this task to bue used by run_task
         log.info("Registering task "+str(target))
@@ -69,41 +84,41 @@ class Task:
         # from the first parameter in signature
 
         # Other mandatory input names or prerequisites for this task
-        self.input_names = list(inputs)
+        if isinstance(inputs, list):
+            self.input_names = inputs[:]
+        else:
+            self.input_names = list(inputs)
         # Optional input names or prerequisites for this task
         self.optional_input_names = list(optionalInputs)
         self.default_input = defaultInput
         self.runnable = runnable
-        self.values = dict()
-        # Check values if they contain inputs to be completed
+        self.provided_values = dict()
+        # Check provided_values if they contain inputs to be completed
         # Mapping to generate inline tasks.
         # Key is the pattern to be matched with input values
         # which is also used as target name.
         # Value is the list of the inputs for the task to be created
         # which names are used in the pattern.
-        for value_name in values:
-            input_value = str(values[value_name])
-            input_name_match = self.__class__.inline_regexp.search(
-                input_value,
-            )
-            if input_name_match:
-                groups = input_name_match.groups()
-                if groups and len(groups) > 0:
-                    inline_input_name = groups[0]
-                    if inline_input_name:
-                        # Store input_value to a tuple
-                        # to prevent it's value inside inline_runnable
-                        # to change
-                        input_value_container = (input_value, )
+        for value_name in providedValues:
+            input_search_value = str(providedValues[value_name])
 
-                        def inline_runnable(**kwargs):
-                            return input_value_container[0].format(**kwargs)
-                        Task(
-                            target=input_value,
-                            runnable=inline_runnable,
-                            inputs=[inline_input_name],
-                        )
-        self.values = values
+            # Collect matches first, then construct the task with all matches
+            # as inputs
+            found_inline_inputs = self.__class__.extract_input_names(
+                input_search_value,
+            )
+
+            if found_inline_inputs:
+                input_search_value_container = (input_search_value, )
+
+                def inline_runnable(**kwargs):
+                    return input_search_value_container[0].format(**kwargs)
+                Task(
+                    target=input_search_value,
+                    runnable=inline_runnable,
+                    inputs=found_inline_inputs,
+                )
+        self.provided_values = providedValues
         taskgraph.dag.add(self)
 
     def log_result(self, target, values):
@@ -341,7 +356,7 @@ def task_shell_script(
     optionalInputs=[],
     defaultInput=None,
     inputDependencies=None,
-    values={},
+    providedValues={},
     postprocess=None,
 ):
     def runnable(**resolved_input_values):
@@ -388,5 +403,5 @@ def task_shell_script(
         inputs=inputs,
         optionalInputs=optionalInputs,
         defaultInput=defaultInput,
-        values=values,
+        providedValues=providedValues,
     )

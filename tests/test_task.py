@@ -1,6 +1,8 @@
 import os
 import pytest
+import random
 import sys
+import time
 
 from unittest.mock import *
 
@@ -80,3 +82,80 @@ def test_simple_task_execution():
             input_values,
         ),
     ]
+
+
+def test_task_with_values():
+    taskname = "car"
+    inputs = ["engine", "tyres"]
+    runnable_car = Mock(
+        side_effect=lambda engine, tyres: {
+            "engine": engine,
+            "tyres": tyres,
+            "time": time.time(),
+        }
+    )
+    values = {
+        "transmission": "transmission has {gears} gears",
+    }
+    task_car = taskgraph.task.Task(
+        target=taskname,
+        runnable=runnable_car,
+        inputs=inputs,
+        providedValues=values,
+    )
+    # Check parent task contents
+    parent_task = taskgraph.dag.get_task(taskname)
+    assert parent_task.input_names == ["engine", "tyres"]
+    assert parent_task.provided_values == {
+        "transmission": "transmission has {gears} gears",
+    }
+    # Run parent task
+    beginning = time.time()
+    result = parent_task.run(
+        {
+            "engine": "volvo",
+            "tyres": "michelin",
+        },
+    )
+    end = time.time()
+    assert beginning < result["time"] < end
+    del(result["time"])
+    assert result == {
+        "engine": "volvo",
+        "tyres": "michelin",
+    }
+    assert runnable_car.mock_calls == [
+        (
+            '',
+            (),
+            {
+                "engine": "volvo",
+                "tyres": "michelin",
+            },
+        )
+    ]
+    # Check child task contents
+    child_task = taskgraph.dag.get_task("transmission has {gears} gears")
+    assert child_task.input_names == ["gears"]
+    assert child_task.provided_values == {}
+    # Run child task
+    result = child_task.run({"gears": "four"})
+    assert result == "transmission has four gears"
+
+
+def test_extract_input_names():
+    # amount of inputs
+    chars = []
+    for c in range(30, 254):
+        chars.append(chr(c))
+    chars.remove('{')
+    chars.remove('}')
+    text = "".join(random.choices(population=chars, k=random.randint(0, 200)))
+    token_count = random.randint(0, 100)
+    tokens = []
+    for i in range(token_count):
+        token = "".join(random.choices(population=chars, k=random.randint(0, 80)))
+        tokens.append(token)
+        text += '{' + token + '}'
+        text += "".join(random.choices(population=chars, k=random.randint(0, 200)))
+    assert taskgraph.task.Task.extract_input_names(text) == tokens

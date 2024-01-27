@@ -114,6 +114,40 @@ execution order within the inputs, or dependencies between then.
 ]
 ```
 
+### Setting hard coded inputs for dependency tasks
+There is a defined task called `sendDbusMessage` which pretty much describes 
+what it does
+
+It has three inputs: `type`, `destination` and `contents`.
+
+On linux system running gnome related window manager, locking the screen can 
+be done with a dbus call with following values: 
+```
+type=method_call
+destination=org.gnome.ScreenSaver
+contents=/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock
+```
+
+There is a mechanism to define task and in the task definition declare hard coded
+inputs for dependency tasks.
+This is done wiht a dictionary called `providedValues`.
+
+For `lockScreen` the full definition in json would be following:
+```
+  {
+    "target": "lockScreen",
+    "inputs": ["sendDbusMessage"],
+    "providedValues": {
+      "type":  "method_call",
+      "destination": "org.gnome.ScreenSaver",
+      "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
+    }
+  },
+```
+
+### Setting inputs completed from values for dependency tasks
+TODO. BUILD_ID etc
+
 ## Python functions
 
 `task_func` creates task with executable content (the function contents),

@@ -14,7 +14,7 @@
   {
     "target": "deviceAddress",
     "inputs": ["searchPattern"],
-    "values": {
+    "providedValues": {
       "pattern": "^Device ([A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]:[A-F0-9][A-F0-9]) {deviceName}",
       "text": "pairedDevices"
     }

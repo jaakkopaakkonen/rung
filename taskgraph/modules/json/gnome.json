@@ -2,7 +2,7 @@
   {
     "target": "lockScreen",
     "inputs": ["sendDbusMessage"],
-    "values": {
+    "providedValues": {
       "type":  "method_call",
       "destination": "org.gnome.ScreenSaver",
       "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"

@@ -36,8 +36,8 @@ def flatten_values(values):
 
 class TaskWithInputs:
     """Class which' instances contain both a single task and it's inputs.
-    The input value may be either a string or another TaskWithInputs which needs
-    to be completed in order to fulfull the value of that specific input.
+    The input value may be either a string or another TaskWithInputs which
+    needs to be completed in order to fulfull the value of that specific input.
     """
 
     def __init__(self, target, inputs):
@@ -51,10 +51,21 @@ class TaskWithInputs:
         self.target = target
         self.task = taskgraph.dag.get_task(target)
         self.inputs = dict()
-        all_inputs = {**inputs, **self.task.values}
+        all_inputs = {**inputs}
+        if self.task and self.task.provided_values:
+            all_inputs.update(self.task.provided_values)
         for input_name in self.task.input_names:
-            if input_name not in all_inputs or \
-               taskgraph.dag.is_task(input_name):
+            if input_name not in all_inputs:
+                # Either current input is actually a task name
+                # or input is not specified in inputs
+                if taskgraph.dag.is_task(input_name):
+                    self.inputs[input_name] = TaskWithInputs(
+                        target=input_name,
+                        inputs=all_inputs,
+                    )
+                else:
+                    return
+            elif taskgraph.dag.is_task(input_name):
                 # Either current input is actually a task name
                 # or input is not specified in inputs
                 self.inputs[input_name] = TaskWithInputs(

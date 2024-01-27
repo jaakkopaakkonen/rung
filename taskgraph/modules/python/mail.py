@@ -97,7 +97,7 @@ def sendSmtpMail(host, From, To, mailBody):
      return smtplib.SMTP(host=host,).sendmail(
         from_addr=From,
         to_addrs=To,
-        msg=mail_body,
+        msg=mailBody,
     )
 
 @task_func
