@@ -47,13 +47,14 @@ def add(task):
     Adding a task will enable bookkeeper to track name and inputs
     and retrieve the task based on those
     """
+    global all_target_names
     global task_names_by_complete_inputs
     global mandatory_inputs_of_tasks
     global optional_inputs_of_tasks
     global tasks_by_name
     global all_valuenames
     global all_input_names
-    global all_target_names
+
     global tasks_having_input
 
     target = task.target
@@ -81,6 +82,27 @@ def add(task):
         tasks_having_input[input].add(target)
     tasks_by_name[target] = task
 
+
+def reset():
+    """Empty all values from dag
+    :return:
+    """
+    global task_names_by_complete_inputs
+    global mandatory_inputs_of_tasks
+    global optional_inputs_of_tasks
+    global tasks_having_input
+    global tasks_by_name
+    global all_valuenames
+    global all_input_names
+    global all_target_names
+    task_names_by_complete_inputs = dict()
+    mandatory_inputs_of_tasks = dict()
+    optional_inputs_of_tasks = dict()
+    tasks_having_input = dict()
+    tasks_by_name = dict()
+    all_valuenames = set()
+    all_input_names = set()
+    all_target_names = set()
 
 def is_task(name):
     global tasks_by_name

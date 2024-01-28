@@ -2,9 +2,6 @@ import taskgraph.util
 import taskgraph.matrix
 
 
-
-
-
 def test_transpose():
     assert taskgraph.util.transpose(
         [

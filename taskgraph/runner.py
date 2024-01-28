@@ -7,6 +7,11 @@ import taskgraph.results
 
 log = logging.getLogger("taskgraph")
 
+class MissingInputException(BaseException):
+    # TODO: Add both input and task name information both in instance
+    # and also to output print
+    pass
+
 def flatten_values(values):
     values = copy.deepcopy(values)
     result = dict()
@@ -34,88 +39,98 @@ def flatten_values(values):
     return result
 
 
-class TaskWithInputs:
-    """Class which' instances contain both a single task and it's inputs.
-    The input value may be either a string or another TaskWithInputs which
+class ValueTask:
+    """Class which' instances contain both a single task and it's
+    already fixed input values..
+    The input value may be either a string or another ValueTask which
     needs to be completed in order to fulfull the value of that specific input.
     """
 
-    def __init__(self, target, inputs):
-        """Creates TaskWithInputs instance from task and given dict of inputs.
-        Makes a copy of inputs and stores only inputs
-        required for the execution of the task.
+    def __init__(self, target, values={}):
+        """Creates ValueTask instance from task and given dict of input values.
+        Makes a copy of input values and stores only those values which
+        are actually required for the execution of the task.
 
         :param target: The task name of the actual task used.
-        :param inputs: Dictionary of the inputs.
+        :param values: Dictionary of the input values.
         """
         self.target = target
+        self.values = values
+        self.completed_values = dict()
         self.task = taskgraph.dag.get_task(target)
-        self.inputs = dict()
-        all_inputs = {**inputs}
+
+        # Construct all values combining the input values and
+        # possible provided values of the task
+        all_values = {**self.values}
         if self.task and self.task.provided_values:
-            all_inputs.update(self.task.provided_values)
+            all_values.update(self.task.provided_values)
         for input_name in self.task.input_names:
-            if input_name not in all_inputs:
+            if input_name not in all_values:
                 # Either current input is actually a task name
                 # or input is not specified in inputs
                 if taskgraph.dag.is_task(input_name):
-                    self.inputs[input_name] = TaskWithInputs(
+                    self.completed_values[input_name] = type(self)(
                         target=input_name,
-                        inputs=all_inputs,
+                        values=all_values,
                     )
                 else:
-                    return
+                    raise MissingInputException(input)
             elif taskgraph.dag.is_task(input_name):
                 # Either current input is actually a task name
                 # or input is not specified in inputs
-                self.inputs[input_name] = TaskWithInputs(
+                self.completed_values[input_name] = type(self)(
                     target=input_name,
-                    inputs=all_inputs,
+                    values=all_values,
                 )
-            elif taskgraph.dag.is_task(all_inputs[input_name]):
+            elif taskgraph.dag.is_task(all_values[input_name]):
                 # Input value is a task
-                self.inputs[input_name] = TaskWithInputs(
-                    target=inputs[input_name],
-                    inputs=all_inputs,
+                self.completed_values[input_name] = type(self)(
+                    target=all_values[input_name],
+                    values=all_values,
                 )
             else:
-                self.inputs[input_name] = all_inputs[input_name]
+                self.completed_values[input_name] = all_values[input_name]
         for input_name in self.task.optional_input_names:
             try:
-                self.inputs[input_name] = all_inputs[input_name]
+                self.completed_values[input_name] = all_values[input_name]
             except KeyError:
                 pass
 
     def run(self):
         # TODO store results to spearate structure,
         #      do not contaminate self.inputs?
-        # TODO parallel execution of TaskWithInputs inputs
-        for input_name in self.inputs:
-            input_value = self.inputs[input_name]
-            if isinstance(input_value, TaskWithInputs):
-                self.inputs[input_name] = input_value.run()
+        # TODO parallel execution of ValueTask inputs
+        for input_name in self.completed_values:
+            input_value = self.completed_values[input_name]
+            if isinstance(input_value, ValueTask):
+                self.completed_values[input_name] = input_value.run()
             elif taskgraph.dag.is_task(input_value):
                 print(input_value + " is task")
         if self.task.runnable:
-            return self.task.run(self.inputs)
+            return self.task.run(self.completed_values)
         elif len(self.task.input_names) == 1:
             # No task runnable and only one input specified
             # Task is infact an alias for other task
-            return self.inputs[self.task.input_names[0]]
+            return self.completed_values[self.task.input_names[0]]
 
     def __hash__(self):
-        return hash(frozenset(self.inputs.items())) + hash(self.task)
+        return hash(frozenset(self.values.items())) + hash(self.task)
 
     def __eq__(self, other):
-        return self.inputs == other.inputs and \
+        return self.values == other.values and \
             self.task == other.task
 
     def __deepcopy__(self, memo={}):
-        new_inputs = dict()
-        for input_name in self.inputs:
-            input_value = self.inputs[input_name]
-            new_inputs[input_name] = copy.deepcopy(input_value, memo)
-        result = type(self)(self.target, new_inputs)
+        values = dict()
+        completed_values = dict()
+        for input_name in self.values:
+            input_value = self.values[input_name]
+            values[input_name] = copy.deepcopy(input_value, memo)
+        for input_name in self.completed_values:
+            input_value = self.completed_values[input_name]
+            completed_values[input_name] = copy.deepcopy(input_value, memo)
+        result = type(self)(self.target, values)
+        result.completed_values = completed_values
         return result
 
 
@@ -313,6 +328,3 @@ class TaskRunner:
                 result.append(self._run_task_value_structure(item))
         return result
 
-    def get_complete_task_structure(self, target, values):
-        taskwithinputs = TaskWithInputs(target, values)
-        return taskwithinputs

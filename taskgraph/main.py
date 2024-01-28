@@ -128,9 +128,9 @@ def main():
                             default_input,
                             value,
                         )
-                        result = taskgraph.runner.TaskWithInputs(
+                        result = taskgraph.runner.ValueTask(
                             target=target,
-                            inputs=valuestack.get_values(),
+                            values=valuestack.get_values(),
                         ).run()
                         print(
                             json.dumps(
@@ -169,9 +169,9 @@ def main():
                         current_input = None
                     # TODO: Array values with plural suffix "s"
                     else:
-                        result = taskgraph.runner.TaskWithInputs(
+                        result = taskgraph.runner.ValueTask(
                             target=argument,
-                            inputs=valuestack.get_values(),
+                            values=valuestack.get_values(),
                         ).run()
                         print(result)
                 i += 1

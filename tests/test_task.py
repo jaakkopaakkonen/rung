@@ -38,17 +38,16 @@ def test_format_argument_list():
     ) == "no inputs this should stay and it stayed this should stay too {z} this should also stay and it also stayed"
 
 
-@pytest.mark.skip
 def test_task_with_command_line_parts():
     task_structure = {
         "target": "commit",
         "executable": "echo",
-        "command_line_arguments": [
+        "commandLineArguments": [
             "echo git commit --dry-run",
-            "--file={commit_message_file}",
-            "--message=\"{commit_message}\"",
+            " --file={commit_message_file}",
+            " --message=\"{commit_message}\"",
         ],
-        "optional_input_names": [
+        "optionalInputs": [
             "commit_message_file",
             "commit_message",
         ]

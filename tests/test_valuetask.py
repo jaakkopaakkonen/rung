@@ -1,13 +1,15 @@
+import copy
 import pytest
 import time
+import unittest.mock
 
-from unittest.mock import Mock
-
+import taskgraph.dag
 import taskgraph.task
 import taskgraph.runner
 
-def test_taskwithinputs_complete_optional():
-    runnable = Mock()
+
+def test_valuetask_complete_optional():
+    runnable = unittest.mock.Mock()
     inputs = ["beta", "gamma"]
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
@@ -23,8 +25,8 @@ def test_taskwithinputs_complete_optional():
         "delta": "d",
         "epsilon": "e",
     }
-    task_with_inputs = taskgraph.runner.TaskWithInputs(taskname, values)
-    assert task_with_inputs.inputs == values
+    task_with_inputs = taskgraph.runner.ValueTask(taskname, values)
+    assert task_with_inputs.values == values
     result = task_with_inputs.run()
     assert result == runnable.return_value
     assert runnable.mock_calls == [
@@ -36,8 +38,8 @@ def test_taskwithinputs_complete_optional():
     ]
 
 
-def test_taskwithinputs_partial_optional():
-    runnable = Mock()
+def test_valuetask_partial_optional():
+    runnable = unittest.mock.Mock()
     inputs = ["beta", "gamma"]
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
@@ -52,9 +54,9 @@ def test_taskwithinputs_partial_optional():
         "gamma": "g",
         "delta": "d",
     }
-    task_with_inputs = taskgraph.runner.TaskWithInputs(taskname, values)
-    assert task_with_inputs.inputs == values
-    result = task_with_inputs.run()
+    valuetask = taskgraph.runner.ValueTask(taskname, values)
+    assert valuetask.values == values
+    result = valuetask.run()
     assert result == runnable.return_value
     assert runnable.mock_calls == [
         (
@@ -65,8 +67,8 @@ def test_taskwithinputs_partial_optional():
     ]
 
 
-def test_taskwithinputs_no_optional():
-    runnable = Mock()
+def test_valuetask_no_optional():
+    runnable = unittest.mock.Mock()
     inputs = ["beta", "gamma"]
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
@@ -80,9 +82,9 @@ def test_taskwithinputs_no_optional():
         "beta": "b",
         "gamma": "g",
     }
-    task_with_inputs = taskgraph.runner.TaskWithInputs(taskname, values)
-    assert task_with_inputs.inputs == values
-    result = task_with_inputs.run()
+    valuetask = taskgraph.runner.ValueTask(taskname, values)
+    assert valuetask.values == values
+    result = valuetask.run()
     assert result == runnable.return_value
     assert runnable.mock_calls == [
         (
@@ -96,7 +98,7 @@ def test_taskwithinputs_no_optional():
 def test_two_taskswithinputs_happy():
     taskname = "alpha"
     inputs = ["beta", "gamma"]
-    runnable_alpha = Mock(
+    runnable_alpha = unittest.mock.Mock(
         side_effect=lambda beta, gamma: {
             "beta": beta,
             "gamma": gamma,
@@ -110,16 +112,16 @@ def test_two_taskswithinputs_happy():
     )
     taskname = "beta"
     inputs = ["delta", "epsilon"]
-    runnable_beta = Mock(
+    runnable_beta = unittest.mock.Mock(
         side_effect=lambda delta, epsilon: {
             "delta": delta,
             "epsilon": epsilon,
-            "time":time.time()
+            "time": time.time()
         },
     )
     task_beta = taskgraph.task.Task(
         target=taskname,
-        runnable = runnable_beta,
+        runnable=runnable_beta,
         inputs=inputs,
     )
     run_inputs = {
@@ -127,11 +129,11 @@ def test_two_taskswithinputs_happy():
         "gamma": "gamma",
         "epsilon": "epsilon",
     }
-    taskwithinputs_alpha = taskgraph.runner.TaskWithInputs(
+    valuetask_alpha = taskgraph.runner.ValueTask(
         target="alpha",
-        inputs=run_inputs,
+        values=run_inputs,
     )
-    result = taskwithinputs_alpha.run()
+    result = valuetask_alpha.run()
     # Depedency beta was executed before maintask alpha
     assert result["time"] > result["beta"]["time"]
     del(result["time"])
@@ -149,7 +151,7 @@ def test_two_taskswithinputs_with_parent_values_happy():
     # TODO add values
     taskname = "alpha"
     inputs = ["beta", "gamma"]
-    runnable_alpha = Mock(
+    runnable_alpha = unittest.mock.Mock(
         side_effect=lambda beta, gamma: {
             "beta": beta,
             "gamma": gamma,
@@ -163,7 +165,7 @@ def test_two_taskswithinputs_with_parent_values_happy():
     )
     taskname = "beta"
     inputs = ["delta", "epsilon"]
-    runnable_beta = Mock(
+    runnable_beta = unittest.mock.Mock(
         side_effect=lambda delta, epsilon: {
             "delta": delta,
             "epsilon": epsilon,
@@ -180,11 +182,11 @@ def test_two_taskswithinputs_with_parent_values_happy():
         "gamma": "gamma",
         "epsilon": "epsilon",
     }
-    taskwithinputs_alpha = taskgraph.runner.TaskWithInputs(
+    valuetask_alpha = taskgraph.runner.ValueTask(
         target="alpha",
-        inputs=run_inputs,
+        values=run_inputs,
     )
-    result = taskwithinputs_alpha.run()
+    result = valuetask_alpha.run()
     # Depedency beta was executed before maintask alpha
     assert result["time"] > result["beta"]["time"]
     del(result["time"])
@@ -202,7 +204,7 @@ def test_two_taskswithinputs_with_child_values_happy():
     # Add values
     taskname = "car"
     inputs = ["engine", "tyres"]
-    runnable_car = Mock(
+    runnable_car = unittest.mock.Mock(
         side_effect=lambda engine, tyres: {
             "engine": engine,
             "tyres": tyres,
@@ -216,11 +218,11 @@ def test_two_taskswithinputs_with_child_values_happy():
     )
     taskname = "engine"
     inputs = ["carburetor", "engine_block"]
-    runnable_beta = Mock(
+    runnable_beta = unittest.mock.Mock(
         side_effect=lambda carburetor, engine_block: {
             "carburetor": carburetor,
             "engine_block": engine_block,
-            "time":time.time()
+            "time":time.time(),
         },
     )
     task_beta = taskgraph.task.Task(
@@ -228,16 +230,16 @@ def test_two_taskswithinputs_with_child_values_happy():
         runnable = runnable_beta,
         inputs=inputs,
     )
-    run_inputs = {
+    run_values = {
         "carburetor": "bendix",
         "tyres": "michelin",
         "engine_block": "dynacast",
     }
-    taskwithinputs_car = taskgraph.runner.TaskWithInputs(
+    valuetask_car = taskgraph.runner.ValueTask(
         target="car",
-        inputs=run_inputs,
+        values=run_values,
     )
-    result = taskwithinputs_car.run()
+    result = valuetask_car.run()
     # Depedency engine was executed before maintask car
     assert result["time"] > result["engine"]["time"]
     del(result["time"])
@@ -249,12 +251,13 @@ def test_two_taskswithinputs_with_child_values_happy():
         },
         "tyres": "michelin",
     }
+    taskgraph.dag.reset()
 
 
 def test_task_with_values():
     taskname = "car"
     inputs = ["engine", "tyres"]
-    runnable_car = Mock(
+    runnable_car = unittest.mock.Mock(
         side_effect=lambda engine, tyres: {
             "engine": engine,
             "tyres": tyres,
@@ -308,13 +311,136 @@ def test_task_with_values():
     # Run child task
     # assert child_task.run({"gears": "four"}) == "transmission has four gears"
 
-    car_taskwithinputs = taskgraph.runner.TaskWithInputs(
+    car_valuetask = taskgraph.runner.ValueTask(
         target=taskname,
-        inputs={
+        values={
             "engine": "volvo",
             "tyres": "michelin",
             "gears": "four",
         },
     )
-    result = car_taskwithinputs.run()
+    result = car_valuetask.run()
     print(result)
+    taskgraph.dag.reset()
+
+
+def test_inline_task_in_values_one_match():
+    import taskgraph.main
+    testtask = taskgraph.task.Task(
+        target="testtask",
+        inputs=["searchPattern"],
+        providedValues={
+            "pattern": "alpha",
+            "text": "{alpha}\nbeta\ngamma",
+        },
+    )
+    testtaskwi = taskgraph.runner.ValueTask(
+        target="testtask",
+        values={"alpha": "balpha"},
+    )
+    result = testtaskwi.run()
+    assert result == "balpha"
+    taskgraph.dag.reset()
+
+
+def test_taskwihinputs_deepcopy():
+    readfile_mock = unittest.mock.Mock(
+        side_effect=lambda file: "halipatsuippa",
+    )
+    readfile_task = taskgraph.task.Task(
+        target="readfile",
+        runnable=readfile_mock,
+        inputs=["file"],
+        defaultInput="file",
+    )
+    build_id_task = taskgraph.task.Task(
+        target="build_id",
+        inputs=["readfile"],
+        providedValues={
+            "file": "file-{REVISION}-{VARIANT}-{RELEASE}",
+        },
+    )
+    build_id_valuetask = taskgraph.runner.ValueTask(
+        target="build_id",
+        values={
+            "REVISION": "dunfell",
+            "VARIANT": "mp",
+            "RELEASE": "master",
+        },
+    )
+    copy_of_build_id_valuetask = copy.deepcopy(build_id_valuetask)
+    assert build_id_valuetask == copy_of_build_id_valuetask
+    taskgraph.dag.reset()
+
+
+def test_inline_task_in_values_two_matches():
+    # Set up tasks
+    readfile_mock = unittest.mock.Mock(
+        side_effect=lambda file: "halipatsuippa",
+    )
+    readfile_task = taskgraph.task.Task(
+        target="readfile",
+        runnable=readfile_mock,
+        inputs=["file"],
+        defaultInput="file",
+    )
+    build_id_task = taskgraph.task.Task(
+        target="build_id",
+        inputs=["readfile"],
+        providedValues={
+            "file": "file-{REVISION}-{VARIANT}-{RELEASE}",
+        },
+    )
+    build_id_valuetask = taskgraph.runner.ValueTask(
+        target="build_id",
+        values={
+            "REVISION": "dunfell",
+            "VARIANT": "mp",
+            "RELEASE": "master",
+        },
+    )
+
+    # Check valuetask is correct
+    file_valuetask = taskgraph.runner.ValueTask(
+        target="file-{REVISION}-{VARIANT}-{RELEASE}",
+        values={
+            "REVISION": "dunfell",
+            "VARIANT": "mp",
+            "RELEASE": "master",
+        },
+    )
+    readfile_valuetask = taskgraph.runner.ValueTask(
+        target="readfile",
+        values={
+            "file": file_valuetask,
+        },
+    )
+    check_build_id_task_with_inputs = copy.deepcopy(build_id_valuetask)
+    check_build_id_task_with_inputs.inputs = {
+        "readfile": readfile_valuetask,
+    }
+    assert build_id_valuetask == check_build_id_task_with_inputs
+
+    result = build_id_valuetask.run()
+    assert readfile_mock.mock_calls == [
+        (
+            '',
+            (),
+            {"file": "file-dunfell-mp-master"},
+        ),
+    ]
+    assert result == "halipatsuippa"
+    taskgraph.dag.reset()
+
+
+def test_valuetask_missing_value():
+    test_task = taskgraph.task.Task(
+        target="testtask",
+        inputs=["anothertask"],
+    )
+    with pytest.raises(taskgraph.runner.MissingInputException) as mie:
+        taskgraph.runner.ValueTask(
+            target="testtask",
+            values={},
+        )
+    taskgraph.dag.reset()
