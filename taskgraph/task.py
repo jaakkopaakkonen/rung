@@ -44,6 +44,7 @@ class Task:
         Extracts patterns matching inline_regexp from string
         and returns them as list
         :param text:
+        :param input_value:
         :return:
         """
         inputs = []
@@ -107,7 +108,6 @@ class Task:
             found_inline_inputs = self.__class__.extract_input_names(
                 input_search_value,
             )
-
             if found_inline_inputs:
                 input_search_value_container = (input_search_value, )
 

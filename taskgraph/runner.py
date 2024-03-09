@@ -65,16 +65,8 @@ class ValueTask:
         if self.task and self.task.provided_values:
             all_values.update(self.task.provided_values)
         for input_name in self.task.input_names:
-            if input_name not in all_values:
-                # Either current input is actually a task name
-                # or input is not specified in inputs
-                if taskgraph.dag.is_task(input_name):
-                    self.completed_values[input_name] = type(self)(
-                        target=input_name,
-                        values=all_values,
-                    )
-                else:
-                    raise MissingInputException(input)
+            if input_name in all_values:
+                self.completed_values[input_name] = all_values[input_name]
             elif taskgraph.dag.is_task(input_name):
                 # Either current input is actually a task name
                 # or input is not specified in inputs
@@ -89,7 +81,7 @@ class ValueTask:
                     values=all_values,
                 )
             else:
-                self.completed_values[input_name] = all_values[input_name]
+                raise MissingInputException(input)
         for input_name in self.task.optional_input_names:
             try:
                 self.completed_values[input_name] = all_values[input_name]

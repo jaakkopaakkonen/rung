@@ -1,0 +1,7 @@
+[
+  {
+    "target": "sleep",
+    "executable": "systemctl",
+    "commandLineArguments": "suspend"
+  }
+]
