@@ -1,8 +1,6 @@
 # Task
-Task is a single piece or module of execution which always has a name, or
-target, in string format.
-
-Task always has also content of what it actually does.
+Task is a single piece or module of execution which always has a name in string 
+format and content of what it actually does.
 
 The content, the actual work implementation of the task can be defined in a shell script, python 
 code or with json configuration files.
@@ -13,20 +11,20 @@ Python task definitions usually do not call external executables but stay in the
 You can write your own task or use the tasks coming with the framework.
 
 ## Inputs
-Tasks may have either optional or mandatory inputs. 
+Tasks may have 0 or more mandatory or optional inputs. 
 Input consists of input name and value.
 
 If the value of some input is not known when it is needed, tasks with same name as 
 needed input are executed as needed. 
 
-These tasks will then provide the correct values as inputs for the actual target task 
+These tasks will then provide the correct values as inputs for the actual task 
 to be executed.
 
 Task can have one special default input which' value can be provided without explicitly 
 defining the input name by:
-``` tg targetName=defaultInputValue```
+``` tg taskName=defaultInputValue```
 
-For instance target `networkConnection` has only one input, which is also the default input, 
+For instance task by the name of `networkConnection` has only one input, which is also the default input, 
 called `connection`. Since the only input is defined also as default input, instead of 
 
 `tg connection=MyConnection networkConnection`,
@@ -36,30 +34,18 @@ called `connection`. Since the only input is defined also as default input, inst
 `tg networkConnection=MyConnection`. 
 
 
-## Assigning variables
-You can assign the target value of the target to a new variable with
-```
-tg previousDirectory=currentDirectory
-```
-The `currentDirectory` task is executed and it's content is stored to new variable 
-which can be used as input to other task later on by:
-
-```
-tg changeDirectory=previousDirectory
-```
-
 ## Defining tasks json modules
 Modules are defined as json dictionary which can optionally be stored in a list, 
 defined inside a json file.
 
 ### Executable
 Json based tasks execute command line executables, so the executable name is the
-only mandatory field in addition to the `target`
+only mandatory field in addition to the task name.
 
 Example:
 ```
 {
-    "target": "hostname",
+    "name": "hostname",
     "executable": "hostname"
 }
 ```
@@ -72,7 +58,7 @@ and cannot be therefore successfully executed.
 ### Inputs
 Inputs and optional inputs are defined in list with respective names: `inputs`, `optionalInputs`.
 
-If you want to enable the default input execution by only target name from the
+If you want to enable the default input execution by only task name from the
 command line, the default input must be defined in both `inputs` and 
 string value `defaultInput`.
 
@@ -80,7 +66,7 @@ Example:
 ```
 [
   {
-    "target": "wifi",
+    "name": "wifi",
     "executable": "nmcli",
     "commandLineArguments": "radio wifi {state}",
     "inputs": ["state"],
@@ -130,14 +116,14 @@ contents=/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock
 
 There is a mechanism to define task and in the task definition declare hard coded
 inputs for dependency tasks.
-This is done wiht a dictionary called `providedValues`.
+This is done with a map object called `values`.
 
 For `lockScreen` the full definition in json would be following:
 ```
   {
-    "target": "lockScreen",
+    "name": "lockScreen",
     "inputs": ["sendDbusMessage"],
-    "providedValues": {
+    "values": {
       "type":  "method_call",
       "destination": "org.gnome.ScreenSaver",
       "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
@@ -151,7 +137,7 @@ TODO. BUILD_ID etc
 ## Python functions
 
 `task_func` creates task with executable content (the function contents),
-target name (the function name) and inputs.
+task name (the function name) and inputs.
 
 The inputs will be the function parameters the way they are.
 
@@ -174,7 +160,7 @@ if it doesn't contain neither kind of input, it contains mandatory input or it c
 optional input which is specified among the values.
 ```
 {
-    "target": "commit",
+    "name": "commit",
     "executable": "git",
     "commandLineArguments": ["commit --dry-run", "--file={commit_message_file}", "--message=\"{commit_message}\""],
     "optionalInputs" : ["commit_message_file", "commit_message"]

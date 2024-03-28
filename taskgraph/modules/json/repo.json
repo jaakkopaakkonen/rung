@@ -1,6 +1,6 @@
 [
   {
-    "target": "init",
+    "name": "init",
     "executable": "repo",
     "commandLineArguments": [
       "init ",
@@ -12,12 +12,12 @@
     "inputs": ["url", "branch", "manifestName"]
   },
   {
-    "target": "sync",
+    "name": "sync",
     "executable": "repo",
     "commandLineArguments": "sync"
   },
   {
-    "target": "effectiveManifest",
+    "name": "effectiveManifest",
     "executable": "repo",
     "commandLineArguments": "manifest"
   }

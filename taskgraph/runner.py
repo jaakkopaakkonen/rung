@@ -4,6 +4,7 @@ import logging
 import time
 import taskgraph.dag
 import taskgraph.results
+from taskgraph.util import log_string
 
 log = logging.getLogger("taskgraph")
 
@@ -46,64 +47,82 @@ class ValueTask:
     needs to be completed in order to fulfull the value of that specific input.
     """
 
-    def __init__(self, target, values={}):
+    @classmethod
+    def createValueTask(cls, name, values={}):
         """Creates ValueTask instance from task and given dict of input values.
         Makes a copy of input values and stores only those values which
         are actually required for the execution of the task.
 
-        :param target: The task name of the actual task used.
+        :param name: The task name of the actual task used.
         :param values: Dictionary of the input values.
         """
-        self.target = target
-        self.values = values
-        self.completed_values = dict()
-        self.task = taskgraph.dag.get_task(target)
+        completed_values = dict()
+        task = taskgraph.dag.get_task(name)
 
         # Construct all values combining the input values and
         # possible provided values of the task
-        all_values = {**self.values}
-        if self.task and self.task.provided_values:
-            all_values.update(self.task.provided_values)
-        for input_name in self.task.input_names:
+        all_values = {**values}
+        if task and task.provided_values:
+            all_values.update(task.provided_values)
+        all_task_inputs = task.input_names + task.optional_input_names
+        for input_name in all_task_inputs:
             if input_name in all_values:
-                self.completed_values[input_name] = all_values[input_name]
+                if taskgraph.dag.is_task(all_values[input_name]):
+                    # Input value is a task
+                    completed_values[input_name] = cls.createValueTask(
+                        name=all_values[input_name],
+                        values=all_values,
+                    )
+                else:
+                    completed_values[input_name] = all_values[input_name]
             elif taskgraph.dag.is_task(input_name):
-                # Either current input is actually a task name
-                # or input is not specified in inputs
-                self.completed_values[input_name] = type(self)(
-                    target=input_name,
-                    values=all_values,
-                )
-            elif taskgraph.dag.is_task(all_values[input_name]):
-                # Input value is a task
-                self.completed_values[input_name] = type(self)(
-                    target=all_values[input_name],
-                    values=all_values,
-                )
+                    # Either current input is actually a task name
+                    # or input is not specified in inputs
+                    completed_values[input_name] = cls.createValueTask(
+                        name=input_name,
+                        values=all_values,
+                    )
             else:
                 raise MissingInputException(input)
-        for input_name in self.task.optional_input_names:
-            try:
-                self.completed_values[input_name] = all_values[input_name]
-            except KeyError:
-                pass
+        return ValueTask(name=name, values=completed_values, task=task)
+
+    def __init__(self, name, values={}, task=None):
+        """Creates ValueTask instance from task and given dict of input values.
+        Makes a copy of input values and stores only those values which
+        are actually required for the execution of the task.
+
+        :param name: The task name of the actual task used.
+        :param values: Dictionary of the input values.
+        """
+        self.name = name
+        self.values = values
+        self.task = task
+        if self.task is None and name:
+            self.task = taskgraph.dag.get_task(name)
 
     def run(self):
-        # TODO store results to spearate structure,
+        # TODO store results to separate structure,
         #      do not contaminate self.inputs?
         # TODO parallel execution of ValueTask inputs
-        for input_name in self.completed_values:
-            input_value = self.completed_values[input_name]
+        result = None
+        for input_name in self.values:
+            input_value = self.values[input_name]
             if isinstance(input_value, ValueTask):
-                self.completed_values[input_name] = input_value.run()
+                self.values[input_name] = input_value.run()
             elif taskgraph.dag.is_task(input_value):
                 print(input_value + " is task")
         if self.task.runnable:
-            return self.task.run(self.completed_values)
+            result = self.task.run(self.values)
         elif len(self.task.input_names) == 1:
             # No task runnable and only one input specified
             # Task is infact an alias for other task
-            return self.completed_values[self.task.input_names[0]]
+            result =  self.values[self.task.input_names[0]]
+        taskgraph.results.add(
+            task=self.name,
+            values=self.values,
+            result=result,
+        )
+        return result
 
     def __hash__(self):
         return hash(frozenset(self.values.items())) + hash(self.task)
@@ -121,7 +140,7 @@ class ValueTask:
         for input_name in self.completed_values:
             input_value = self.completed_values[input_name]
             completed_values[input_name] = copy.deepcopy(input_value, memo)
-        result = type(self)(self.target, values)
+        result = type(self)(self.name, values)
         result.completed_values = completed_values
         return result
 
@@ -199,20 +218,20 @@ class TaskRunner:
         self,
         structure=dict(),
         values=dict(),
-        target=None,
+        name=None,
     ):
         """ Calculates the task-value structure with all the input values
         in place
         :param structure:
         :param values: The original values to insert to structure
-        :param target: task's target which' values to be set
-        :return: The actual task target-input-substructure
+        :param name: task's name which' values to be set
+        :return: The actual task name-input-substructure
         """
         if isinstance(structure, list):
             result = list()
             for item in structure:
                 result.append(
-                    self.create_task_value_structure(item, values, target)
+                    self.create_task_value_structure(item, values, name)
                 )
             return result
         elif isinstance(structure, dict):

@@ -1,25 +1,25 @@
 [
   {
-    "target": "listNetworkConnections",
+    "name": "listNetworkConnections",
     "executable": "nmcli",
     "commandLineArguments": "-terse connection"
   },
   {
-    "target": "networkConnection",
+    "name": "networkConnection",
     "executable": "nmcli",
     "commandLineArguments": "connection up {connection}",
     "inputs": ["connection"],
     "defaultInput": "connection"
   },
   {
-    "target": "wifi",
+    "name": "wifi",
     "executable": "nmcli",
     "commandLineArguments": "radio wifi {state}",
     "inputs": ["state"],
     "defaultInput": "state"
   },
   {
-    "target": "connectWifi",
+    "name": "connectWifi",
     "executable": "nmcli",
     "commandLineArguments": "device wifi connect {SSID} password \"{password}\"",
     "inputs": ["SSID", "password"]

@@ -20,6 +20,7 @@ import taskgraph.exception
 import taskgraph.util
 import taskgraph.config
 import taskgraph.valuestack
+import taskgraph.results
 import taskgraph.runner
 import taskgraph.modules
 import taskgraph.matrix
@@ -57,11 +58,11 @@ if external_module_path:
 taskgraph.modules.register_json_modules()
 
 
-def print_target_tree(runner):
-    for target in sorted(taskgraph.dag.final_tasks()):
+def print_task_tree(runner):
+    for task in sorted(taskgraph.dag.final_tasks()):
         print(
             taskgraph.util.format_tree_box(
-                taskgraph.matrix.task_to_matrix(target),
+                taskgraph.matrix.task_to_matrix(task),
                 runner,
             ),
         )
@@ -88,7 +89,7 @@ def main():
         print_values(values)
         print("\n")
         runner = taskgraph.runner.TaskRunner(valuestack)
-        print_target_tree(runner)
+        print_task_tree(runner)
     else:
         # We have arguments
         # This holds the current input where value is going to be read next
@@ -115,6 +116,8 @@ def main():
                             )
                         )
                     i += 1
+                elif argument.startswith("--print"):
+                    i += 1
                 elif separator_idx > 0:
                     # name=value assignment
                     name = argument[0:separator_idx]
@@ -124,15 +127,15 @@ def main():
                     )
                     if default_input is not None:
                         # We have default input
-                        target = name
                         valuestack.set_command_line_value(
                             default_input,
                             value,
                         )
-                        result = taskgraph.runner.ValueTask(
-                            target=target,
+                        valuetask = taskgraph.runner.ValueTask.createValueTask(
+                            name=name,
                             values=valuestack.get_values(),
-                        ).run()
+                        )
+                        result = valuetask.run()
                         print(
                             json.dumps(
                                 result,
@@ -164,11 +167,15 @@ def main():
                         current_input = None
                     # TODO: Array values with plural suffix "s"
                     else:
-                        result = taskgraph.runner.ValueTask(
-                            target=argument,
+                        valuetask = taskgraph.runner.ValueTask.createValueTask(
+                            name=argument,
                             values=valuestack.get_values(),
-                        ).run()
-                        print(result)
+                        )
+                        result = valuetask.run()
+                        for task, result in taskgraph.results.get_results():
+                            if " " in result:
+                                result = '"' + result + '"'
+                            print("export "+ str(task) + "=" + str(result))
                 i += 1
         except taskgraph.exception.FailedCommand as ex:
             print(ex)

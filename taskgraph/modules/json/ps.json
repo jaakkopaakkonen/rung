@@ -1,5 +1,5 @@
 {
-  "target": "listProcesses",
+  "name": "listProcesses",
   "executable": "ps",
   "commandLineArguments":"-axo pid,command|grep -v -e chromium-browser -e kworker -e nginx -e \"bash$\" -e \"xdg-desktop-portal\" -e \"gnome-terminal-server\" -e \"jcef_helper\" -e \"gvfs\" -e \"deja-dup\" -e \"gnome-settings-daemon\" -e \"evolution\" -e \"openvpn-service\" -e \"openvpn$\" -e \"loop[0-9]*\" -e \"/slack \" -e \"/slack/\""
 }

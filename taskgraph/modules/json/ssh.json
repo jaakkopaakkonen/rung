@@ -1,12 +1,12 @@
  [
   {
-    "target": "ssh",
+    "name": "ssh",
     "executable": "ssh",
     "commandLineArguments": "-A -o StrictHostKeyChecking=accept-new {host}",
     "inputs": ["host"]
   },
   {
-    "target": "scp",
+    "name": "scp",
     "executable": "scp",
     "commandLineArguments": [
       "{sourceHost}:", "{sourceFile}", " ",
@@ -16,13 +16,13 @@
     "optionalInputs": ["sourceHost", "destinationHost", "destinationFile"]
   },
   {
-    "target": "updateSshKey",
+    "name": "updateSshKey",
     "executable": "ssh-keyscan",
     "commandLineArguments": "{host} >> ~/.ssh/known_hosts",
     "inputs": ["host"]
   },
   {
-    "target": "removeSshKey",
+    "name": "removeSshKey",
     "executable": "ssh-keygen",
     "commandLineArguments": "-f ~/.ssh/known_hosts -R {host}",
     "inputs": ["host"]

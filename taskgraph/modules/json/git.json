@@ -1,21 +1,21 @@
 [
   {
-    "target": "branch",
+    "name": "branch",
     "executable": "git",
     "commandLineArguments": "branch --show-current"
   },
   {
-    "target": "remote",
+    "name": "remote",
     "executable": "git",
     "commandLineArguments": "remote"
   },
   {
-    "target": "addUpdatedToGit",
+    "name": "addUpdatedToGit",
     "executable": "git",
     "commandLineArguments": "add --update"
   },
   {
-    "target": "commit",
+    "name": "commit",
     "executable": "git",
     "commandLineArguments": [
       "commit",
@@ -27,7 +27,7 @@
     ]
   },
   {
-    "target": "pushToGitlab",
+    "name": "pushToGitlab",
     "executable": "git",
     "commandLineArguments": [
       "push",
@@ -41,7 +41,7 @@
     "optionalInputs": ["branch", "featureBranch", "targetBranch"]
   },
   {
-    "target": "commitId",
+    "name": "commitId",
     "executable": "git",
     "commandLineArguments": [
       "rev-parse HEAD"

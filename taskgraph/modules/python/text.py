@@ -21,4 +21,3 @@ def get_random_ascii_data(size=80):
 @task_func(defaultInput="secs")
 def wait(secs):
     time.sleep(float(secs))
-

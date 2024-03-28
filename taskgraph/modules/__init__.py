@@ -76,7 +76,7 @@ def struct_to_task(struct):
                 taskgraph.task.Task(**struct)
             except TypeError as te:
                 log.exception(
-                    "Task " + struct["target"] +
+                    "Task " + struct["name"] +
                     " parameters are not correct"
                 )
         elif struct["executable"] in command_to_full_path:
@@ -84,7 +84,7 @@ def struct_to_task(struct):
             taskgraph.task.task_shell_script(**struct)
         else:
             log.warning(
-                "Not registering task " + struct["target"] +
+                "Not registering task " + struct["name"] +
                 ". Executable " + struct["executable"] +
                 " missing from PATH.",
             )

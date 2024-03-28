@@ -271,7 +271,7 @@ def test_task_with_values():
         target=taskname,
         runnable=runnable_car,
         inputs=inputs,
-        providedValues=values,
+        values=values,
     )
     # Check parent task contents
     parent_task = taskgraph.dag.get_task(taskname)
@@ -329,7 +329,7 @@ def test_inline_task_in_values_one_match():
     testtask = taskgraph.task.Task(
         target="testtask",
         inputs=["searchPattern"],
-        providedValues={
+        values={
             "pattern": "alpha",
             "text": "{alpha}\nbeta\ngamma",
         },
@@ -356,7 +356,7 @@ def test_taskwihinputs_deepcopy():
     build_id_task = taskgraph.task.Task(
         target="build_id",
         inputs=["readfile"],
-        providedValues={
+        values={
             "file": "file-{REVISION}-{VARIANT}-{RELEASE}",
         },
     )
@@ -387,7 +387,7 @@ def test_inline_task_in_values_two_matches():
     build_id_task = taskgraph.task.Task(
         target="build_id",
         inputs=["readfile"],
-        providedValues={
+        values={
             "file": "file-{REVISION}-{VARIANT}-{RELEASE}",
         },
     )

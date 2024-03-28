@@ -66,30 +66,30 @@ def test_add_to_matrix():
     matrix = []
     row = 0
     column = 0
-    value = "target"
-    assert taskgraph.matrix.add_to_matrix(matrix, row ,column, value) == [["target"]]
+    value = "name"
+    assert taskgraph.matrix.add_to_matrix(matrix, row, column, value) == [["name"]]
     column += 1
     value = "input1"
     assert taskgraph.matrix.add_to_matrix(matrix, row, column, value) == [
-        [ "target", "input1"]
+        ["name", "input1"]
     ]
     column += 1
     value = "input1.1"
     assert taskgraph.matrix.add_to_matrix(matrix, row, column, value) == [
-        [ "target", "input1", "input1.1"]
+        ["name", "input1", "input1.1"]
     ]
     row += 1
     value= "input1.2"
     assert taskgraph.matrix.add_to_matrix(matrix, row, column, value) == [
-        [ "target", "input1", "input1.1"],
-        [ None    , None    , "input1.2"]
+        ["name", "input1", "input1.1"],
+        [None    , None    , "input1.2"]
     ]
     column = 1
     row += 1
     value = "input2"
     assert taskgraph.matrix.add_to_matrix(matrix, row, column, value) == [
-        [ "target", "input1", "input1.1"],
-        [ None    , None    , "input1.2"],
-        [ None    , "input2"],
+        ["name", "input1", "input1.1"],
+        [None    , None    , "input1.2"],
+        [None    , "input2"],
     ]
 

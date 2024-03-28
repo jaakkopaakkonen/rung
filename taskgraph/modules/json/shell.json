@@ -1,6 +1,6 @@
 [
   {
-    "target": "readableFile",
+    "name": "readableFile",
     "executable": "bash",
     "inputs": ["file"],
     "defaultInput": "file",

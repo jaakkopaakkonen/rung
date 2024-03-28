@@ -28,7 +28,7 @@ def get_function_name_params(function):
         values[name] = value
         if "__defaults__" in values and "__name__" in values:
             break
-    result["target"] = values["__name__"]
+    result["name"] = values["__name__"]
     all_params = list(
         inspect.signature(
             function,
@@ -289,3 +289,10 @@ def format_tree_box(row_items, runner):
         output += '\n'
         row_idx += 1
     return output
+
+def log_string(function, locals, cls=None, thread=None):
+    members = dict()
+    for key, name in inspect.getmembers(function):
+        members[key] = name
+    print(members)
+

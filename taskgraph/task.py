@@ -36,7 +36,40 @@ class Task:
         more controlled entities to enable testing
     """
 
-    inline_regexp = re.compile("{([^}]*)}")
+    @classmethod
+    def create_inline_value_task(cls, name, inputs):
+        """
+        Creates a new task based on inputs and values
+
+        :param name: The name of the task. The value part of the task values.
+        :param inputs: List of mandatory inputs of the task
+        :return:
+        """
+        # Search for given inputs matching {input} in given name
+        regex_list = []
+        for input_name in inputs:
+            regex_list.append(re.escape('{' + input_name + '}'))
+        found_given_inputs = re.findall('(' + '|'.join(regex_list) + ')', name)
+        task = None
+        if found_given_inputs:
+            # Found given inputs
+            i = 0
+            while i < len(found_given_inputs):
+                if found_given_inputs[i][0] == '{' and found_given_inputs[i][-1] == '}':
+                    found_given_inputs[i] = found_given_inputs[i][1:-1]
+                i += 1
+            name_container = (name, )
+
+            def inline_value_runnable(**kwargs):
+                return name_container[0].format(**kwargs)
+            task = Task(
+                name=name,
+                inputs=found_given_inputs,
+                runnable=inline_value_runnable,
+            )
+        else:
+            pass
+        return task
 
     @classmethod
     def extract_input_names(cls, input_value):
@@ -54,32 +87,32 @@ class Task:
 
     def __init__(
         self,
-        target=None,
+        name=None,
         runnable=None,
         inputs=[],
         optionalInputs=[],
         defaultInput=None,
-        providedValues={},
+        values={},
     ):
         """Add and register new task to be used as input for other tasks
-        :param target to be used for executing
+        :param name to be used for executing
                the task specifically via run_task
         :param runnable: The actual executable call (function or lambda)
             and it's argument names as list or tuple of strings, or as
             dictionary of strings,
-            when the input name either as task target of earlier task or name
+            when the input name either as task name of earlier task or name
             in values is different from the argument actual argument name.
             If dictionary format is used, the argument actual argument name
             for the executable is key and input as value.
         :param input_names: Additional input names as list,
             tuple or separate pa rameters, which are neccessary for this task
             but are not relayed to the signature executable call.
-        :param providedValues: Dictionary of input names and their values to
+        :param values: Dictionary of input names and their values to
                be provided further down to input tasks
         """
         # The name of this task to bue used by run_task
-        log.info("Registering task "+str(target))
-        self.target = target
+        log.info("Registering task "+str(name))
+        self.name = name
 
         # The actual runnable implementation extracted
         # from the first parameter in signature
@@ -97,38 +130,25 @@ class Task:
         # Check provided_values if they contain inputs to be completed
         # Mapping to generate inline tasks.
         # Key is the pattern to be matched with input values
-        # which is also used as target name.
+        # which is also used as task name.
         # Value is the list of the inputs for the task to be created
         # which names are used in the pattern.
-        for value_name in providedValues:
-            input_search_value = str(providedValues[value_name])
-
-            # Collect matches first, then construct the task with all matches
-            # as inputs
-            found_inline_inputs = self.__class__.extract_input_names(
-                input_search_value,
+        for value_name in values:
+            self.provided_values[value_name] = values[value_name]
+            self.__class__.create_inline_value_task(
+                name=values[value_name],
+                inputs=inputs,
             )
-            if found_inline_inputs:
-                input_search_value_container = (input_search_value, )
-
-                def inline_runnable(**kwargs):
-                    return input_search_value_container[0].format(**kwargs)
-                Task(
-                    target=input_search_value,
-                    runnable=inline_runnable,
-                    inputs=found_inline_inputs,
-                )
-        self.provided_values = providedValues
         taskgraph.dag.add(self)
 
-    def log_result(self, target, values):
-        if target is None:
-            target = "unnamed"
+    def log_result(self, name, values):
+        if name is None:
+            name = "unnamed"
         if type(values) == str:
             if len(values) > 80:
-                log.warning(target + "=\"" + values[0:80] + "\"...")
+                log.warning(name + "=\"" + values[0:80] + "\"...")
             else:
-                log.warning(target + "=\"" + values+"\"")
+                log.warning(name + "=\"" + values+"\"")
 
     def run(self, values):
         call_args = dict()
@@ -142,29 +162,29 @@ class Task:
         missing_dependencies = set(self.input_names) - fulfilled_dependencies
         if missing_dependencies:
             # Not all parameters fullfilled
-            log.warning("Not running " + self.target)
+            log.warning("Not running " + self.name)
             log.warning(
                 "Missing dependencies: " + " ".join(list(missing_dependencies)),
             )
             return
-        log.warning("Running " + self.target)
+        log.warning("Running " + self.name)
         log.warning("with values")
         log.warning("\n" + values_as_string(call_args))
 
-        result = ""
+        result = None
         if self.runnable:
             result = self.runnable(**call_args)
-            self.log_result(self.target, result)
+            self.log_result(self.name, result)
         return result
 
     def is_predecessor_of(self, task):
-        return self.target in task.input_names
+        return self.name in task.input_names
 
     def is_successor_of(self, task):
-        return task.target in self.input_names
+        return task.name in self.input_names
 
     def __eq__(self, other):
-        if not self.target == other.target:
+        if not self.name == other.name:
             return False
         if not self.input_names == other.input_names:
             return False
@@ -175,21 +195,21 @@ class Task:
         return True
 
     def __lt__(self, other):
-        if self.target in other.input_names:
+        if self.name in other.input_names:
             return True
-        if self.target in other.optional_input_names:
+        if self.name in other.optional_input_names:
             return True
-        return self.target < other.target
+        return self.name < other.name
 
     def __gt__(self, other):
-        if other.target in self.input_names:
+        if other.name in self.input_names:
             return True
-        if other.target in self.optional_input_names:
+        if other.name in self.optional_input_names:
             return True
-        return self.target > other.target
+        return self.name > other.name
 
     def __hash__(self):
-        result = hash(self.target)
+        result = hash(self.name)
         for input in self.input_names:
             result += hash(input)
         for optional_input in self.optional_input_names:
@@ -208,7 +228,7 @@ def task_func(*args, **kwargs):
         return inner_func
 
 
-def run_commands(target, commands):
+def run_commands(name, commands):
     READ_SIZE = 8192
     results = list()
 
@@ -349,18 +369,18 @@ def postprocessOutput(output_lines, postprocess_rules):
 
 
 def task_shell_script(
-    target=None,
+    name=None,
     executable=None,
     commandLineArguments=None,
     inputs=[],
     optionalInputs=[],
     defaultInput=None,
     inputDependencies=None,
-    providedValues={},
+    values={},
     postprocess=None,
 ):
     def runnable(**resolved_input_values):
-        nonlocal target
+        nonlocal name
         nonlocal executable
         nonlocal commandLineArguments
         nonlocal postprocess
@@ -384,7 +404,7 @@ def task_shell_script(
             completed_script_lines[0] = executable + ' ' + \
                 completed_script_lines[0]
         # Run commands
-        result = run_commands(target, completed_script_lines)
+        result = run_commands(name, completed_script_lines)
         if isinstance(postprocess, dict) and postprocess:
             # Resolve possible inputs in postprocess regexp pattern
             completed_inputs = dict()
@@ -398,10 +418,10 @@ def task_shell_script(
             result = postprocessOutput(result, completed_inputs)
         return result
     return Task(
-        target=target,
+        name=name,
         runnable=runnable,
         inputs=inputs,
         optionalInputs=optionalInputs,
         defaultInput=defaultInput,
-        providedValues=providedValues,
+        values=values,
     )

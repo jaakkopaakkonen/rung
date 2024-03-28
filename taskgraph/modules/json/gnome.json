@@ -1,15 +1,15 @@
 [
   {
-    "target": "lockScreen",
+    "name": "lockScreen",
     "inputs": ["sendDbusMessage"],
-    "providedValues": {
+    "values": {
       "type":  "method_call",
       "destination": "org.gnome.ScreenSaver",
       "contents": "/org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
     }
   },
   {
-    "target": "terminal",
+    "name": "terminal",
     "executable": "gnome-terminal",
     "commandLineArguments": ["--window", " --title '{title}'", " -- {command}"],
     "optionalInputs": ["command", "title"]
