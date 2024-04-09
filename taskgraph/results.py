@@ -2,7 +2,8 @@ import time
 import taskgraph.task
 
 
-store = list()
+results_in_order = list()
+results_by_values = dict()
 
 
 def add(task, values, result):
@@ -14,11 +15,9 @@ def add(task, values, result):
     :param result: THe result value task execution returned
     :return: None
     """
-    global store
+    global results_in_order
     finish_timestamp = time.time()
-    if isinstance(task, taskgraph.task.Task):
-        task = task.name
-    store.append(
+    results_in_order.append(
         {
             "finish_timestamp": finish_timestamp,
             "task": task,
@@ -26,6 +25,13 @@ def add(task, values, result):
             "result": result,
         },
     )
+    values = values.copy()
+    values["task_name"] = task.name
+    results_by_values[task.get_namedtuple()(**values)] = {
+        "finish_timestamp": finish_timestamp,
+        "values": values,
+        "result": result,
+    }
 
 
 def get(task):
@@ -42,7 +48,23 @@ def get(task):
     return None
 
 
-def get_results():
+def get_results(task, values={}):
+    result = None
+    try:
+        values = values.copy()
+        values["task_name"] = task.name
+        result = results_by_values[task.get_namedtuple()(**values)]
+        del(result["values"]["task_name"])
+    except TypeError as te:
+        # Mandatory input value missing
+        pass
+    except KeyError as ke:
+        # No such task with such values found
+        pass
+    return result
+
+
+def get_all_results():
     """
     Gets a list of tuples containing task name and it's return value.
     Earlier values of same name tasks are not returned despite of result value

@@ -8,6 +8,7 @@ import taskgraph.valuestack
 import taskgraph.util
 import taskgraph.exception
 
+import collections
 import fcntl
 import os
 import pprint
@@ -36,6 +37,7 @@ class Task:
         more controlled entities to enable testing
     """
 
+    empty_input_value = "empty_input_value"
     @classmethod
     def create_inline_value_task(cls, name, inputs):
         """
@@ -183,6 +185,7 @@ class Task:
     def is_successor_of(self, task):
         return task.name in self.input_names
 
+
     def __eq__(self, other):
         if not self.name == other.name:
             return False
@@ -216,6 +219,12 @@ class Task:
             result += hash(optional_input)
         return result
 
+    def get_namedtuple(self):
+        return collections.namedtuple(
+            self.name,
+            ["task_name"] + self.input_names + self.optional_input_names,
+            defaults=(self.empty_input_value,) * len(self.optional_input_names),
+        )
 
 def task_func(*args, **kwargs):
     def inner_func(runnable):
@@ -275,7 +284,7 @@ def run_commands(name, commands):
                             "\r\n",
                             line,
                         )
-                        # print(line, end='', file=outhandle)
+                        print(line, end='', file=outhandle)
                         line = ""
             outstream_list, _, _ = select.select(
                 [

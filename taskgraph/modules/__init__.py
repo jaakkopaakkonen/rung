@@ -36,6 +36,7 @@ def refresh_path_executables(paths=None):
                 " listed PATH environment variable",
             )
         else:
+            # Loop through all files in dir
             for filepath in dir.iterdir():
                 if is_executable(filepath):
                     command = filepath.name
@@ -79,7 +80,8 @@ def struct_to_task(struct):
                     "Task " + struct["name"] +
                     " parameters are not correct"
                 )
-        elif struct["executable"] in command_to_full_path:
+        elif struct["executable"] in command_to_full_path or \
+           is_executable(pathlib.Path(struct["executable"])):
             # Executable exists in PATH
             taskgraph.task.task_shell_script(**struct)
         else:

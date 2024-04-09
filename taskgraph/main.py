@@ -172,7 +172,7 @@ def main():
                             values=valuestack.get_values(),
                         )
                         result = valuetask.run()
-                        for task, result in taskgraph.results.get_results():
+                        for task, result in taskgraph.results.get_all_results():
                             if " " in result:
                                 result = '"' + result + '"'
                             print("export "+ str(task) + "=" + str(result))

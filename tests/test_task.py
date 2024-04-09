@@ -1,3 +1,4 @@
+import collections
 import os
 import pytest
 import random
@@ -54,7 +55,9 @@ def test_task_with_command_line_parts():
             "commit_message",
         ]
     }
-    taskgraph.modules.command_to_full_path = {"echo": "/usr/bin/echo"}
+    taskgraph.modules.command_to_full_path = {
+        "echo": "/usr/bin/echo",
+    }
     taskgraph.modules.struct_to_task(task_structure)
     task = taskgraph.dag.get_task("commit")
     result =  task.run({"commit_message_file": "commit.md"})
@@ -138,7 +141,7 @@ def test_task_with_values():
     ]
     # Check child task contents
     child_task = taskgraph.dag.get_task("transmission has {gears} gears")
-    assert child_task.input_names == ["gears"]
+    assert child_task.inputs == ["gears"]
     assert child_task.provided_values == {}
     # Run child task
     result = child_task.run({"gears": "four"})
@@ -218,10 +221,190 @@ def test_task_inline_values():
             '',
             (),
             {
-                "command": "ssh www.google.com sudo supervisorctl tail -f searchengine",
+                "command":
+                    "ssh www.google.com sudo supervisorctl tail -f searchengine",
                 "title": "www.google.com: supervisorctl tail -f searchengine",
             },
         ),
     ]
     # Revert original command_to_full_path
     taskgraph.modules.command_to_full_path = old_command_to_full_path
+
+
+def test_get_namedtuple():
+    # Initialize command_to_full_path to bypass executable search from PATH
+    old_command_to_full_path = taskgraph.modules.command_to_full_path
+    taskgraph.modules.command_to_full_path = ["executable"]
+
+    # Initialize task
+    taskgraph.modules.struct_to_task(
+        [
+            {
+                "name": "task",
+                "executable": "executable",
+                "inputs": ["inputName"],
+                "optionalInputs": ["optionalInputName"]
+            },
+        ],
+    )
+
+    task = taskgraph.dag.get_task("task")
+    nt = task.get_namedtuple()
+    valuedtuple1 = nt(inputName="inputValue")
+    assert valuedtuple1 == collections.namedtuple(
+        "task",
+        ["inputName", "optionalInputName"],
+    )("inputValue", taskgraph.task.Task.empty_input_value)
+
+
+def test_store_results():
+    # Initialize command_to_full_path to bypass executable search from PATH
+    old_command_to_full_path = taskgraph.modules.command_to_full_path
+    taskgraph.modules.command_to_full_path = ["executable"]
+
+    # Initialize task
+    taskgraph.modules.struct_to_task(
+        [
+            {
+                "name": "task",
+                "executable": "executable",
+                "inputs": ["inputName"],
+            },
+        ],
+    )
+
+    # Switch terminal runnable with a Mock
+    task = taskgraph.dag.get_task("task")
+    task.runnable = Mock()
+
+    # Create first valuetask
+    valuetask1 = taskgraph.runner.ValueTask.createValueTask(
+        name="task",
+        values={
+            "inputName": "inputValue",
+        },
+    )
+
+    # Execute first valuetask
+    result = valuetask1.run()
+
+    # Check results
+    assert result == task.runnable.return_value
+    assert task.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {
+                "inputName": "inputValue",
+            }
+        )
+    ]
+
+    # Create second identical valuetask
+    valuetask2 = taskgraph.runner.ValueTask.createValueTask(
+        name="task",
+        values={
+            "inputName": "inputValue",
+        },
+    )
+
+    # Execute the second valuetask
+    # Execute first valuetask
+    result = valuetask1.run()
+
+    # Check results
+    assert result == task.runnable.return_value
+
+    # Especially check the mock was not run again but cached result
+    # was used
+    assert task.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {
+                "inputName": "inputValue",
+            }
+        )
+    ]
+
+
+def test_tasks_store_results():
+    # Initialize command_to_full_path to bypass executable search from PATH
+    old_command_to_full_path = taskgraph.modules.command_to_full_path
+    taskgraph.modules.command_to_full_path = ["a", "b", "c"]
+
+    # Initialize task
+    taskgraph.modules.struct_to_task(
+        [
+            {
+                "name": "a",
+                "executable": "a",
+            },
+            {
+                "name": "b",
+                "executable": "b",
+                "inputs": ['a'],
+            },
+            {
+                "name": "c",
+                "executable": "c",
+                "inputs": ['a'],
+            },
+        ],
+    )
+    # Switch terminal runnable with a Mock for all tasks
+    task_a = taskgraph.dag.get_task("a")
+    task_a.runnable = Mock()
+
+    task_b = taskgraph.dag.get_task("b")
+    task_b.runnable = Mock()
+
+    task_c = taskgraph.dag.get_task("c")
+    task_c.runnable = Mock()
+
+    # Create ValueTask and execute b and it's dependency a
+    valuetask_b = taskgraph.runner.ValueTask.createValueTask(name="b")
+    result_b = valuetask_b.run()
+
+    # Check task b runnable is returning correct result
+    assert result_b == task_b.runnable.return_value
+
+    # Check task a was called
+    assert task_a.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {}
+        )
+    ]
+
+    # Check task b was called with input a as parameter
+    assert task_b.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {"a": task_a.runnable.return_value}
+        )
+    ]
+
+    # Create ValueTask and execute c but it's dependency a will not be executed
+    valuetask_c = taskgraph.runner.ValueTask.createValueTask(name="c")
+    result_c = valuetask_c.run()
+
+    # Check task a was not called again
+    assert task_a.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {}
+        )
+    ]
+
+    # Check task b was called with input a as parameter
+    assert task_c.runnable.mock_calls == [
+        (
+            '',
+            (),
+            {"a": task_a.runnable.return_value}
+        )
+    ]

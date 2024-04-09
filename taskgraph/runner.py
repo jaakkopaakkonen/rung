@@ -83,7 +83,8 @@ class ValueTask:
                         values=all_values,
                     )
             else:
-                raise MissingInputException(input)
+                if input_name not in task.optional_input_names:
+                    return MissingInputException(input)
         return ValueTask(name=name, values=completed_values, task=task)
 
     def __init__(self, name, values={}, task=None):
@@ -104,7 +105,7 @@ class ValueTask:
         # TODO store results to separate structure,
         #      do not contaminate self.inputs?
         # TODO parallel execution of ValueTask inputs
-        result = None
+
         for input_name in self.values:
             input_value = self.values[input_name]
             if isinstance(input_value, ValueTask):
@@ -112,13 +113,22 @@ class ValueTask:
             elif taskgraph.dag.is_task(input_value):
                 print(input_value + " is task")
         if self.task.runnable:
-            result = self.task.run(self.values)
+            # Try to fetch result from the cache
+            result = taskgraph.results.get_results(
+                self.task,
+                self.values,
+            )
+            if result and "result" in result:
+                result = result["result"]
+            # No result in cache. We need to execute
+            if result == None:
+                result = self.task.run(self.values)
         elif len(self.task.input_names) == 1:
             # No task runnable and only one input specified
             # Task is infact an alias for other task
             result =  self.values[self.task.input_names[0]]
         taskgraph.results.add(
-            task=self.name,
+            task=self.task,
             values=self.values,
             result=result,
         )

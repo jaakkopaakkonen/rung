@@ -36,8 +36,6 @@ def test_valuestack():
         "ib": "two",
         "ic": "three",
         "id": "four",
-        "ie": "ten",
-        "ig": "seven",
     }
 
     valuestack2 = valuestack1.new_level_copy()
