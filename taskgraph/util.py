@@ -1,9 +1,11 @@
+import codecs
 import colorama
 import fcntl
 import inspect
 import logging
 import os
 import pathlib
+import re
 import types
 
 
@@ -296,3 +298,17 @@ def log_string(function, locals, cls=None, thread=None):
         members[key] = name
     print(members)
 
+
+def string_to_valid_identifier(string):
+    string = string.strip()
+    string = re.sub('[\\s\\t\\n]+', '_', string)
+
+    strlist = []
+    for c in string:
+        if not re.findall('[^0-9a-zA-Z_]', c):
+            strlist.append(c)
+    string = ''.join(strlist)
+
+    string = re.sub('[^0-9a-zA-Z_]', '', string)
+    string = re.sub('^[^a-zA-Z_]+', '', string)
+    return string

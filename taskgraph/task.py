@@ -57,7 +57,8 @@ class Task:
             # Found given inputs
             i = 0
             while i < len(found_given_inputs):
-                if found_given_inputs[i][0] == '{' and found_given_inputs[i][-1] == '}':
+                if found_given_inputs[i][0] == '{' and \
+                   found_given_inputs[i][-1] == '}':
                     found_given_inputs[i] = found_given_inputs[i][1:-1]
                 i += 1
             name_container = (name, )
@@ -221,7 +222,7 @@ class Task:
 
     def get_namedtuple(self):
         return collections.namedtuple(
-            self.name,
+            "task",
             ["task_name"] + self.input_names + self.optional_input_names,
             defaults=(self.empty_input_value,) * len(self.optional_input_names),
         )

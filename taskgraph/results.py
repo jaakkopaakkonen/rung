@@ -40,10 +40,10 @@ def get(task):
     :param task: Task name
     :return: Dictionary of finish_timestamp, task, values, result
     """
-    i = len(store)-1
+    i = len(results_in_order)-1
     while i >= 0:
-        if store[i]["task"] == task:
-            return store[i]
+        if results_in_order[i]["task"] == task:
+            return results_in_order[i]
         i -= 1
     return None
 
@@ -72,10 +72,10 @@ def get_all_results():
     """
     found_tasks = set()
     results = list()
-    i = len(store)-1
+    i = len(results_in_order)-1
     while i >= 0:
-        task_name = store[i]["task"]
-        task_result = store[i]["result"]
+        task_name = results_in_order[i]["task"].name
+        task_result = results_in_order[i]["result"]
         if task_name not in found_tasks and \
            task_result is not None and \
            len(task_result) <= 80:

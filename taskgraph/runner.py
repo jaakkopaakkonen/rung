@@ -110,6 +110,8 @@ class ValueTask:
             input_value = self.values[input_name]
             if isinstance(input_value, ValueTask):
                 self.values[input_name] = input_value.run()
+                # Store last run and evaluated input as result to handle aliases
+                result = self.values[input_name]
             elif taskgraph.dag.is_task(input_value):
                 print(input_value + " is task")
         if self.task.runnable:
@@ -123,10 +125,6 @@ class ValueTask:
             # No result in cache. We need to execute
             if result == None:
                 result = self.task.run(self.values)
-        elif len(self.task.input_names) == 1:
-            # No task runnable and only one input specified
-            # Task is infact an alias for other task
-            result =  self.values[self.task.input_names[0]]
         taskgraph.results.add(
             task=self.task,
             values=self.values,

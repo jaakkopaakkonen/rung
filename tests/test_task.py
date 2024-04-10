@@ -250,11 +250,11 @@ def test_get_namedtuple():
 
     task = taskgraph.dag.get_task("task")
     nt = task.get_namedtuple()
-    valuedtuple1 = nt(inputName="inputValue")
+    valuedtuple1 = nt(task_name="task", inputName="inputValue")
     assert valuedtuple1 == collections.namedtuple(
         "task",
-        ["inputName", "optionalInputName"],
-    )("inputValue", taskgraph.task.Task.empty_input_value)
+        ["task_name", "inputName", "optionalInputName"],
+    )("task", "inputValue", taskgraph.task.Task.empty_input_value)
 
 
 def test_store_results():

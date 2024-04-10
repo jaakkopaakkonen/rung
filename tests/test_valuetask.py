@@ -14,7 +14,7 @@ def test_valuetask_complete_optional():
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
     task = taskgraph.task.Task(
-        target=taskname,
+        name=taskname,
         runnable=runnable,
         inputs=inputs,
         optionalInputs=optionalInputs,
@@ -44,7 +44,7 @@ def test_valuetask_partial_optional():
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
     task = taskgraph.task.Task(
-        target=taskname,
+        name=taskname,
         runnable=runnable,
         inputs=inputs,
         optionalInputs=optionalInputs,
@@ -73,7 +73,7 @@ def test_valuetask_no_optional():
     optionalInputs = ["delta", "epsilon"]
     taskname = "task"
     task = taskgraph.task.Task(
-        target=taskname,
+        name=taskname,
         runnable=runnable,
         inputs=inputs,
         optionalInputs=optionalInputs,
@@ -96,7 +96,6 @@ def test_valuetask_no_optional():
 
 
 def test_two_taskswithinputs_happy():
-    taskname = "alpha"
     inputs = ["beta", "gamma"]
     runnable_alpha = unittest.mock.Mock(
         side_effect=lambda beta, gamma: {
@@ -106,7 +105,7 @@ def test_two_taskswithinputs_happy():
         }
     )
     task_alpha = taskgraph.task.Task(
-        target=taskname,
+        name="alpha",
         runnable=runnable_alpha,
         inputs=inputs,
     )
@@ -120,7 +119,7 @@ def test_two_taskswithinputs_happy():
         },
     )
     task_beta = taskgraph.task.Task(
-        target=taskname,
+        name=taskname,
         runnable=runnable_beta,
         inputs=inputs,
     )
@@ -130,7 +129,7 @@ def test_two_taskswithinputs_happy():
         "epsilon": "epsilon",
     }
     valuetask_alpha = taskgraph.runner.ValueTask(
-        target="alpha",
+        name="alpha",
         values=run_inputs,
     )
     result = valuetask_alpha.run()
