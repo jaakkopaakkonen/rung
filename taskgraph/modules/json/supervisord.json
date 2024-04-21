@@ -4,7 +4,7 @@
     "inputs": ["terminal", "host", "service"],
     "defaultInput": "service",
     "values": {
-      "title": "{host}: supervisorctl tail -f {service}",
+      "title": "ssh f{host} supervisorctl tail -f {service}",
       "command": "ssh {host} sudo supervisorctl tail -f {service}"
     }
   }

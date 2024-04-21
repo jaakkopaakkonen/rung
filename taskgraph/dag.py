@@ -26,7 +26,6 @@ mandatory_inputs_of_tasks = dict()
 # Value is a frozen set of inputs which can fulfill this task.
 optional_inputs_of_tasks = dict()
 
-
 # All tasks as set in value having single input as key
 tasks_having_input = dict()
 
@@ -35,12 +34,12 @@ tasks_having_input = dict()
 # Value is Task object itself
 tasks_by_name = dict()
 
-
 all_valuenames = set()
 
 all_input_names = set()
 
 all_task_names = set()
+
 
 def add(task):
     """ Add task to this bookkeeper
@@ -76,10 +75,12 @@ def add(task):
     optional_inputs_of_tasks[name] = task.optional_input_names
 
     # tasks_having_input
-    for input in inputs:
+    for input in task.input_names + task.optional_input_names:
         if input not in tasks_having_input:
             tasks_having_input[input] = set()
         tasks_having_input[input].add(name)
+
+    # tasks by name
     tasks_by_name[name] = task
 
 
@@ -123,12 +124,22 @@ def get_all_input_names():
     return all_input_names
 
 
+def get_task_names_with_input(input_name):
+    result = []
+
+
 def get_default_input_name(task_name):
     task = get_task(task_name)
     if not task:
         return None
     return task.default_input
 
+def get_tasks_having_input(input_name):
+    global tasks_having_input
+    try:
+        return tasks_having_input[input_name]
+    except KeyError:
+        return set()
 
 def get_task(name):
     """Retrieves the task based on it's name and all non-optional inputs
