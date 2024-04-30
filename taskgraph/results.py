@@ -1,9 +1,110 @@
+import os
+import re
+import sys
 import time
 import taskgraph.task
 
+from datetime import datetime
 
 results_in_order = list()
 results_by_values = dict()
+
+tasks_by_runner = dict()
+
+
+def register_runner(runner, task):
+    global tasks_by_runner
+    tasks_by_runner[runner] = task
+
+def get_logger(runner):
+    return Logger(tasks_by_runner[runner])
+
+def prefix_lines(prefix, lines):
+    if isinstance(prefix, bytes) and isinstance(lines, bytes):
+        result = bytes()
+        newline = b'\n'
+    elif isinstance(prefix, str) and isinstance(lines, str):
+        result = str()
+        newline = '\n'
+    lines = lines.split(newline)
+    i = 0
+    while i < len(lines):
+        if i < (len(lines)-1) or lines[i]:
+            result += prefix + lines[i] + newline
+        i += 1
+    return result
+
+def timestamp_to_human(timestamp):
+    datetime_obj = datetime.fromtimestamp(timestamp)
+    return "{:02d}".format(datetime_obj.hour) + ':'  + \
+        "{:02d}".format(datetime_obj.minute) + ':' + \
+        "{:02d}".format(datetime_obj.second)
+
+def timestamp_to_utc_bytes(timestamp):
+    return bytes(
+        "{:.6f}".format(
+            datetime.utcfromtimestamp(timestamp).timestamp(),
+        ),
+        "utf-8",
+    )
+class Logger:
+
+    def __init__(self, task):
+        self.file = None
+        if taskgraph.config.log_dir:
+            timestamp = time.time()
+            filename = str(int(datetime.utcfromtimestamp(timestamp).timestamp()))
+            if task.module:
+                filename += '_' + task.module
+            if task.name:
+                filename += '_' + task.name
+            filename += ".log"
+            try:
+                self.file = open(taskgraph.config.log_dir + '/' + filename, 'wb')
+            except FileNotFoundError:
+                os.makedirs(taskgraph.config.log_dir)
+                self.file = open(taskgraph.config.log_dir + '/' + filename, 'wb')
+
+
+
+    def print_operation(self, timestamp, operation=b'', data=b''):
+        self.file.write(
+            prefix_lines(
+                timestamp_to_utc_bytes(timestamp) + b' ' + operation + b' ',
+                data,
+            )
+        )
+        return prefix_lines(
+            timestamp_to_human(timestamp) + ' ',
+            data.decode("utf-8"),
+        )
+
+    def command(self, command):
+        sys.stdout.write(
+            self.print_operation(time.time(), b"CMD", command),
+        )
+
+    def pid(self, pid):
+        self.print_operation(time.time(), b"PID", bytes(str(pid), "utf-8"))
+
+    def stdout(self, output):
+        sys.stdout.write(
+            self.print_operation(time.time(), b"OUT", output),
+        )
+
+    def stderr(self, output):
+        sys.stderr.write(
+            self.print_operation(time.time(), b"ERR", output),
+        )
+
+    def exitcode(self, status):
+        sys.stdout.write(
+            self.print_operation(time.time(), b"END", bytes(str(status), "utf-8")),
+        )
+
+    def close(self):
+        self.print_operation(time.time())
+        self.file.close()
 
 
 def add(task, values, result):

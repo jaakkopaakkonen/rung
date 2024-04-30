@@ -35,13 +35,12 @@ taskgraph.modules.refresh_path_executables()
 
 from taskgraph.modules.python import *
 
+taskgraph.config.read_config_file()
 
-external_module_path = taskgraph.config.initialize_external_modules()
-
-
-if external_module_path:
+# Read and import external json modules
+if taskgraph.config.external_module_dir:
     # Read and import external python modules
-    for path in glob.glob(external_module_path + "/python/*.py"):
+    for path in glob.glob(taskgraph.config.external_module_dir + "/python/*.py"):
         module_name = taskgraph.util.get_basename_without_ext(path)
         spec = importlib.util.spec_from_file_location(module_name, path)
         module = importlib.util.module_from_spec(spec)
@@ -49,21 +48,20 @@ if external_module_path:
         spec.loader.exec_module(module)
     # Read and register external json modules
     taskgraph.modules.register_json_modules(
-        directory=external_module_path + "/json",
+        directory=taskgraph.config.external_module_dir + "/json",
     )
 
 
-# Read and import external json modules
 # Read and import json modules
 taskgraph.modules.register_json_modules()
 
 
-def print_task_tree(runner):
+def print_task_tree(valuestack):
     for task in sorted(taskgraph.dag.final_tasks()):
         print(
             taskgraph.util.format_tree_box(
                 taskgraph.matrix.task_to_matrix(task),
-                runner,
+                valuestack,
             ),
         )
 
@@ -88,8 +86,7 @@ def main():
         values = valuestack.get_values()
         print_values(values)
         print("\n")
-        runner = taskgraph.runner.TaskRunner(valuestack)
-        print_task_tree(runner)
+        print_task_tree(valuestack)
     else:
         # We have arguments
         # This holds the current input where value is going to be read next
@@ -104,17 +101,18 @@ def main():
                     with open(
                         os.path.expanduser(sys.argv[i]), "rb",
                     ) as jsonfile:
-                        runner = taskgraph.runner.TaskRunner(
-                            valuestack,
-                        )
-                        result = runner.run_tasks(json.load(jsonfile))
-                        print(
-                            json.dumps(
-                                result,
-                                indent=2,
-                                default=lambda o: str(o),
-                            )
-                        )
+                        pass
+                        # runner = taskgraph.runner.TaskRunner(
+                        #     valuestack,
+                        # )
+                        # result = runner.run_tasks(json.load(jsonfile))
+                        # print(
+                        #     json.dumps(
+                        #         result,
+                        #         indent=2,
+                        #         default=lambda o: str(o),
+                        #     )
+                        # )
                     i += 1
                 elif argument.startswith("--print"):
                     i += 1
@@ -167,15 +165,20 @@ def main():
                         current_input = None
                     # TODO: Array values with plural suffix "s"
                     else:
-                        valuetask = taskgraph.runner.ValueTask.createValueTask(
-                            name=argument,
-                            values=valuestack.get_values(),
-                        )
-                        result = valuetask.run()
-                        for task, result in taskgraph.results.get_all_results():
-                            if " " in result:
-                                result = '"' + result + '"'
-                            print("export "+ str(task) + "=" + str(result))
+                        try:
+                            valuetask = taskgraph.runner.ValueTask.createValueTask(
+                                name=argument,
+                                values=valuestack.get_values(),
+                            )
+                            result = valuetask.run()
+                            for task, result in taskgraph.results.get_all_results():
+                                if " " in result:
+                                    result = '"' + result + '"'
+                                print("export "+ str(task) + "=" + str(result))
+                        except taskgraph.runner.MissingInputException as mie:
+                            print("Missing input for task " + str(argument))
+                            print(mie.args)
+
                 i += 1
         except taskgraph.exception.FailedCommand as ex:
             print(ex)

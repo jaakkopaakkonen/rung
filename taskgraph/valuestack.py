@@ -1,3 +1,4 @@
+import colorama
 import taskgraph.dag
 
 class ValueStack:
@@ -82,3 +83,22 @@ class ValueStack:
     def reset(self):
         self.command_line_values = dict()
         self.result_values = dict()
+
+    def get_printable_len(self, name):
+        value = self.get_value(name)
+        if value is not None:
+            return len(name) + 1 + len(value)
+        return len(name)
+
+    def get_printable_form(self, name):
+        value = self.get_value(name)
+        if value is not None:
+            return colorama.Fore.GREEN + \
+               name + \
+               '=' + value + \
+               colorama.Fore.RESET
+        if not taskgraph.dag.is_task(name):
+            return colorama.Fore.RED + \
+             name + \
+             colorama.Fore.RESET
+        return name

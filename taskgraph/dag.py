@@ -40,8 +40,11 @@ all_input_names = set()
 
 all_task_names = set()
 
+# key is module name, value is list of tasks in module
+tasks_by_modules = dict()
 
-def add(task):
+
+def add(module, task):
     """ Add task to this bookkeeper
     Adding a task will enable bookkeeper to track name and inputs
     and retrieve the task based on those
@@ -53,10 +56,15 @@ def add(task):
     global tasks_by_name
     global all_valuenames
     global all_input_names
-
     global tasks_having_input
+    global tasks_by_modules
+    
 
     name = task.name
+    if module:
+        if not module in tasks_by_modules:
+            tasks_by_modules[module] = set()
+        tasks_by_modules[module].add(name)
     inputs = frozenset(tuple(task.input_names))
 
     all_task_names.add(name)

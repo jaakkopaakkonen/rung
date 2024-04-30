@@ -54,27 +54,28 @@ def register_json_modules(directory=None):
         with jsonfile.open(mode="rb") as fp:
             try:
                 taskstruct = json.load(fp)
-                struct_to_task(taskstruct)
+                struct_to_task(jsonfile.stem, taskstruct)
             except json.decoder.JSONDecodeError:
                 log.warning("Could not parse " + str(jsonfile))
 
 
-def struct_to_task(struct):
+def struct_to_task(module, struct):
     """Check whether struct contains executable and it is in PATH.
        If no executable or it is in PATH, relay task forward to
        task_shell_script
 
+    :param module: Name of module where tasks are to be associated
     :param struct:
     :return:
     """
     global command_to_full_path
     if isinstance(struct, (list, tuple)):
         for substruct in struct:
-            struct_to_task(substruct)
+            struct_to_task(module, substruct)
     elif isinstance(struct, dict):
         if "executable" not in struct:
             try:
-                taskgraph.task.Task(**struct)
+                taskgraph.task.Task(module=module, **struct)
             except TypeError as te:
                 log.exception(
                     "Task " + struct["name"] +
@@ -83,7 +84,7 @@ def struct_to_task(struct):
         elif struct["executable"] in command_to_full_path or \
            is_executable(pathlib.Path(struct["executable"])):
             # Executable exists in PATH
-            taskgraph.task.task_shell_script(**struct)
+            taskgraph.task.task_shell_script(module=module, **struct)
         else:
             log.warning(
                 "Not registering task " + struct["name"] +

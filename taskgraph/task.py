@@ -96,6 +96,7 @@ class Task:
         optionalInputs=[],
         defaultInput=None,
         values={},
+        module=None,
     ):
         """Add and register new task to be used as input for other tasks
         :param name to be used for executing
@@ -115,8 +116,9 @@ class Task:
         """
         # The name of this task to bue used by run_task
         log.info("Registering task "+str(name))
+        self.runnable = None
         self.name = name
-
+        self.module = module
         # The actual runnable implementation extracted
         # from the first parameter in signature
 
@@ -128,7 +130,9 @@ class Task:
         # Optional input names or prerequisites for this task
         self.optional_input_names = list(optionalInputs)
         self.default_input = defaultInput
-        self.runnable = runnable
+        if runnable:
+            self.runnable = runnable
+            taskgraph.results.register_runner(runnable, self)
         self.provided_values = dict()
         # Check provided_values if they contain inputs to be completed
         # Mapping to generate inline tasks.
@@ -142,7 +146,7 @@ class Task:
                 name=values[value_name],
                 inputs=inputs,
             )
-        taskgraph.dag.add(self)
+        taskgraph.dag.add(self.module, self)
 
     def log_result(self, name, values):
         if name is None:
@@ -231,36 +235,32 @@ def task_func(*args, **kwargs):
     def inner_func(runnable):
         determined_values =  taskgraph.util.get_function_name_params(runnable)
         determined_values.update(kwargs)
-        Task(**determined_values)
+        module = re.search(r'[^.]+$', runnable.__module__).group(0)
+        Task(module=module, **determined_values)
     if args:
         return inner_func(args[0])
     else:
         return inner_func
 
 
-def run_commands(name, commands):
+def run_commands(logger, commands):
     READ_SIZE = 8192
-    results = list()
-
-    output_lines = ""
     cmd_idx = 0
     while cmd_idx < len(commands):
-        line = ""
         command = commands[cmd_idx].strip()
         if command:
-            print("CMD " + command, file=sys.stderr)
+            logger.command(bytes(command, "utf-8"))
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                encoding="utf-8",
             )
+            logger.pid(process.pid)
             taskgraph.util.set_stream_nonblocking(process.stdout)
             taskgraph.util.set_stream_nonblocking(process.stderr)
             stdout_fileno = process.stdout.fileno()
             stderr_fileno = process.stderr.fileno()
-            prefix = ""
             while process.poll() is None:
                 outstream_list, _, _ = select.select(
                     [
@@ -271,22 +271,11 @@ def run_commands(name, commands):
                     [],
                 )
                 for outstream in outstream_list:
-                    outhandle = None
                     out_fileno = outstream.fileno()
                     if out_fileno == stdout_fileno:
-                        outhandle = sys.stdout
+                        logger.stdout(outstream.read(READ_SIZE))
                     elif out_fileno == stderr_fileno:
-                        outhandle = sys.stderr
-                    line += outstream.read(READ_SIZE)
-                    if line:
-                        output_lines += line
-                        line = re.sub(
-                            "\n",
-                            "\r\n",
-                            line,
-                        )
-                        print(line, end='', file=outhandle)
-                        line = ""
+                        logger.stderr(outstream.read(READ_SIZE))
             outstream_list, _, _ = select.select(
                 [
                     process.stdout,
@@ -296,27 +285,17 @@ def run_commands(name, commands):
                 [],
             )
             for outstream in outstream_list:
-                outhandle = None
                 out_fileno = outstream.fileno()
                 if out_fileno == stdout_fileno:
-                    outhandle = sys.stdout
+                    logger.stdout(outstream.read(READ_SIZE))
                 elif out_fileno == stderr_fileno:
-                    outhandle = sys.stderr
-                line = outstream.read(READ_SIZE)
-                if line:
-                    output_lines += line
-                    line = re.sub(
-                        "\n",
-                        "\r\n",
-                        line,
-                    )
-                    line = ""
+                    logger.stderr(outstream.read(READ_SIZE))
             # Non-zero exit status, break loop
+            logger.exitcode(process.returncode)
             if process.returncode:
-                raise(taskgraph.exception.FailedCommand(output_lines.strip()))
+                raise(taskgraph.exception.FailedCommand(logger.failed_command_output()))
         cmd_idx += 1
-    return output_lines.strip()
-
+    return
 
 def format_argument_list(
     argument_list,
@@ -388,6 +367,7 @@ def task_shell_script(
     inputDependencies=None,
     values={},
     postprocess=None,
+    module=None,
 ):
     def runnable(**resolved_input_values):
         nonlocal name
@@ -414,7 +394,10 @@ def task_shell_script(
             completed_script_lines[0] = executable + ' ' + \
                 completed_script_lines[0]
         # Run commands
-        result = run_commands(name, completed_script_lines)
+        result = run_commands(
+            taskgraph.results.get_logger(runnable),
+            completed_script_lines,
+        )
         if isinstance(postprocess, dict) and postprocess:
             # Resolve possible inputs in postprocess regexp pattern
             completed_inputs = dict()
@@ -428,6 +411,7 @@ def task_shell_script(
             result = postprocessOutput(result, completed_inputs)
         return result
     return Task(
+        module=module,
         name=name,
         runnable=runnable,
         inputs=inputs,

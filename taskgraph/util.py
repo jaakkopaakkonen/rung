@@ -233,7 +233,7 @@ def transpose(matrix):
     return taskgraph.matrix.remove_trailing_none(result)
 
 
-def format_tree_box(row_items, runner):
+def format_tree_box(row_items, valuestack):
     row_items = transpose(row_items)
     # get column widths
     column_lengths = [0] * len(row_items[-1])
@@ -242,7 +242,7 @@ def format_tree_box(row_items, runner):
         while col_idx < len(row):
             item = row[col_idx]
             if item:
-                item_length = runner.get_printable_len(item)
+                item_length = valuestack.get_printable_len(item)
                 if column_lengths[col_idx] < item_length:
                     column_lengths[col_idx] = item_length
             col_idx += 1
@@ -271,8 +271,8 @@ def format_tree_box(row_items, runner):
                     right = False
                 else:
                     # Create map graphics
-                    pad_length -= runner.get_printable_len(item)
-                    output += runner.get_printable_form(item)
+                    pad_length -= valuestack.get_printable_len(item)
+                    output += valuestack.get_printable_form(item)
                     output += pad_length * '─'
                     left = True
                     right = (col_idx + 1) < row_lengths[row_idx]
