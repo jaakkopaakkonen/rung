@@ -3,6 +3,7 @@ import re
 import sys
 import time
 import taskgraph.task
+import taskgraph.config
 
 from datetime import datetime
 
@@ -51,6 +52,8 @@ class Logger:
 
     def __init__(self, task):
         self.file = None
+        # Output lines collected from stdout wihtout any additions
+        self.stdoutput = []
         if taskgraph.config.log_dir:
             timestamp = time.time()
             filename = str(int(datetime.utcfromtimestamp(timestamp).timestamp()))
@@ -65,15 +68,14 @@ class Logger:
                 os.makedirs(taskgraph.config.log_dir)
                 self.file = open(taskgraph.config.log_dir + '/' + filename, 'wb')
 
-
-
     def print_operation(self, timestamp, operation=b'', data=b''):
-        self.file.write(
-            prefix_lines(
-                timestamp_to_utc_bytes(timestamp) + b' ' + operation + b' ',
-                data,
+        if self.file:
+            self.file.write(
+                prefix_lines(
+                    timestamp_to_utc_bytes(timestamp) + b' ' + operation + b' ',
+                    data,
+                )
             )
-        )
         return prefix_lines(
             timestamp_to_human(timestamp) + ' ',
             data.decode("utf-8"),
@@ -88,6 +90,7 @@ class Logger:
         self.print_operation(time.time(), b"PID", bytes(str(pid), "utf-8"))
 
     def stdout(self, output):
+        self.stdoutput.append(output)
         sys.stdout.write(
             self.print_operation(time.time(), b"OUT", output),
         )
@@ -105,6 +108,7 @@ class Logger:
     def close(self):
         self.print_operation(time.time())
         self.file.close()
+        return b''.join(self.stdoutput).decode("utf-8")
 
 
 def add(task, values, result):

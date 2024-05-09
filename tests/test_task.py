@@ -20,6 +20,7 @@ import taskgraph.task
 import taskgraph.modules
 import taskgraph.dag
 import taskgraph.modules
+import taskgraph.results
 import taskgraph.runner
 
 
@@ -41,7 +42,9 @@ def test_format_argument_list():
     ) == "no inputs this should stay and it stayed this should stay too {z} this should also stay and it also stayed"
 
 
-def test_task_with_command_line_parts():
+@patch("taskgraph.results.Logger")
+def test_task_with_command_line_parts(logger):
+    module = "module"
     task_structure = {
         "name": "commit",
         "executable": "echo",
@@ -58,10 +61,43 @@ def test_task_with_command_line_parts():
     taskgraph.modules.command_to_full_path = {
         "echo": "/usr/bin/echo",
     }
-    taskgraph.modules.struct_to_task(task_structure)
+    taskgraph.modules.struct_to_task(module, task_structure)
     task = taskgraph.dag.get_task("commit")
-    result =  task.run({"commit_message_file": "commit.md"})
-    assert result == "echo git commit --dry-run --file=commit.md"
+    result = task.run({"commit_message_file": "commit.md"})
+
+    assert logger.return_value.command.mock_calls == [
+        (
+            '',
+            (b'echo echo git commit --dry-run --file=commit.md',),
+            {},
+        )
+    ]
+    assert len(logger.return_value.pid.mock_calls) == 1
+    assert len(logger.return_value.pid.mock_calls[0][1]) == 1
+    assert logger.return_value.pid.mock_calls[0][1][0] > 0
+
+    assert logger.return_value.stdout.mock_calls == [
+        (
+            '',
+            (b'echo git commit --dry-run --file=commit.md\n',),
+            {},
+        )
+    ]
+    assert logger.return_value.stderr.mock_calls == [
+        (
+            '',
+            (b'',),
+            {},
+        )
+    ]
+
+    assert logger.return_value.exitcode.mock_calls == [
+        (
+            '',
+            (0,),
+            {},
+        )
+    ]
 
 
 def test_simple_task_execution():
@@ -155,6 +191,7 @@ def test_task_inline_values():
 
     # Initialize tasks
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "terminal",
@@ -238,6 +275,7 @@ def test_get_namedtuple():
 
     # Initialize task
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "task",
@@ -264,6 +302,7 @@ def test_store_results():
 
     # Initialize task
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "task",
@@ -335,6 +374,7 @@ def test_tasks_store_results():
 
     # Initialize task
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "a",

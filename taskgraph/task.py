@@ -292,10 +292,13 @@ def run_commands(logger, commands):
                     logger.stderr(outstream.read(READ_SIZE))
             # Non-zero exit status, break loop
             logger.exitcode(process.returncode)
+
             if process.returncode:
-                raise(taskgraph.exception.FailedCommand(logger.failed_command_output()))
+                raise taskgraph.exception.FailedCommand(
+                    "Command \"" + command + "\" exit code: " + str(process.returncode)
+                )
         cmd_idx += 1
-    return
+    return logger.close()
 
 def format_argument_list(
     argument_list,

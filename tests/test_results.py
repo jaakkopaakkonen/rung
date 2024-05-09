@@ -30,6 +30,7 @@ def test_get_results():
 
     # Initialize task
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "task",
@@ -73,6 +74,7 @@ def test_get_results():
 
     # Create task with same input names but different name
     taskgraph.modules.struct_to_task(
+        "module",
         [
             {
                 "name": "other_task",

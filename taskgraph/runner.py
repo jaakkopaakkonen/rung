@@ -124,11 +124,6 @@ class ValueTask:
             # No result in cache. We need to execute
             if result == None:
                 result = self.task.run(self.values)
-        taskgraph.results.add(
-            task=self.task,
-            values=self.values,
-            result=result,
-        )
         return result
 
     def __hash__(self):
