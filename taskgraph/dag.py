@@ -3,7 +3,7 @@ import pprint
 import time
 
 import taskgraph.results
-
+import taskgraph.inputs
 # This file contains everything related to managing the directed asyclic graph
 # containing all the input names of all tasks and their names
 
@@ -34,15 +34,12 @@ tasks_having_input = dict()
 # Value is Task object itself
 tasks_by_name = dict()
 
-all_valuenames = set()
-
-all_input_names = set()
+all_value_names = set()
 
 all_task_names = set()
 
 # key is module name, value is list of tasks in module
 tasks_by_modules = dict()
-
 
 def add(module, task):
     """ Add task to this bookkeeper
@@ -54,24 +51,24 @@ def add(module, task):
     global mandatory_inputs_of_tasks
     global optional_inputs_of_tasks
     global tasks_by_name
-    global all_valuenames
-    global all_input_names
+    global all_value_names
     global tasks_having_input
     global tasks_by_modules
-    
 
     name = task.name
+    taskgraph.inputs.add_input_names(module, task.input_names)
+    taskgraph.inputs.add_input_names(module, task.optional_input_names)
+
     if module:
         if not module in tasks_by_modules:
             tasks_by_modules[module] = set()
         tasks_by_modules[module].add(name)
+
     inputs = frozenset(tuple(task.input_names))
 
     all_task_names.add(name)
-    all_input_names.add(inputs)
-    all_valuenames.add(name)
-    all_valuenames.update(inputs)
-    all_valuenames.update(task.optional_input_names)
+    all_value_names.add(name)
+    all_value_names.update(inputs)
 
     # task_names_by_complete_inputs
     if inputs not in task_names_by_complete_inputs:
@@ -101,16 +98,14 @@ def reset():
     global optional_inputs_of_tasks
     global tasks_having_input
     global tasks_by_name
-    global all_valuenames
-    global all_input_names
+    global all_value_names
     global all_task_names
     task_names_by_complete_inputs = dict()
     mandatory_inputs_of_tasks = dict()
     optional_inputs_of_tasks = dict()
     tasks_having_input = dict()
     tasks_by_name = dict()
-    all_valuenames = set()
-    all_input_names = set()
+    all_value_names = set()
     all_task_names = set()
 
 def is_task(name):
@@ -118,18 +113,13 @@ def is_task(name):
     return name in tasks_by_name
 
 def get_all_value_names():
-    global all_valuenames
-    return all_valuenames
+    global all_value_names
+    return all_value_names
 
 
 def get_all_task_names():
     global all_task_names
     return all_task_names
-
-
-def get_all_input_names():
-    global all_input_names
-    return all_input_names
 
 
 def get_task_names_with_input(input_name):
@@ -142,12 +132,14 @@ def get_default_input_name(task_name):
         return None
     return task.default_input
 
+
 def get_tasks_having_input(input_name):
     global tasks_having_input
     try:
         return tasks_having_input[input_name]
     except KeyError:
         return set()
+
 
 def get_task(name):
     """Retrieves the task based on it's name and all non-optional inputs
@@ -159,6 +151,7 @@ def get_task(name):
         return tasks_by_name[name]
     except KeyError:
         return None
+
 
 def final_tasks():
     """Get all tasks which are not inputs to any other task

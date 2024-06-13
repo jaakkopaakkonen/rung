@@ -154,27 +154,6 @@ def set_stream_nonblocking(stream):
     fcntl.fcntl(fileno, fcntl.F_SETFL, flags|os.O_NONBLOCK)
 
 
-def argument_subset(values, argument_names):
-    """ Construct and return a subset of dictionary values
-        containing only keys listed in argument_names.
-        :param values The dictionary which' matching values are to be returnec
-        :param argument_names List or strings and/or dictionaries to be included
-               in returned dictionary.
-               If list item is a dictionary
-    """
-    result = {}
-    for argument in argument_names:
-        key = argument
-        if isinstance(argument_names, dict):
-            argument = argument_names[argument]
-            if argument in values:
-                argument = values[argument]
-                result[key] = argument
-        elif argument in values:
-            result[key] = values[argument]
-    return result
-
-
 def strip_dictionary_to_keys(d, keylist):
     """ Construct and return a subset of dictionary values
         containing only keys listed in argument_names.

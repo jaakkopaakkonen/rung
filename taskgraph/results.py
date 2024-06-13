@@ -121,6 +121,7 @@ def add(task, values, result):
     :return: None
     """
     global results_in_order
+    global results_by_values
     finish_timestamp = time.time()
     results_in_order.append(
         {
@@ -154,6 +155,7 @@ def get(task):
 
 
 def get_results(task, values={}):
+    global results_by_values
     result = None
     try:
         values = values.copy()

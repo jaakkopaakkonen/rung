@@ -129,7 +129,7 @@ def main():
                             default_input,
                             value,
                         )
-                        valuetask = taskgraph.runner.ValueTask.createValueTask(
+                        valuetask = taskgraph.runner.ValueTask.create_value_task(
                             name=name,
                             values=valuestack.get_values(),
                         )
@@ -166,7 +166,7 @@ def main():
                     # TODO: Array values with plural suffix "s"
                     else:
                         try:
-                            valuetask = taskgraph.runner.ValueTask.createValueTask(
+                            valuetask = taskgraph.runner.ValueTask.create_value_task(
                                 name=argument,
                                 values=valuestack.get_values(),
                             )

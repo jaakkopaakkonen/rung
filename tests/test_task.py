@@ -242,7 +242,7 @@ def test_task_inline_values():
         "title": "{host}: supervisorctl tail -f {service}",
         "command": "ssh {host} sudo supervisorctl tail -f {service}",
     }
-    valuetask = taskgraph.runner.ValueTask.createValueTask(
+    valuetask = taskgraph.runner.ValueTask.create_value_task(
         name="tailService",
         values={
             "host": "www.google.com",
@@ -317,7 +317,7 @@ def test_store_results():
     task.runnable = Mock()
 
     # Create first valuetask
-    valuetask1 = taskgraph.runner.ValueTask.createValueTask(
+    valuetask1 = taskgraph.runner.ValueTask.create_value_task(
         name="task",
         values={
             "inputName": "inputValue",
@@ -340,7 +340,7 @@ def test_store_results():
     ]
 
     # Create second identical valuetask
-    valuetask2 = taskgraph.runner.ValueTask.createValueTask(
+    valuetask2 = taskgraph.runner.ValueTask.create_value_task(
         name="task",
         values={
             "inputName": "inputValue",
@@ -403,7 +403,7 @@ def test_tasks_store_results():
     task_c.runnable = Mock()
 
     # Create ValueTask and execute b and it's dependency a
-    valuetask_b = taskgraph.runner.ValueTask.createValueTask(name="b")
+    valuetask_b = taskgraph.runner.ValueTask.create_value_task(name="b")
     result_b = valuetask_b.run()
 
     # Check task b runnable is returning correct result
@@ -428,7 +428,7 @@ def test_tasks_store_results():
     ]
 
     # Create ValueTask and execute c but it's dependency a will not be executed
-    valuetask_c = taskgraph.runner.ValueTask.createValueTask(name="c")
+    valuetask_c = taskgraph.runner.ValueTask.create_value_task(name="c")
     result_c = valuetask_c.run()
 
     # Check task a was not called again
@@ -447,4 +447,31 @@ def test_tasks_store_results():
             (),
             {"a": task_a.runnable.return_value}
         )
+    ]
+
+
+def test_task_input_module_name():
+    expected_result = "result"
+    runnable = Mock(return_value=expected_result)
+    inputnames = ["mandatoryinput"]
+    optionalinputnames = ["optionalinput"]
+    task = taskgraph.task.Task(
+        module="blah",
+        name="testtask",
+        runnable=runnable,
+        inputs=inputnames,
+        optionalInputs=optionalinputnames,
+        defaultInput=inputnames[0],
+    )
+    input_values = {
+        "mandatoryinput": "mandatoryinputvalue",
+    }
+    result = task.run(input_values)
+    assert result == expected_result
+    assert runnable.mock_calls == [
+        (
+            '',
+            (),
+            input_values,
+        ),
     ]

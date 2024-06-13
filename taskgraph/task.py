@@ -32,6 +32,27 @@ def values_as_string(values):
     return result
 
 
+def values_subset(values, value_names):
+    """ Construct and return a subset of dictionary values
+        containing only values which' names are listed in value_names.
+        :param values The dictionary which' matching values are to be returned
+        :param value_names List or strings and/or dictionaries to be included
+               in returned dictionary.
+               If list item is a dictionary
+    """
+    result = {}
+    for argument in value_names:
+        key = argument
+        if isinstance(value_names, dict):
+            argument = value_names[argument]
+            if argument in values:
+                argument = values[argument]
+                result[key] = argument
+        elif argument in values:
+            result[key] = values[argument]
+    return result
+
+
 class Task:
     """ Class to wrap executable parts and their arguments to
         more controlled entities to enable testing
@@ -160,7 +181,7 @@ class Task:
     def run(self, values):
         call_args = dict()
         call_args.update(
-            taskgraph.util.argument_subset(
+            values_subset(
                 values,
                 self.input_names + self.optional_input_names,
             )
@@ -367,7 +388,6 @@ def task_shell_script(
     inputs=[],
     optionalInputs=[],
     defaultInput=None,
-    inputDependencies=None,
     values={},
     postprocess=None,
     module=None,
