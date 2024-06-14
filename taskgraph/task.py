@@ -2,21 +2,17 @@ import logging
 log = logging.getLogger("taskgraph")
 log.setLevel(1)
 
+import collections
+import re
+import select
+import subprocess
+
 import taskgraph.dag
+import taskgraph.inputs
 import taskgraph.results
 import taskgraph.valuestack
 import taskgraph.util
 import taskgraph.exception
-
-import collections
-import fcntl
-import os
-import pprint
-import re
-import select
-import subprocess
-import sys
-import time
 
 
 class NonZeroExitStatus(BaseException):
@@ -150,6 +146,10 @@ class Task:
             self.input_names = list(inputs)
         # Optional input names or prerequisites for this task
         self.optional_input_names = list(optionalInputs)
+        taskgraph.inputs.add_input_names(
+            module=self.module,
+            inputs=self.input_names + self.optional_input_names,
+        )
         self.default_input = defaultInput
         if runnable:
             self.runnable = runnable

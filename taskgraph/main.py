@@ -77,7 +77,7 @@ def main():
     :return:
     """
     valuestack = taskgraph.valuestack.ValueStack(
-        taskgraph.dag.all_valuenames,
+        taskgraph.dag.get_all_valuenames(),
     )
     valuestack.set_environment_values(dict(os.environ))
     # TODO print relevant inputs before starting on task(s)

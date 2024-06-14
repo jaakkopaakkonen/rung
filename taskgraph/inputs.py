@@ -9,11 +9,20 @@ def add_input_names(module, inputs):
     for input in inputs:
         keynames = [input]
         if module:
-            keynames.extend([module + input, module + '.' + input, module + '_' + input])
+            keynames.extend(
+                [
+                    module + input,
+                    module + '.' + input,
+                    module + '_' + input,
+                ],
+            )
         for key in keynames:
             if not key in all_input_names:
                 all_input_names[key] = input
 
+
+def get_all_input_names():
+    return frozenset(all_input_names.keys())
 
 def is_input(input):
     global all_input_names
@@ -26,10 +35,10 @@ def is_input(input):
 def get_simple_values(module, values):
     global all_input_names
     result = {}
-    for inputname in values:
-        if all_input_names[inputname]:
-            simple_inputname = all_input_names[inputname]
-            result[simple_inputname] = values[inputname]
+    for input_name in values:
+        if all_input_names[input_name]:
+            simple_input_name = all_input_names[input_name]
+            result[simple_input_name] = values[input_name]
     return result
 
 

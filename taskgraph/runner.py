@@ -2,6 +2,7 @@ import copy
 import logging
 import time
 import taskgraph.dag
+import taskgraph.inputs
 import taskgraph.results
 from taskgraph.util import log_string
 
@@ -61,6 +62,10 @@ class ValueTask:
         # Construct all values combining the input values and
         # possible provided values of the task
         all_values = {**values}
+        all_values = taskgraph.inputs.get_simple_values(
+            module=task.module,
+            values=all_values,
+        )
         if task and task.provided_values:
             all_values.update(task.provided_values)
         all_task_inputs = task.input_names + task.optional_input_names
