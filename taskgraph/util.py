@@ -188,18 +188,7 @@ def get_matching_file_basenames(dir, pattern='*'):
     return basenames
 
 
-def get_crossing_char(left, up, right, down):
-    if left and not up and right and not down:
-        return '─'
-    if not left and up and not right and down:
-        return '│'
-    if left and not up and not right and down:
-        return '┐'
-    if left and up and right and not down:
-        return '┴'
-    if left and up and not right and down:
-        return '┤'
-    return ' '
+
 
 
 def transpose(matrix):
