@@ -10,6 +10,8 @@ import types
 
 
 import taskgraph.matrix
+import taskgraph.asciitree
+import taskgraph.dag
 
 log = logging.getLogger("taskgraph")
 
@@ -188,9 +190,6 @@ def get_matching_file_basenames(dir, pattern='*'):
     return basenames
 
 
-
-
-
 def transpose(matrix):
     result = list()
     taskgraph.matrix.fill_matrix_none_to_width(matrix)
@@ -280,3 +279,17 @@ def string_to_valid_identifier(string):
     string = re.sub('[^0-9a-zA-Z_]', '', string)
     string = re.sub('^[^a-zA-Z_]+', '', string)
     return string
+
+
+def get_asciitree(task):
+    parents = []
+    for input in task.input_names + task.optional_input_names:
+        input_task = taskgraph.dag.get_task(input)
+        if input_task:
+            parents.append(get_asciitree(input_task))
+        else:
+            parents.append(taskgraph.asciitree.AsciiTreeItem(contents=input))
+    return taskgraph.asciitree.AsciiTreeItem(
+        contents=task.name,
+        parent_list=parents,
+    )

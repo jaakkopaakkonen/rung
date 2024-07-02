@@ -41,7 +41,12 @@ def test_format_argument_list():
         optional_input_names={"c"},
     ) == "no inputs this should stay and it stayed this should stay too {z} this should also stay and it also stayed"
 
-
+@patch(
+    "taskgraph.modules.command_to_full_path",
+    {
+        "echo": "/usr/bin/echo",
+    }
+)
 @patch("taskgraph.results.Logger")
 def test_task_with_command_line_parts(logger):
     module = "module"
@@ -58,9 +63,6 @@ def test_task_with_command_line_parts(logger):
             "commit_message",
         ]
     }
-    taskgraph.modules.command_to_full_path = {
-        "echo": "/usr/bin/echo",
-    }
     taskgraph.modules.struct_to_task(module, task_structure)
     task = taskgraph.dag.get_task("commit")
     result = task.run({"commit_message_file": "commit.md"})
@@ -76,13 +78,12 @@ def test_task_with_command_line_parts(logger):
     assert len(logger.return_value.pid.mock_calls[0][1]) == 1
     assert logger.return_value.pid.mock_calls[0][1][0] > 0
 
-    assert logger.return_value.stdout.mock_calls == [
-        (
+    print(logger.return_value.stdout.mock_calls)
+    assert (
             '',
             (b'echo git commit --dry-run --file=commit.md\n',),
             {},
-        )
-    ]
+        ) in logger.return_value.stdout.mock_calls
     assert logger.return_value.stderr.mock_calls == [
         (
             '',

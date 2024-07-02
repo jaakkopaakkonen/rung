@@ -4,7 +4,7 @@ import sys
 
 import taskgraph.debug
 
-@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+#@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
 def get_crossing_char(left=False, up=False, right=False, down=False):
     if left and not up and right and not down:
         return '─'
@@ -18,6 +18,9 @@ def get_crossing_char(left=False, up=False, right=False, down=False):
         return '┤'
     return ' '
 
+def length_after_last_newline(string):
+    pos = string.rfind('\n')
+    return len(string) - pos -1
 
 
 class NotEnoughCols(BaseException):
@@ -25,65 +28,98 @@ class NotEnoughCols(BaseException):
 
 
 class ParentConnectionTracker:
-    @staticmethod
-    def length_after_last_newline(string):
-        pos = string.rfind('\n')
-        return len(string) - pos -1
-
     def __init__(self):
         self.connection_columns = []
 
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
-    def get_line_suffix(self, line, child_direction="down"):
-        line_length = self.length_after_last_newline(line)
 
-        if line_length in self.connection_columns:
-            # A parent connection ends here
-            self.connection_columns.remove(line_length)
-            # Insert the immediate crossing
+    def add_connection_column(self, column):
+        self.connection_columns.append(column)
+        self.connection_columns = sorted(self.connection_columns)
+
+    def remove_connection_column(self, column):
+        self.connection_columns.remove(column)
+
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    def get_line_suffix(
+            self,
+            line,
+            child_direction="down",
+            last_item='',
+            width=None,
+    ):
+        result = ""
+        to_be_added = None
+        line_length = length_after_last_newline(line)
+        if width is None or \
+           (line_length + len(last_item)) < width:
             crossing_char_args = {
                 "left": True,
-                child_direction: True, # Right or down
-                "up": True,
+                "up": (line_length + 1) in self.connection_columns,
+                "right": False,
+                "down": False,
             }
-        else:
-            # No parent connection here
-            # Insert the immediate crossing
-            crossing_char_args = {
-                "left": True,
-                child_direction: True, # Right or down
-                "up": False,
-            }
-        result = get_crossing_char(**crossing_char_args)
+            crossing_char_args[child_direction]= True
+            result += get_crossing_char(**crossing_char_args)
+            line_length += 1
+            if crossing_char_args["up"] and \
+                not crossing_char_args["down"]:
+                self.remove_connection_column(line_length)
+            elif child_direction == "down":
+                to_be_added = line_length
 
-        # Calculate crossings inherited from parents
+        last_item_inserted = False
         column_idx = 0
         while column_idx < len(self.connection_columns):
+            # We have parent columns to process
+            # The column for next parent connection
             parent_column = self.connection_columns[column_idx]
-            if parent_column < (line_length + len(result)):
-                # Remove ended connections
-                self.connection_columns.pop(column_idx)
+            if last_item:
+                # There is still space to insert last_item
+                last_item_len = len(last_item)
+                if last_item_len and \
+                    (line_length + last_item_len) <= min(parent_column, width):
+                    # Last item fits here
+                    result += last_item
+                    line_length += len(last_item)
+                    last_item = None
+                    last_item_inserted = True
+            if parent_column <= line_length:
+                # Parent column connection expired
+                self.remove_connection_column(parent_column)
             else:
-                left = False
-                if parent_column != (line_length + len(result)):
+                if parent_column == line_length + 1:
+                    crossing_char_args = {
+                        "up": True,
+                        "right": False,
+                        "down": False,
+                        "left": (last_item_inserted and child_direction=="right"),
+                    }
+                    crossing_char_args[child_direction] = True
+                    result += get_crossing_char(**crossing_char_args)
+                    line_length += 1
+                    if crossing_char_args["up"] and \
+                        not crossing_char_args["down"]:
+                        self.remove_connection_column(line_length)
+                    column_idx += 1
+                else:
+                    # There's a gap until next parent column
+                    gap = ''
                     if child_direction == "down":
-                        result += (parent_column - line_length - len(result)) * ' '
-                    elif child_direction == "right":
-                        left = True
-                        result += (parent_column - line_length - len(result)) * get_crossing_char(left=left, right=True)
-                crossing_char_args = {
-                    "up": True,
-                    "left": left,
-                    child_direction: True,
-                }
-                result += get_crossing_char(**crossing_char_args)
-                column_idx += 1
-        if child_direction == "down":
-            self.connection_columns.append(line_length)
-            self.connection_columns = sorted(self.connection_columns)
+                        gap = (parent_column - line_length - 1) * ' '
+					else:
+	                    if line_length < width:
+	                        gap = (parent_column - line_length - 1) * get_crossing_char(left=True, right=True)
+                        column_idx += 1
+                    result += gap
+                    line_length += len(gap)
+
+
+        # Add the parent connection created in the beginning
+        if to_be_added is not None:
+            self.add_connection_column(to_be_added)
         return result
 
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def get_padded_left_side(self, item, align="left", width=0):
         result = ""
         if align == "right":
@@ -102,7 +138,7 @@ class ParentConnectionTracker:
             str(self.connection_columns) + ")"
 
 class AsciiTreeItem:
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def __init__(self, contents, parent_list=None):
         self.parent_list = None
         self.contents = contents
@@ -143,7 +179,7 @@ class AsciiTreeItem:
         else:
             return 1
 
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def get_subtree(self, width=sys.maxsize, connection_tracker=None):
         min_width = len(self.contents)
         if min_width > width:
@@ -158,10 +194,14 @@ class AsciiTreeItem:
             if width >= max_width:
                 # All fits without compression
                 result = self.parent_list.get_subtree(
-                    width - len(self.contents),
-                    connection_tracker,
+                    width=width-len(self.contents),
+                    connection_tracker=connection_tracker,
                 )
-                result += connection_tracker.get_line_suffix(result, "right")
+                result += connection_tracker.get_line_suffix(
+                    line=result,
+                    child_direction="right",
+                    width=width-len(self.contents),
+                )
                 result += self.contents
             else:
                 # Does not fit. We have to compress to several lines
@@ -181,7 +221,10 @@ class AsciiTreeItem:
                     width=width,
                     connection_tracker=connection_tracker,
                 )
-                result += connection_tracker.get_line_suffix(result)
+                result += connection_tracker.get_line_suffix(
+                    line=result,
+                    width=width,
+                )
                 result += '\n'
                 result += connection_tracker.get_padded_left_side(
                     self.contents,
@@ -197,8 +240,9 @@ class AsciiTreeItem:
             )
         return result
 
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def get_tree(self, width=sys.maxsize):
+        # Check we can fit a tree in the given width
         min_width = len(self.contents)
         if min_width > width:
             raise NotEnoughCols(
@@ -208,20 +252,28 @@ class AsciiTreeItem:
                 str(width) +
                 " given."
             )
-        connection_tracker = ParentConnectionTracker()
+
+        # Truncate witdth argument to sensible value
         max_width = self.get_max_width()
         if width >= max_width:
             width = max_width
+
+        # Create connection tracker
+        connection_tracker = ParentConnectionTracker()
+
         if self.parent_list:
             if width >= max_width:
                 # All fits without compression
+
+                # Get tree for the items
                 result = self.parent_list.get_subtree(
-                    width - len(self.contents),
-                    connection_tracker,
+                    width=width-len(self.contents),
+                    connection_tracker=connection_tracker,
                 )
                 result += connection_tracker.get_line_suffix(
-                    result,
-                    "right",
+                    line=result,
+                    child_direction="right",
+                    width=width-len(self.contents),
                 )
                 result += self.contents
             else:
@@ -234,8 +286,14 @@ class AsciiTreeItem:
                         str(min_width) +
                         ", only " + str(width) + " given."
                     )
-                result = self.parent_list.get_subtree(width, connection_tracker)
-                result += connection_tracker.get_line_suffix(result)
+                result = self.parent_list.get_subtree(
+                    width=width,
+                    connection_tracker=connection_tracker,
+                )
+                result += connection_tracker.get_line_suffix(
+                    line=result,
+                    width=width,
+                )
                 result += '\n'
                 result += connection_tracker.get_padded_left_side(
                     self.contents,
@@ -263,7 +321,7 @@ class AsciiTreeItem:
             "\"" + parent_list_repr + ')'
 
 class AsciiTreeList:
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def __init__(self, items):
         self.items = items
 
@@ -302,7 +360,7 @@ class AsciiTreeList:
                 max_width = width
         return max_width
 
-    @taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
+    #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
     def get_subtree(self, width=sys.maxsize, connection_tracker=None):
         """
         Returns a subtree with set width.
@@ -314,17 +372,28 @@ class AsciiTreeList:
         """
         result = ""
         if len(self.items) == 1:
-            result = self.items[0].get_subtree(width-1, connection_tracker)
+            # Ony one item. Get the item subtree
+            result = self.items[0].get_subtree(
+                width=width-1,
+                connection_tracker=connection_tracker,
+            )
         else:
-            # items_width = self.get_items_width()
+            # Several items
+            # Loop through them and get each individual item tree
             itemidx = 0
             while itemidx < len(self.items):
                 item = self.items[itemidx]
-                tree_piece = item.get_subtree(width - 1, connection_tracker)
+                tree_piece = item.get_subtree(
+                    width=width-1,
+                    connection_tracker=connection_tracker,
+                )
                 result += tree_piece
                 if itemidx < len(self.items) - 1:
                     # Not the last item
-                    result += connection_tracker.get_line_suffix(tree_piece)
+                    result += connection_tracker.get_line_suffix(
+                        line=tree_piece,
+                        width=width,
+                    )
                     result += '\n'
                 itemidx += 1
         return result

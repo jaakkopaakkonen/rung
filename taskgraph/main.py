@@ -5,7 +5,6 @@ import importlib.util
 import json
 import logging
 import os
-import pprint
 import sys
 import colorama
 from colorama import Fore as f
@@ -56,14 +55,16 @@ if taskgraph.config.external_module_dir:
 taskgraph.modules.register_json_modules()
 
 
-def print_task_tree(valuestack):
-    for task in sorted(taskgraph.dag.final_tasks()):
-        print(
-            taskgraph.util.format_tree_box(
-                taskgraph.matrix.task_to_matrix(task),
-                valuestack,
-            ),
-        )
+def print_task_tree(values, module=None):
+    if module is None:
+        for module in taskgraph.dag.get_modules():
+            print_task_tree(values, module)
+    else:
+        tasks = taskgraph.dag.final_tasks(module)
+        for taskname in tasks:
+            task = taskgraph.dag.get_task(taskname)
+            asciitree = taskgraph.util.get_asciitree(task)
+            print(asciitree.get_tree())
 
 
 def print_values(values=dict()):
@@ -77,7 +78,7 @@ def main():
     :return:
     """
     valuestack = taskgraph.valuestack.ValueStack(
-        taskgraph.dag.get_all_valuenames(),
+        taskgraph.dag.get_all_value_names(),
     )
     valuestack.set_environment_values(dict(os.environ))
     # TODO print relevant inputs before starting on task(s)

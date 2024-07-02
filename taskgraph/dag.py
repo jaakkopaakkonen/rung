@@ -1,7 +1,3 @@
-import copy
-import pprint
-import time
-
 import taskgraph.results
 import taskgraph.inputs
 # This file contains everything related to managing the directed asyclic graph
@@ -39,7 +35,7 @@ all_value_names = set()
 
 all_task_names = set()
 
-# key is module name, value is list of tasks in module
+# key is module name, value is set of tasks in module
 tasks_by_modules = dict()
 
 def add(module, task):
@@ -123,10 +119,6 @@ def get_all_task_names():
     return all_task_names
 
 
-def get_task_names_with_input(input_name):
-    result = []
-
-
 def get_default_input_name(task_name):
     task = get_task(task_name)
     if not task:
@@ -154,16 +146,27 @@ def get_task(name):
         return None
 
 
-def final_tasks():
+def get_modules():
+    global tasks_by_modules
+    return sorted(tasks_by_modules.keys())
+
+
+def final_tasks(module=None):
     """Get all tasks which are not inputs to any other task
 
     """
+    global tasks_by_modules
     global mandatory_inputs_of_tasks
     global optional_inputs_of_tasks
 
+    if module is None:
+        tasks = mandatory_inputs_of_tasks
+    else:
+        tasks = sorted(tasks_by_modules[module])
+
     all_tasks = set()
     all_inputs = set()
-    for task in mandatory_inputs_of_tasks:
+    for task in tasks:
         all_tasks.add(task)
         all_inputs.update(mandatory_inputs_of_tasks[task])
         try:

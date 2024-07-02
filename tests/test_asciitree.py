@@ -346,7 +346,39 @@ def test_actual_tree_3():
     assert result == \
 "12─1─1234567┐\n" \
 "12345──┐    │\n" \
-"123456─┴────┴1234─123"
+"123456─┴1234┴123"
+#123456789112345678
+
+
+def test_actual_tree_31():
+    tree = taskgraph.asciitree.AsciiTreeItem(
+        contents="1",
+        parent_list=[
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="1234",
+            ),
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="12",
+                parent_list=[
+                    taskgraph.asciitree.AsciiTreeItem(
+                        contents="123",
+                    ),
+                ],
+            ),
+        ],
+    )
+    width = tree.get_max_width()
+    assert width == 8
+    result = tree.get_tree()
+    print()
+    print(result)
+    assert result == \
+"1234──┐\n" \
+"123─12┴1"
+#123456789
+
+
+
 
 def test_actual_tree_4():
     tree = taskgraph.asciitree.AsciiTreeItem(
@@ -719,11 +751,12 @@ def test_actual_tree_8():
     print(result)
 
 
+
 def test_parent_connection_tracker_length_after_last_newline():
-    assert taskgraph.asciitree.ParentConnectionTracker.length_after_last_newline(
+    assert taskgraph.asciitree.length_after_last_newline(
         "all this will be ignored\n12345───",
     ) == 8
-    assert taskgraph.asciitree.ParentConnectionTracker.length_after_last_newline(
+    assert taskgraph.asciitree.length_after_last_newline(
         "12345───",
     ) == 8
 
@@ -750,10 +783,116 @@ def test_parent_connection_tracker():
     print(result)
     assert result == '┐'
 
-    result = pct.get_line_suffix("apodfiapgriug oiuhfao\n    123456")
+    result = pct.get_line_suffix(
+        "apodfiapgriug oiuhfao\n    123456",
+    )
     print(result)
     assert result == '┐'
 
-    result = pct.get_line_suffix("apodfiapgriug oiuhfao\n         12")
+    result = pct.get_line_suffix(
+        "apodfiapgriug oiuhfao\n         12",
+    )
     print(result)
     assert result == '┐'
+
+
+def test_get_line_suffix():
+    pct = taskgraph.asciitree.ParentConnectionTracker()
+    result = pct.get_line_suffix(line="host─────────", width=14)
+    assert result == "┐"
+    assert pct.connection_columns == [14]
+
+    result = pct.get_line_suffix(line="size", width=5)
+    assert result == "┐        │"
+    assert pct.connection_columns == [5, 14]
+
+    result = pct.get_line_suffix(
+        line="size┐        │\nDate",
+        child_direction="right",
+        width=13,
+        last_item="mailBody",
+    )
+    assert result == "┴mailBody┴"
+    assert pct.connection_columns == []
+    #12345678911234567890
+    #host─────────┐
+    #size┐        │
+    #Date┴mailBody┴
+
+
+def test_sendSmtpMail():
+    tree = taskgraph.asciitree.AsciiTreeItem(
+        contents="sendSmtpMail",
+        parent_list=[
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="host",
+            ),
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="mailBody",
+                parent_list=[
+                    taskgraph.asciitree.AsciiTreeItem(
+                        contents="size",
+                    ),
+                    taskgraph.asciitree.AsciiTreeItem(
+                        contents="Date",
+                    ),
+                ],
+            ),
+        ],
+    )
+    assert tree.get_max_width() == 26
+    result = tree.get_tree()
+    print(result)
+    assert result == \
+"host─────────┐\n" \
+"size┐        │\n" \
+"Date┴mailBody┴sendSmtpMail"
+
+
+def test_sendSmtpMail_1():
+    tree = taskgraph.asciitree.AsciiTreeItem(
+        contents="sendSmtpMail",
+        parent_list=[
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="host",
+            ),
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="mailBody",
+                parent_list=[
+                    taskgraph.asciitree.AsciiTreeItem(
+                        contents="size",
+                    ),
+                    taskgraph.asciitree.AsciiTreeItem(
+                        contents="Date",
+                    ),
+                ],
+            ),
+        ],
+    )
+    assert tree.get_max_width() == 26
+    result = tree.get_tree()
+    print(result)
+    assert result == \
+"host─────────┐\n" \
+"size┐        │\n" \
+"Date┴mailBody┴sendSmtpMail"
+
+def test_sendSmtpMail_2():
+    tree = taskgraph.asciitree.AsciiTreeItem(
+        contents="mailBody",
+        parent_list=[
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="size",
+            ),
+            taskgraph.asciitree.AsciiTreeItem(
+                contents="Date",
+            ),
+        ],
+    )
+    connection_tracker = taskgraph.asciitree.ParentConnectionTracker()
+    connection_tracker.connection_columns = [13]
+    result = tree.get_subtree(
+        width=13,
+        connection_tracker=connection_tracker,
+    )
+    print(result)
