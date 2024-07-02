@@ -106,9 +106,9 @@ class ParentConnectionTracker:
                     gap = ''
                     if child_direction == "down":
                         gap = (parent_column - line_length - 1) * ' '
-					else:
-	                    if line_length < width:
-	                        gap = (parent_column - line_length - 1) * get_crossing_char(left=True, right=True)
+                    else:
+                        if line_length < width:
+                            gap = (parent_column - line_length - 1) * get_crossing_char(left=True, right=True)
                         column_idx += 1
                     result += gap
                     line_length += len(gap)
