@@ -10,7 +10,7 @@ import types
 
 
 import taskgraph.matrix
-import taskgraph.asciitree
+import taskgraph.ascii
 import taskgraph.dag
 
 log = logging.getLogger("taskgraph")
@@ -288,8 +288,8 @@ def get_asciitree(task):
         if input_task:
             parents.append(get_asciitree(input_task))
         else:
-            parents.append(taskgraph.asciitree.AsciiTreeItem(contents=input))
-    return taskgraph.asciitree.AsciiTreeItem(
+            parents.append(taskgraph.ascii.AsciiTreeItem(contents=input))
+    return taskgraph.ascii.AsciiTreeItem(
         contents=task.name,
         parent_list=parents,
     )

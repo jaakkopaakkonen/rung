@@ -1,4 +1,4 @@
-import taskgraph.asciitree
+import taskgraph.ascii
 
 import logging
 import pytest
@@ -9,13 +9,13 @@ logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
 def test_asciitree_single_item():
     contents = "halipatsuippa"
-    item = taskgraph.asciitree.AsciiTreeItem(contents=contents)
+    item = taskgraph.ascii.AsciiTreeItem(contents=contents)
     assert item.get_min_width() == len(contents)
     assert item.get_max_width() == len(contents)
     assert item.get_depth() == 1
     assert item.get_row_count() == 1
     assert item.get_tree() == contents
-    with pytest.raises(taskgraph.asciitree.NotEnoughCols) as noc:
+    with pytest.raises(taskgraph.ascii.NotEnoughCols) as noc:
         item.get_tree(len(contents) - 1)
 
 
@@ -23,10 +23,10 @@ def test_asciitree_parent_longer_child():
     contentsA = "aposdifa"
     contentsB = "asdopfijapdsofja"
 
-    itemA = taskgraph.asciitree.AsciiTreeItem(
+    itemA = taskgraph.ascii.AsciiTreeItem(
         contents=contentsA,
     )
-    itemB = taskgraph.asciitree.AsciiTreeItem(
+    itemB = taskgraph.ascii.AsciiTreeItem(
         contents=contentsB,
         parent_list=itemA,
     )
@@ -40,7 +40,7 @@ def test_asciitree_parent_longer_child():
     # No limit
     result = itemB.get_tree()
     assert len(result) == max_width
-    assert result == contentsA + taskgraph.asciitree.get_crossing_char(
+    assert result == contentsA + taskgraph.ascii.get_crossing_char(
         left=True,
         right=True,
     ) + contentsB
@@ -48,7 +48,7 @@ def test_asciitree_parent_longer_child():
     # max_width limit
     result = itemB.get_tree(max_width)
     assert len(result) == max_width
-    assert result == contentsA + taskgraph.asciitree.get_crossing_char(left=True,right=True) + contentsB
+    assert result == contentsA + taskgraph.ascii.get_crossing_char(left=True,right=True) + contentsB
 
     # min_width limit
     result = itemB.get_tree(min_width)
@@ -60,7 +60,7 @@ def test_asciitree_parent_longer_child():
     assert len(lines) == 2
     assert len(lines[1]) == max_width - 1
 
-    with pytest.raises(taskgraph.asciitree.NotEnoughCols) as noc:
+    with pytest.raises(taskgraph.ascii.NotEnoughCols) as noc:
         itemB.get_tree(itemB.get_min_width() - 1)
 
 
@@ -69,10 +69,10 @@ def test_asciitree_parent_shorter_child():
     contentsA = "123456789112345678921"
     contentsB = "1234567891123456"
 
-    itemA = taskgraph.asciitree.AsciiTreeItem(
+    itemA = taskgraph.ascii.AsciiTreeItem(
         contents=contentsA,
     )
-    itemB = taskgraph.asciitree.AsciiTreeItem(
+    itemB = taskgraph.ascii.AsciiTreeItem(
         contents=contentsB,
         parent_list=itemA,
     )
@@ -87,12 +87,12 @@ def test_asciitree_parent_shorter_child():
     # No limit
     result = itemB.get_tree()
     assert len(result) == max_width
-    assert result == contentsA + taskgraph.asciitree.get_crossing_char(left=True,right=True) + contentsB
+    assert result == contentsA + taskgraph.ascii.get_crossing_char(left=True,right=True) + contentsB
 
     # max_width limit
     result = itemB.get_tree(max_width)
     assert len(result) == max_width
-    assert result == contentsA + taskgraph.asciitree.get_crossing_char(left=True,right=True) + contentsB
+    assert result == contentsA + taskgraph.ascii.get_crossing_char(left=True,right=True) + contentsB
 
     # min_width limit
     result = itemB.get_tree(min_width)
@@ -104,7 +104,7 @@ def test_asciitree_parent_shorter_child():
     lines = result.split('\n')
     assert len(lines[1]) == max_width-1
 
-    with pytest.raises(taskgraph.asciitree.NotEnoughCols) as noc:
+    with pytest.raises(taskgraph.ascii.NotEnoughCols) as noc:
         itemB.get_tree(itemB.get_min_width() - 1)
 
 
@@ -113,13 +113,13 @@ def test_asciitree_two_long_parents():
     contentsParentB = "12"
     contents =        "123"
 
-    parentA = taskgraph.asciitree.AsciiTreeItem(
+    parentA = taskgraph.ascii.AsciiTreeItem(
         contents=contentsParentA,
     )
-    parentB = taskgraph.asciitree.AsciiTreeItem(
+    parentB = taskgraph.ascii.AsciiTreeItem(
         contents=contentsParentB,
     )
-    item = taskgraph.asciitree.AsciiTreeItem(
+    item = taskgraph.ascii.AsciiTreeItem(
         contents=contents,
         parent_list=[parentA, parentB],
     )
@@ -185,14 +185,14 @@ def test_asciitree_succession():
     parent_contents = "123456"
     contents = "1234567891123"
 
-    grandparent =taskgraph.asciitree.AsciiTreeItem(
+    grandparent =taskgraph.ascii.AsciiTreeItem(
         contents=grandparent_contents,
     )
-    parent = taskgraph.asciitree.AsciiTreeItem(
+    parent = taskgraph.ascii.AsciiTreeItem(
         contents=parent_contents,
         parent_list=grandparent,
     )
-    item = taskgraph.asciitree.AsciiTreeItem(
+    item = taskgraph.ascii.AsciiTreeItem(
         contents=contents,
         parent_list=parent,
     )
@@ -229,11 +229,11 @@ def test_random_big_tree():
 
     def get_item():
         contents = get_contents()
-        print("taskgraph.asciitree.AsciiTreeItem(")
+        print("taskgraph.ascii.AsciiTreeItem(")
         print("\tcontents=\"" + contents + '\",')
         print("\tparent_list=[")
         parent_list = get_parent_list()
-        item = taskgraph.asciitree.AsciiTreeItem(
+        item = taskgraph.ascii.AsciiTreeItem(
             contents=contents,
             parent_list=parent_list,
         )
@@ -265,28 +265,28 @@ def test_random_big_tree():
 
 
 def test_get_subtree():
-    assert taskgraph.asciitree.AsciiTreeItem(
-        contents="12345").get_subtree(5, taskgraph.asciitree.ParentConnectionTracker()) == \
+    assert taskgraph.ascii.AsciiTreeItem(
+        contents="12345").get_subtree(5, taskgraph.ascii.ParentConnectionTracker()) == \
 "12345"
 
 
 def test_actual_tree_1():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="12",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="1",
                         parent_list=[
                         ],
                     )
                     ,
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="12345",
                             )
                             ,
@@ -311,29 +311,29 @@ def test_actual_tree_1():
 
 
 def test_actual_tree_3():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="123",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234567",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="1",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="12",
                             ),
                         ],
                     ),
                 ],
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="12345",
                     ),
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123456",
                     ),
                 ],
@@ -351,16 +351,16 @@ def test_actual_tree_3():
 
 
 def test_actual_tree_31():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="1",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234",
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="12",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123",
                     ),
                 ],
@@ -381,29 +381,29 @@ def test_actual_tree_31():
 
 
 def test_actual_tree_4():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="12345678",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234567891123456789212345678931234567894123456789512345678961234567897123",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123456",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1234567",
                             ),
                         ],
                     ),
                 ],
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="12345678911234567892123456",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="12345678911234567892123456789312345678941234567895123456789612345",
                     ),
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123456789112345678921234567893123456789412345678951234567896123456789",
                     ),
                 ],
@@ -417,30 +417,30 @@ def test_actual_tree_4():
 
 
 def test_get_min_width():
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="1",
     ).get_min_width() == 1
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="12345",
     ).get_min_width() == 5
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="123",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(contents="12345"),
+                taskgraph.ascii.AsciiTreeItem(contents="12345"),
             ]
         ),
     ).get_min_width() == 6
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="1234",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(contents="1"),
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(contents="1"),
+                taskgraph.ascii.AsciiTreeItem(
                     contents="123",
-                    parent_list=taskgraph.asciitree.AsciiTreeList(
+                    parent_list=taskgraph.ascii.AsciiTreeList(
                         [
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="12345",
                             )
                         ]
@@ -456,22 +456,22 @@ def test_get_min_width():
     #    123┤
     #    1234┐
     #       12
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="12",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="1234",
-                    parent_list=taskgraph.asciitree.AsciiTreeList(
+                    parent_list=taskgraph.ascii.AsciiTreeList(
                         [
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1",
                             ),
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="123",
-                                parent_list=taskgraph.asciitree.AsciiTreeList(
+                                parent_list=taskgraph.ascii.AsciiTreeList(
                                     [
-                                        taskgraph.asciitree.AsciiTreeItem(
+                                        taskgraph.ascii.AsciiTreeItem(
                                             contents="12345",
                                         )
                                     ]
@@ -484,13 +484,13 @@ def test_get_min_width():
         )
     ).get_min_width() == 8
 
-    assert taskgraph.asciitree.AsciiTreeItem(contents="1").get_min_width() == 1
-    assert taskgraph.asciitree.AsciiTreeItem(contents="12345").get_min_width() == 5
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(contents="1").get_min_width() == 1
+    assert taskgraph.ascii.AsciiTreeItem(contents="12345").get_min_width() == 5
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="123",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="12345",
                 )
             ]
@@ -502,18 +502,18 @@ def test_get_min_width():
     # 12345┐│
     #    123┤
     #    1234
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="1234",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="1",
                 ),
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="123",
-                    parent_list=taskgraph.asciitree.AsciiTreeList(
+                    parent_list=taskgraph.ascii.AsciiTreeList(
                         [
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="12345",
                             )
                         ]
@@ -529,22 +529,22 @@ def test_get_min_width():
     #    123┤
     #    1234┐
     #       12
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="12",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="1234",
-                    parent_list=taskgraph.asciitree.AsciiTreeList(
+                    parent_list=taskgraph.ascii.AsciiTreeList(
                         [
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1",
                             ),
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="123",
-                                parent_list=taskgraph.asciitree.AsciiTreeList(
+                                parent_list=taskgraph.ascii.AsciiTreeList(
                                     [
-                                        taskgraph.asciitree.AsciiTreeItem(
+                                        taskgraph.ascii.AsciiTreeItem(
                                             contents="12345",
                                         )
                                     ]
@@ -557,37 +557,37 @@ def test_get_min_width():
         )
     ).get_min_width() == 8
 
-    assert taskgraph.asciitree.AsciiTreeItem(contents="1").get_min_width() == 1
-    assert taskgraph.asciitree.AsciiTreeItem(contents="12345").get_min_width() == 5
+    assert taskgraph.ascii.AsciiTreeItem(contents="1").get_min_width() == 1
+    assert taskgraph.ascii.AsciiTreeItem(contents="12345").get_min_width() == 5
 
-    assert taskgraph.asciitree.AsciiTreeItem(
+    assert taskgraph.ascii.AsciiTreeItem(
         contents="123",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="12345",
                 )
             ]
         )
     ).get_min_width() == 6
 
-    assert taskgraph.asciitree.AsciiTreeItem(contents="12345").get_min_width() == 5
+    assert taskgraph.ascii.AsciiTreeItem(contents="12345").get_min_width() == 5
 
 
 
 def test_actual_tree_5():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="123",
-        parent_list=taskgraph.asciitree.AsciiTreeList(
+        parent_list=taskgraph.ascii.AsciiTreeList(
             [
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="1",
                 ),
-                taskgraph.asciitree.AsciiTreeItem(
+                taskgraph.ascii.AsciiTreeItem(
                     contents="12",
-                    parent_list=taskgraph.asciitree.AsciiTreeList(
+                    parent_list=taskgraph.ascii.AsciiTreeList(
                         [
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1234",
                             )
                         ]
@@ -608,22 +608,22 @@ def test_actual_tree_5():
 
 
 def test_actual_tree_6():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="123456789112345678921234567",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="123456789112345678921",
                 parent_list=[
                 ],
             )
             ,
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="1234567891123456789212345678931234567894123456789512345678961",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="1234567891",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="123456789112345678921234567893",
                                 parent_list=[
                                 ],
@@ -644,28 +644,28 @@ def test_actual_tree_6():
 
 
 def test_actual_tree_7():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="1234",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="12",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="123456",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1",
                                 parent_list=[
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="12345",
                                         parent_list=[
                                         ],
                                     )
                                     ,
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="1234567",
                                         parent_list=[
-                                            taskgraph.asciitree.AsciiTreeItem(
+                                            taskgraph.ascii.AsciiTreeItem(
                                                 contents="123",
                                                 parent_list=[
                                                 ],
@@ -674,7 +674,7 @@ def test_actual_tree_7():
                                         ],
                                     )
                                     ,
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="12345678",
                                         parent_list=[
                                         ],
@@ -698,28 +698,28 @@ def test_actual_tree_7():
 
 
 def test_actual_tree_8():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="123456789112345678921234567893123",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="123456789112345678921234567893",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="1234567891123456789212345678931234567894123456789512345678961234567897",
                         parent_list=[
-                            taskgraph.asciitree.AsciiTreeItem(
+                            taskgraph.ascii.AsciiTreeItem(
                                 contents="1234567891123456",
                                 parent_list=[
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="12345678911234567892123456789312345678",
                                         parent_list=[
                                         ],
                                     )
                                     ,
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="1234567891123456789212345678931234567894123456789512345678961234567897123456789",
                                         parent_list=[
-                                            taskgraph.asciitree.AsciiTreeItem(
+                                            taskgraph.ascii.AsciiTreeItem(
                                                 contents="12345678911234567892123456789312",
                                                 parent_list=[
                                                 ],
@@ -728,7 +728,7 @@ def test_actual_tree_8():
                                         ],
                                     )
                                     ,
-                                    taskgraph.asciitree.AsciiTreeItem(
+                                    taskgraph.ascii.AsciiTreeItem(
                                         contents="12345678911234",
                                         parent_list=[
                                         ],
@@ -753,16 +753,16 @@ def test_actual_tree_8():
 
 
 def test_parent_connection_tracker_length_after_last_newline():
-    assert taskgraph.asciitree.length_after_last_newline(
+    assert taskgraph.ascii.length_after_last_newline(
         "all this will be ignored\n12345───",
     ) == 8
-    assert taskgraph.asciitree.length_after_last_newline(
+    assert taskgraph.ascii.length_after_last_newline(
         "12345───",
     ) == 8
 
 
 def test_parent_connection_tracker():
-    pct = taskgraph.asciitree.ParentConnectionTracker()
+    pct = taskgraph.ascii.ParentConnectionTracker()
     result = pct.get_line_suffix("all this will be ignored\n12345───")
     print(result)
     assert result == '┐'
@@ -797,7 +797,7 @@ def test_parent_connection_tracker():
 
 
 def test_get_line_suffix():
-    pct = taskgraph.asciitree.ParentConnectionTracker()
+    pct = taskgraph.ascii.ParentConnectionTracker()
     result = pct.get_line_suffix(line="host─────────", width=14)
     assert result == "┐"
     assert pct.connection_columns == [14]
@@ -821,19 +821,19 @@ def test_get_line_suffix():
 
 
 def test_sendSmtpMail():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="sendSmtpMail",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="host",
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="mailBody",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="size",
                     ),
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="Date",
                     ),
                 ],
@@ -850,19 +850,19 @@ def test_sendSmtpMail():
 
 
 def test_sendSmtpMail_1():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="sendSmtpMail",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="host",
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="mailBody",
                 parent_list=[
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="size",
                     ),
-                    taskgraph.asciitree.AsciiTreeItem(
+                    taskgraph.ascii.AsciiTreeItem(
                         contents="Date",
                     ),
                 ],
@@ -878,18 +878,18 @@ def test_sendSmtpMail_1():
 "Date┴mailBody┴sendSmtpMail"
 
 def test_sendSmtpMail_2():
-    tree = taskgraph.asciitree.AsciiTreeItem(
+    tree = taskgraph.ascii.AsciiTreeItem(
         contents="mailBody",
         parent_list=[
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="size",
             ),
-            taskgraph.asciitree.AsciiTreeItem(
+            taskgraph.ascii.AsciiTreeItem(
                 contents="Date",
             ),
         ],
     )
-    connection_tracker = taskgraph.asciitree.ParentConnectionTracker()
+    connection_tracker = taskgraph.ascii.ParentConnectionTracker()
     connection_tracker.connection_columns = [13]
     result = tree.get_subtree(
         width=13,

@@ -5,6 +5,7 @@ import importlib.util
 import json
 import logging
 import os
+import shutil
 import sys
 import colorama
 from colorama import Fore as f
@@ -15,6 +16,7 @@ log.setLevel(1)
 # Apply everything from modules
 
 
+import taskgraph.ascii
 import taskgraph.exception
 import taskgraph.util
 import taskgraph.config
@@ -55,18 +57,59 @@ if taskgraph.config.external_module_dir:
 taskgraph.modules.register_json_modules()
 
 
-def print_task_tree(values, module=None):
-    if module is None:
-        for module in taskgraph.dag.get_modules():
-            print_task_tree(values, module)
-    else:
-        tasks = taskgraph.dag.final_tasks(module)
-        for taskname in tasks:
-            task = taskgraph.dag.get_task(taskname)
-            asciitree = taskgraph.util.get_asciitree(task)
-            print(asciitree.get_tree())
+def get_task_tree_aligned(values, module=None, columns=None):
+    tasks = taskgraph.dag.final_tasks(module)
+    aligned_texts = list()
+
+    for task_name in tasks:
+        # Get text tree for the task
+        asciitree = taskgraph.util.get_asciitree(
+            taskgraph.dag.get_task(task_name),
+        )
+        text = asciitree.get_tree(width=columns)
+        # Align tree
+        aligned_task = taskgraph.ascii.AlignedText(text=text)
+        # Set aligned column at the start of the task name
+        aligned_task.set_aligned_column(
+            aligned_task.get_width() - len(task_name),
+        )
+        aligned_texts.append(aligned_task)
+    return aligned_texts
 
 
+def print_task_tree(values, module=None, columns=None):
+    columns = shutil.get_terminal_size().columns
+
+    result = dict()
+    for module in taskgraph.dag.get_modules():
+        result[module] = get_task_tree_aligned(
+            values=values,
+            module=module,
+            columns=columns,
+        )
+
+    max_width = 0
+    max_aligned_column = 0
+    for module in result:
+        for aligned_task in result[module]:
+            if aligned_task.aligned_column > max_aligned_column:
+                max_aligned_column = aligned_task.aligned_column
+            if max_width < aligned_task.get_width():
+                max_width = aligned_task.width
+
+    for module in result:
+        for aligned_task in result[module]:
+            aligned_task.align_to(
+                column=max_aligned_column,
+                max_width=columns,
+            )
+
+    for module in sorted(result.keys()):
+        print(module)
+        print(len(module) * '=')
+        for aligned_task in result[module]:
+            print(str(aligned_task))
+        print()
 def print_values(values=dict()):
     for name in sorted(values):
         print(name + "=" + values[name])

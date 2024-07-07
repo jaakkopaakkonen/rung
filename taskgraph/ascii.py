@@ -1,3 +1,4 @@
+import copy
 import logging
 import sys
 
@@ -18,15 +19,138 @@ def get_crossing_char(left=False, up=False, right=False, down=False):
         return '┤'
     return ' '
 
+
 def length_after_last_newline(string):
     pos = string.rfind('\n')
     return len(string) - pos -1
+
+
+def prefix_all_lines(prefix, string):
+    result = list()
+    for line in string.split('\n'):
+        result.append(prefix + line)
+    return '\n'.join(result)
 
 
 class NotEnoughCols(BaseException):
     pass
 
 
+class AlignedText():
+
+    @classmethod
+    def align_texts(cls, left, right):
+        if left.aligned_column < right.aligned_column:
+            left.indent(right.aligned_column-left.aligned_column)
+        elif right.aligned_column < left.aligned_column:
+            right.indent(left.aligned_column-right.aligned_column)
+
+    def __init__(self, text='', aligned_column=0):
+        self.text = text
+        self.aligned_column = aligned_column
+        self.width = None
+
+    def set_aligned_column(self, column):
+        self.aligned_column = column
+
+    def get_width(self):
+        if self.width is None:
+            max_length = 0
+            for line in self.text.split('\n'):
+                linelen = len(line)
+                if linelen > max_length:
+                    max_length = linelen
+            self.width = max_length
+        return self.width
+
+    def indent(self, indentation, character=' '):
+        self.text = prefix_all_lines(
+            indentation * character,
+            self.text,
+        )
+        self.aligned_column += indentation
+        if self.width is not None:
+            self.width += indentation
+
+    def align_to(self, column, max_width=None):
+        indentation = column-self.aligned_column
+        if max_width is not None:
+            if self.get_width() + indentation > max_width:
+                indentation = max_width - self.get_width()
+        self.indent(indentation)
+
+    def __add__(self, other):
+        self = copy.copy(self)
+        if type(other) == type(self):
+            self = copy.copy(self)
+            if self.aligned_column < other.aligned_column:
+                self.indent(other.aligned_column-self.aligned_column)
+            elif other.aligned_column < self.aligned_column:
+                other = copy.copy(other)
+                other.indent(self.aligned_column-other.aligned_column)
+            if self.text and \
+                len(self.text) > 0 and \
+                    self.text[-1] != '\n':
+                self.text += '\n'
+            self.text = self.text + other.text
+        else:
+            self.text += str(other)
+            self.width = None
+        return self
+
+    def __str__(self):
+        return self.text
+
+    def __copy__(self):
+        result =  AlignedText(
+            text=self.text,
+            aligned_column=self.aligned_column,
+        )
+        result.width = self.width
+        return result
+class AlignedTree():
+
+    @staticmethod
+    def get_asciitree(task):
+        parents = []
+        for input in task.input_names + task.optional_input_names:
+            input_task = taskgraph.dag.get_task(input)
+            if input_task:
+                parents.append(AlignedTree.get_asciitree(input_task))
+            else:
+                parents.append(taskgraph.ascii.AsciiTreeItem(contents=input))
+        return taskgraph.ascii.AsciiTreeItem(
+            contents=task.name,
+            parent_list=parents,
+        )
+
+    def __init__(self, task_name, width=None):
+        self.task_name = task_name
+        asciitree = self.get_asciitree(taskgraph.dag.get_task(task_name))
+        self.contents = asciitree.get_tree(width=width)
+        self.width = length_after_last_newline(self.contents)
+
+
+    def __len__(self):
+        return self.width
+
+    def get_task_length(self):
+        return len(self.task_name)
+
+    def set_task_align_column(self, column):
+        current_align_column = self.width - len(self.task_name)
+        if current_align_column > column:
+            raise NotEnoughCols()
+        if current_align_column < column:
+            alignment = column - current_align_column
+            self.contents = prefix_all_lines(
+                alignment * ' ', self.contents,
+            )
+            self.width += alignment
+
+
+    def __str__(self):
+        return self.contents
 class ParentConnectionTracker:
     def __init__(self):
         self.connection_columns = []
@@ -241,21 +365,24 @@ class AsciiTreeItem:
         return result
 
     #@taskgraph.debug.enable_debug(logger=logging, level=logging.DEBUG)
-    def get_tree(self, width=sys.maxsize):
+    def get_tree(self, width=None):
         # Check we can fit a tree in the given width
+
         min_width = len(self.contents)
-        if min_width > width:
-            raise NotEnoughCols(
-                "Minimun width required " +
-                str(min_width) +
-                ", only " +
-                str(width) +
-                " given."
-            )
+        if width is not None:
+            if min_width > width:
+                raise NotEnoughCols(
+                    "Minimun width required " +
+                    str(min_width) +
+                    ", only " +
+                    str(width) +
+                    " given."
+                )
 
         # Truncate witdth argument to sensible value
         max_width = self.get_max_width()
-        if width >= max_width:
+        if width is None or \
+            width >= max_width:
             width = max_width
 
         # Create connection tracker
