@@ -19,11 +19,11 @@
     "executable": "git",
     "commandLineArguments": [
       "commit",
-      " --file={readableFile({commitMessageFile})}",
+      " --file=\"{commitMessageFile}\"",
       " --message=\"{commitMessage}\""
     ],
     "optionalInputs" : [
-      "commitMessage", "commitMessageFile", "readableFile"
+      "commitMessage", "commitMessageFile"
     ]
   },
   {
@@ -45,6 +45,13 @@
     "executable": "git",
     "commandLineArguments": [
       "rev-parse HEAD"
+    ]
+  },
+  {
+    "name": "commits",
+    "executable": "git",
+    "commandLineArguments": [
+      "log --format=\"%H %D\""
     ]
   }
 ]

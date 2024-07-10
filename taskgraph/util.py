@@ -293,3 +293,29 @@ def get_asciitree(task):
         contents=task.name,
         parent_list=parents,
     )
+
+def find_variables(string, variables):
+    """Finds variables with pattern `{variable}`-
+
+    :param string:
+    :param variables: Iteration of variables (without surrounding {}) to be searched
+    :return: Variables contained in string as list (without surrounding {})
+    """
+
+    regex_list = []
+    for variable in variables:
+        regex_list.append(re.escape('{' + variable + '}'))
+    found_variables = re.findall('(' + '|'.join(regex_list) + ')', string)
+    if found_variables:
+        # Found given inputs
+        i = 0
+        while i < len(found_variables):
+            if found_variables[i][0] == '{' and \
+                found_variables[i][-1] == '}':
+                found_variables[i] = found_variables[i][1:-1]
+                i += 1
+            else:
+                found_variables.pop(i)
+        return found_variables
+    else:
+        return []

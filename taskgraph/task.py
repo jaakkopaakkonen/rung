@@ -65,11 +65,9 @@ class Task:
         :return:
         """
         # Search for given inputs matching {input} in given name
-        regex_list = []
-        for input_name in inputs:
-            regex_list.append(re.escape('{' + input_name + '}'))
-        found_given_inputs = re.findall('(' + '|'.join(regex_list) + ')', name)
+
         task = None
+        found_given_inputs = taskgraph.util.find_variables(name, inputs)
         if found_given_inputs:
             # Found given inputs
             i = 0

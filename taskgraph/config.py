@@ -4,6 +4,7 @@ import glob
 import importlib.util
 import os
 import pathlib
+
 import taskgraph.util
 
 
@@ -18,7 +19,8 @@ def read_config_file():
     externalModules = giturl
 
     in that config file.
-    Creates ~/.taskgraph/externalModules/girepo directory and clones given git url to that directory.
+    Creates ~/.taskgraph/externalModules/girepo directory
+    and clones given git url to that directory.
     Adds modules cloned from that to taskgraph
     :return: List of modules downloaded from git repo
     """
@@ -39,7 +41,8 @@ def read_config_file():
         # Construct external_module_dir from externalModules
         try:
             repo_url = parser.get("taskgraph", "externalModules")
-            # TODO: Add functionality to handle circumstances on updates from one side or another
+            # TODO: Add functionality to handle circumstances
+            # on updates from one side or another
             # TODO: Make sure git repo is not uselessly cloned
             if repo_url:
                 # Create directory
@@ -58,7 +61,8 @@ def read_config_file():
                     # Clean up repo object
                     del(repo)
 
-                # Set externalModules to all modules to be included from that directory
+                # Set externalModules to all modules
+                # to be included from that directory
                 module_name = taskgraph.util.get_basename_without_ext(repo_url)
                 if dest_directory[-1] != "/":
                     dest_directory += "/"
@@ -69,5 +73,8 @@ def read_config_file():
         # Construct log_dir from logDirectory
         try:
             log_dir = parser.get("taskgraph", "logDirectory")
+            found_variables = taskgraph.util.find_variables(log_dir, os.environ.keys())
+            if found_variables:
+                log_dir = log_dir.format(**os.environ)
         except configparser.NoOptionError:
             pass

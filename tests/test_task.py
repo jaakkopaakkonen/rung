@@ -185,11 +185,8 @@ def test_task_with_values():
     assert result == "transmission has four gears"
 
 
+@patch("taskgraph.modules.command_to_full_path", ["gnome-terminal"])
 def test_task_inline_values():
-    # Initialize command_to_full_path to bypass executable search from PATH
-    old_command_to_full_path = taskgraph.modules.command_to_full_path
-    taskgraph.modules.command_to_full_path = ["gnome-terminal"]
-
     # Initialize tasks
     taskgraph.modules.struct_to_task(
         "module",
@@ -265,8 +262,6 @@ def test_task_inline_values():
             },
         ),
     ]
-    # Revert original command_to_full_path
-    taskgraph.modules.command_to_full_path = old_command_to_full_path
 
 
 def test_get_namedtuple():
