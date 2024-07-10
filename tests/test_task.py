@@ -471,3 +471,37 @@ def test_task_input_module_name():
             input_values,
         ),
     ]
+
+
+@patch("os.environ", {"commitMessageFile": "commit.md"})
+@patch(
+    "taskgraph.modules.command_to_full_path",
+    {
+        "git": "/usr/bin/git",
+    }
+)
+def test_optional_input_environment_value():
+    taskgraph.modules.struct_to_task(
+        "git",
+        {
+            "name": "commit",
+            "executable": "git",
+            "commandLineArguments": [
+              "commit",
+              " --file=\"{commitMessageFile}\"",
+              " --message=\"{commitMessage}\""
+            ],
+            "optionalInputs" : [
+              "commitMessage", "commitMessageFile"
+            ],
+        },
+    )
+    valuestack = taskgraph.valuestack.ValueStack(
+        taskgraph.dag.get_all_value_names(),
+    )
+    valuestack.set_environment_values(dict(os.environ))
+    valuetask = taskgraph.runner.ValueTask.create_value_task(
+        name="commit",
+        values=valuestack.get_values(),
+    )
+    assert valuetask.values == { "commitMessageFile": "commit.md"}

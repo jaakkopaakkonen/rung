@@ -66,6 +66,7 @@ def add(module, task):
     all_task_names.add(name)
     all_value_names.add(name)
     all_value_names.update(inputs)
+    all_value_names.update(frozenset(tuple(task.optional_input_names)))
 
     # task_names_by_complete_inputs
     if inputs not in task_names_by_complete_inputs:
