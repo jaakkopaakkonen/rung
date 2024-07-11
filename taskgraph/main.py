@@ -64,7 +64,8 @@ def get_task_tree_aligned(values, module=None, columns=None):
     for task_name in tasks:
         # Get text tree for the task
         asciitree = taskgraph.util.get_asciitree(
-            taskgraph.dag.get_task(task_name),
+            task=taskgraph.dag.get_task(task_name),
+            values=values,
         )
         text = asciitree.get_tree(width=columns)
         # Align tree
@@ -130,7 +131,7 @@ def main():
         values = valuestack.get_values()
         print_values(values)
         print("\n")
-        print_task_tree(valuestack)
+        print_task_tree(values)
     else:
         # We have arguments
         # This holds the current input where value is going to be read next

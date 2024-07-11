@@ -281,14 +281,22 @@ def string_to_valid_identifier(string):
     return string
 
 
-def get_asciitree(task):
+def get_asciitree(task, values=dict()):
     parents = []
     for input in task.input_names + task.optional_input_names:
         input_task = taskgraph.dag.get_task(input)
         if input_task:
-            parents.append(get_asciitree(input_task))
+            parents.append(
+                get_asciitree(
+                    task=input_task,
+                    values=values,
+                ),
+            )
         else:
-            parents.append(taskgraph.ascii.AsciiTreeItem(contents=input))
+            contents = input
+            if input in values:
+                contents += '=' + values[input]
+            parents.append(taskgraph.ascii.AsciiTreeItem(contents=contents))
     return taskgraph.ascii.AsciiTreeItem(
         contents=task.name,
         parent_list=parents,

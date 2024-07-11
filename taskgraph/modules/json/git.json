@@ -53,6 +53,17 @@
     "commandLineArguments": [
       "log --format=\"%H %D\""
     ]
+  },
+  {
+    "name": "checkout",
+    "executable": "git",
+    "commandLineArguments": [
+      "switch --detach {reference}"
+    ],
+    "inputs":[
+      "reference"
+    ],
+    "defaultInput": "reference"
   }
 ]
 
