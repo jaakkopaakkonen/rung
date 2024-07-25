@@ -1,4 +1,4 @@
-import taskgraph.valuestack
+import taskgraph.values
 import taskgraph.dag
 import taskgraph.runner
 import taskgraph.task
@@ -15,7 +15,7 @@ def test_task_input_module_name():
         defaultInput="inputA",
         module="module",
     )
-    valuestack = taskgraph.valuestack.ValueStack(
+    valuestack = taskgraph.values.ValueStack(
         taskgraph.inputs.get_all_input_names(),
     )
     valuestack.set_environment_values(

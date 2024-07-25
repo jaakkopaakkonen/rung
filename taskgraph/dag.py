@@ -1,4 +1,3 @@
-import taskgraph.results
 import taskgraph.inputs
 # This file contains everything related to managing the directed asyclic graph
 # containing all the input names of all tasks and their names
@@ -98,6 +97,7 @@ def reset():
     global tasks_by_name
     global all_value_names
     global all_task_names
+    global tasks_by_modules
     task_names_by_complete_inputs = dict()
     mandatory_inputs_of_tasks = dict()
     optional_inputs_of_tasks = dict()
@@ -105,6 +105,7 @@ def reset():
     tasks_by_name = dict()
     all_value_names = set()
     all_task_names = set()
+    tasks_by_modules = dict()
 
 def is_task(name):
     global tasks_by_name
@@ -145,6 +146,10 @@ def get_task(name):
         return tasks_by_name[name]
     except KeyError:
         return None
+
+
+def run_task(name, values):
+    return get_task(name).run(values)
 
 
 def get_modules():

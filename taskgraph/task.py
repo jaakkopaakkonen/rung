@@ -10,7 +10,7 @@ import subprocess
 import taskgraph.dag
 import taskgraph.inputs
 import taskgraph.results
-import taskgraph.valuestack
+import taskgraph.values
 import taskgraph.util
 import taskgraph.exception
 
@@ -54,7 +54,7 @@ class Task:
         more controlled entities to enable testing
     """
 
-    empty_input_value = "empty_input_value"
+    empty_input_value = object()
     @classmethod
     def create_inline_value_task(cls, name, inputs):
         """
@@ -167,23 +167,45 @@ class Task:
             )
         taskgraph.dag.add(self.module, self)
 
-    def log_result(self, name, values):
-        if name is None:
-            name = "unnamed"
-        if type(values) == str:
-            if len(values) > 80:
-                log.warning(name + "=\"" + values[0:80] + "\"...")
-            else:
-                log.warning(name + "=\"" + values+"\"")
+    def get_namedtuple(self, values):
+        """
+        Get a named tuple containing task name and it's inputs and their values
+        to get hashed type mainly used for dictionary keys.
+        :return: Value filled named tuple with task name in `task_name` and
+            unset optional values containing "emtpy_input_value"
+        """
+        tupletype = collections.namedtuple(
+            "task",
+            ["task_name"] + self.input_names + self.optional_input_names,
+            defaults=(self.empty_input_value,) * len(self.optional_input_names),
+        )
+        if not "task_name" in values:
+            values = dict(values)
+            values["task_name"] = self.name
+        return tupletype(**values)
 
-    def run(self, values):
-        call_args = dict()
-        call_args.update(
+    def get_relevant_values(self, values):
+        """Strip given values so that only relevant values to this task
+           are included."""
+        new_values = dict()
+        new_values.update(
             values_subset(
                 values,
                 self.input_names + self.optional_input_names,
             )
         )
+        return new_values
+
+    def get_missing_inputs(self, values):
+        missing_inputs = list()
+        delivered_inputs = frozenset(values.keys())
+        for input in self.input_names:
+            if input not in delivered_inputs:
+                missing_inputs.append(input)
+        return missing_inputs
+
+    def run(self, values):
+        call_args = self.get_relevant_values(values)
         fulfilled_dependencies = set(call_args.keys())
         missing_dependencies = set(self.input_names) - fulfilled_dependencies
         if missing_dependencies:
@@ -200,7 +222,7 @@ class Task:
         result = None
         if self.runnable:
             result = self.runnable(**call_args)
-            self.log_result(self.name, result)
+            taskgraph.results.add_result(self, call_args, result)
         return result
 
     def is_predecessor_of(self, task):
@@ -243,12 +265,24 @@ class Task:
             result += hash(optional_input)
         return result
 
-    def get_namedtuple(self):
-        return collections.namedtuple(
-            "task",
-            ["task_name"] + self.input_names + self.optional_input_names,
-            defaults=(self.empty_input_value,) * len(self.optional_input_names),
-        )
+
+class Condition:
+
+    def __init__(self, input_names, evaluator, valuetask):
+        self.input_names = frozenset(input_names)
+        self.valuetask = valuetask
+        self.evaluator = evaluator
+
+    def can_evaluate(self, values):
+        return self.input_names.issubset(frozenset(values.keys()))
+
+    def evaluate(self, values):
+        return self.evaluate(values)
+
+    def run(self, values):
+        if self.evaluator(values):
+            self.next_task.run(self.task_values)
+
 
 def task_func(*args, **kwargs):
     def inner_func(runnable):

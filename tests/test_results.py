@@ -54,7 +54,7 @@ def test_get_results():
     # Store a result
     result = Mock()
     before = time.time()
-    taskgraph.results.add(task, {"inputName": "inputValue"}, result)
+    taskgraph.results.add_result(task, {"inputName": "inputValue"}, result)
     after = time.time()
 
     # Try to get result with different values

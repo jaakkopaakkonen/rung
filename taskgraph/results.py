@@ -1,3 +1,7 @@
+# This file takes care of the results of executed tasks
+# including but not limited to logging and caching the results.
+
+
 import os
 import re
 import sys
@@ -7,18 +11,33 @@ import taskgraph.config
 
 from datetime import datetime
 
+
+# Result metadata in execution order
+# list of dicts
+# [
+#   {
+#     "finish_timestamp",
+#     "task": instance of Task,
+#     "values": values of execution
+#     "result": Task run returned result
+#   }
+# ,
+#   ...
+# ]
 results_in_order = list()
+
+# Dict of metadata by task indexed by task.get_namedtuple(values)
+# results_by_values[task.get_namedtuple(values)] = {
+#     "finish_timestamp": finish_timestamp,
+#     "values": values,
+#     "result": result,
+# }
 results_by_values = dict()
 
+# Runner to task relationship to assist with
+# getting the right logger for the task
 tasks_by_runner = dict()
 
-
-def register_runner(runner, task):
-    global tasks_by_runner
-    tasks_by_runner[runner] = task
-
-def get_logger(runner):
-    return Logger(tasks_by_runner[runner])
 
 def prefix_lines(prefix, lines):
     if isinstance(prefix, bytes) and isinstance(lines, bytes):
@@ -35,11 +54,13 @@ def prefix_lines(prefix, lines):
         i += 1
     return result
 
+
 def timestamp_to_human(timestamp):
     datetime_obj = datetime.fromtimestamp(timestamp)
     return "{:02d}".format(datetime_obj.hour) + ':'  + \
         "{:02d}".format(datetime_obj.minute) + ':' + \
         "{:02d}".format(datetime_obj.second)
+
 
 def timestamp_to_utc_bytes(timestamp):
     return bytes(
@@ -48,8 +69,31 @@ def timestamp_to_utc_bytes(timestamp):
         ),
         "utf-8",
     )
-class Logger:
 
+def register_runner(runner, task):
+    """Register a task for runner function so that
+    we can determine unique logger for the task in question
+
+    :param runner: Runner function of the tatsk
+    :param task: Task object
+    :return: None
+    """
+    global tasks_by_runner
+    tasks_by_runner[runner] = task
+
+
+def get_logger(runner):
+    """ Gets the loggor based on the runner function
+
+    :param runner:
+    :return:
+    """
+    return Logger(tasks_by_runner[runner])
+
+class Logger:
+    """Class responsible for logging stdout, stderr, result,
+    exit status etc of the task
+    """
     def __init__(self, task):
         self.file = None
         # Output lines collected from stdout wihtout any additions
@@ -111,7 +155,7 @@ class Logger:
         return b''.join(self.stdoutput).decode("utf-8")
 
 
-def add(task, values, result):
+def add_result(task, values, result):
     """
     Add task name, it's input values at execution time and result
     and store these, including the timestamp it was stored to memory
@@ -120,6 +164,7 @@ def add(task, values, result):
     :param result: THe result value task execution returned
     :return: None
     """
+
     global results_in_order
     global results_by_values
     finish_timestamp = time.time()
@@ -131,9 +176,7 @@ def add(task, values, result):
             "result": result,
         },
     )
-    values = values.copy()
-    values["task_name"] = task.name
-    results_by_values[task.get_namedtuple()(**values)] = {
+    results_by_values[task.get_namedtuple(values)] = {
         "finish_timestamp": finish_timestamp,
         "values": values,
         "result": result,
@@ -154,14 +197,24 @@ def get(task):
     return None
 
 
+def has_result(task, values):
+    global results_by_values
+    return task.get_namedtuple(values) in results_by_values
+
+def get_result(task, values):
+    if isinstance(task, str):
+        return get_result(taskgraph.dag.get_task(task))
+    return results_by_values[task.get_namedtuple(values)]["result"]
+
+
 def get_results(task, values={}):
     global results_by_values
+
+    if isinstance(task, str):
+        return get_results(taskgraph.dag.get_task(task), values)
     result = None
     try:
-        values = values.copy()
-        values["task_name"] = task.name
-        result = results_by_values[task.get_namedtuple()(**values)]
-        del(result["values"]["task_name"])
+        result = results_by_values[task.get_namedtuple(values)]
     except TypeError as te:
         # Mandatory input value missing
         pass
@@ -190,3 +243,33 @@ def get_all_results():
             found_tasks.add(task_name)
         i -= 1
     return results
+
+
+def get_all_results_in_order():
+    """
+    Gets a list of tuples containing task name and it's return value.
+    Earlier values of same name tasks are not returned despite of result value
+    :return: list(tuple(taskname, result_value))
+    """
+    found_tasks = set()
+    results = list()
+    i = len(results_in_order)-1
+    while i >= 0:
+        task_name = results_in_order[i]["task"].name
+        task_result = results_in_order[i]["result"]
+        if task_name not in found_tasks and \
+           task_result is not None and \
+           len(task_result) <= 80:
+            results.insert(0, (task_name, task_result))
+            found_tasks.add(task_name)
+        i -= 1
+    return results
+
+
+def reset():
+    global results_in_order
+    global results_by_values
+    global tasks_by_runner
+    results_in_order = list()
+    results_by_values = dict()
+    tasks_by_runner = dict()

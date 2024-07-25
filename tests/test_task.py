@@ -127,7 +127,6 @@ def test_simple_task_execution():
 
 @pytest.mark.skip
 def test_task_with_values():
-    taskname = "car"
     inputs = ["engine", "tyres"]
     runnable_car = Mock(
         side_effect=lambda engine, tyres: {
@@ -140,13 +139,13 @@ def test_task_with_values():
         "transmission": "transmission has {gears} gears",
     }
     task_car = taskgraph.task.Task(
-        name=taskname,
+        name="car",
         runnable=runnable_car,
         inputs=inputs,
         values=values,
     )
     # Check parent task contents
-    parent_task = taskgraph.dag.get_task(taskname)
+    parent_task = taskgraph.dag.get_task("car")
     assert parent_task.input_names == ["engine", "tyres"]
     assert parent_task.provided_values == {
         "transmission": "transmission has {gears} gears",
@@ -283,8 +282,7 @@ def test_get_namedtuple():
     )
 
     task = taskgraph.dag.get_task("task")
-    nt = task.get_namedtuple()
-    valuedtuple1 = nt(task_name="task", inputName="inputValue")
+    valuedtuple1 = task.get_namedtuple({"inputName":"inputValue"})
     assert valuedtuple1 == collections.namedtuple(
         "task",
         ["task_name", "inputName", "optionalInputName"],
@@ -471,6 +469,8 @@ def test_task_input_module_name():
             input_values,
         ),
     ]
+    taskgraph.dag.reset()
+    taskgraph.results.reset()
 
 
 @patch("os.environ", {"commitMessageFile": "commit.md"})
@@ -496,7 +496,7 @@ def test_optional_input_environment_value():
             ],
         },
     )
-    valuestack = taskgraph.valuestack.ValueStack(
+    valuestack = taskgraph.values.ValueStack(
         taskgraph.dag.get_all_value_names(),
     )
     valuestack.set_environment_values(dict(os.environ))
@@ -505,3 +505,5 @@ def test_optional_input_environment_value():
         values=valuestack.get_values(),
     )
     assert valuetask.values == { "commitMessageFile": "commit.md"}
+    taskgraph.dag.reset()
+    taskgraph.results.reset()

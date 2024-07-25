@@ -20,7 +20,7 @@ import taskgraph.ascii
 import taskgraph.exception
 import taskgraph.util
 import taskgraph.config
-import taskgraph.valuestack
+import taskgraph.values
 import taskgraph.results
 import taskgraph.runner
 import taskgraph.modules
@@ -121,7 +121,7 @@ def main():
 
     :return:
     """
-    valuestack = taskgraph.valuestack.ValueStack(
+    valuestack = taskgraph.values.ValueStack(
         taskgraph.dag.get_all_value_names(),
     )
     valuestack.set_environment_values(dict(os.environ))
@@ -174,11 +174,7 @@ def main():
                             default_input,
                             value,
                         )
-                        valuetask = taskgraph.runner.ValueTask.create_value_task(
-                            name=name,
-                            values=valuestack.get_values(),
-                        )
-                        result = valuetask.run()
+                        result = valuestack.fetch_value(name=name)
                         print(
                             json.dumps(
                                 result,
@@ -211,12 +207,8 @@ def main():
                     # TODO: Array values with plural suffix "s"
                     else:
                         try:
-                            valuetask = taskgraph.runner.ValueTask.create_value_task(
-                                name=argument,
-                                values=valuestack.get_values(),
-                            )
-                            result = valuetask.run()
-                            for task, result in taskgraph.results.get_all_results():
+                            result = valuestack.fetch_value(name=argument)
+                            for task, result in taskgraph.results.get_all_results_in_order():
                                 if " " in result:
                                     result = '"' + result + '"'
                                 print("export "+ str(task) + "=" + str(result))

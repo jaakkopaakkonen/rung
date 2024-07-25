@@ -1,10 +1,8 @@
 import copy
 import logging
-import time
 import taskgraph.dag
 import taskgraph.inputs
 import taskgraph.results
-from taskgraph.util import log_string
 
 log = logging.getLogger("taskgraph")
 
@@ -129,7 +127,6 @@ class ValueTask:
             # No result in cache. We need to execute
             if result == None:
                 result = self.task.run(self.values)
-                taskgraph.results.add(self.task, self.values, result)
         return result
 
     def __hash__(self):
