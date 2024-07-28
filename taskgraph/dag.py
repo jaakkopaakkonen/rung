@@ -37,6 +37,11 @@ all_task_names = set()
 # key is module name, value is set of tasks in module
 tasks_by_modules = dict()
 
+
+class NoSuchTask(BaseException):
+    pass
+
+
 def add(module, task):
     """ Add task to this bookkeeper
     Adding a task will enable bookkeeper to track name and inputs
@@ -144,8 +149,8 @@ def get_task(name):
 
     try:
         return tasks_by_name[name]
-    except KeyError:
-        return None
+    except KeyError as ke:
+        raise(NoSuchTask(ke))
 
 
 def run_task(name, values):

@@ -1,5 +1,6 @@
 import taskgraph.values
 import taskgraph.dag
+import taskgraph.results
 import taskgraph.runner
 import taskgraph.task
 
@@ -15,10 +16,10 @@ def test_task_input_module_name():
         defaultInput="inputA",
         module="module",
     )
-    valuestack = taskgraph.values.ValueStack(
+    taskgraph.values.add_value_names(
         taskgraph.inputs.get_all_input_names(),
     )
-    valuestack.set_environment_values(
+    taskgraph.values.set_environment_values(
         {
             "moduleinputA": "valueA",
             "module_inputB": "valueB",
@@ -26,9 +27,10 @@ def test_task_input_module_name():
     )
     valuetask = taskgraph.runner.ValueTask.create_value_task(
         name="task",
-        values=valuestack.get_values(),
+        values=taskgraph.values.get_values(),
     )
     result = valuetask.run()
     assert result
-
-
+    taskgraph.values.reset()
+    taskgraph.results.reset()
+    taskgraph.dag.reset()

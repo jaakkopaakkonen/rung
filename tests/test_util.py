@@ -1,5 +1,4 @@
 import taskgraph.dag
-import taskgraph.matrix
 import taskgraph.modules
 import taskgraph.task
 import taskgraph.util

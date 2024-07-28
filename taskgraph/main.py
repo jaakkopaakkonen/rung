@@ -17,14 +17,12 @@ log.setLevel(1)
 
 
 import taskgraph.ascii
-import taskgraph.exception
 import taskgraph.util
 import taskgraph.config
 import taskgraph.values
 import taskgraph.results
 import taskgraph.runner
 import taskgraph.modules
-import taskgraph.matrix
 
 colorama.init(autoreset=True)
 
@@ -121,14 +119,14 @@ def main():
 
     :return:
     """
-    valuestack = taskgraph.values.ValueStack(
+    taskgraph.values.add_value_names(
         taskgraph.dag.get_all_value_names(),
     )
-    valuestack.set_environment_values(dict(os.environ))
+    taskgraph.values.set_environment_values(dict(os.environ))
     # TODO print relevant inputs before starting on task(s)
     if len(sys.argv) == 1:
         # TODO Print also already provided inputs
-        values = valuestack.get_values()
+        values = taskgraph.values.get_values()
         print_values(values)
         print("\n")
         print_task_tree(values)
@@ -170,11 +168,11 @@ def main():
                     )
                     if default_input is not None:
                         # We have default input
-                        valuestack.set_command_line_value(
+                        taskgraph.values.set_command_line_value(
                             default_input,
                             value,
                         )
-                        result = valuestack.fetch_value(name=name)
+                        result = taskgraph.values.fetch_value(name=name)
                         print(
                             json.dumps(
                                 result,
@@ -184,7 +182,7 @@ def main():
                         )
                     else:
                         # No default input
-                        valuestack.set_command_line_value(
+                        taskgraph.values.set_command_line_value(
                             name,
                             value,
                         )
@@ -199,7 +197,7 @@ def main():
                         # suffix.
                         # For instance --recipient a --recipient b ->
                         #  recipients=[a,b]
-                        valuestack.set_command_line_value(
+                        taskgraph.set_command_line_value(
                             current_input,
                             argument,
                         )
@@ -207,7 +205,7 @@ def main():
                     # TODO: Array values with plural suffix "s"
                     else:
                         try:
-                            result = valuestack.fetch_value(name=argument)
+                            result = taskgraph.values.fetch_value(name=argument)
                             for task, result in taskgraph.results.get_all_results_in_order():
                                 if " " in result:
                                     result = '"' + result + '"'
@@ -217,7 +215,7 @@ def main():
                             print(mie.args)
 
                 i += 1
-        except taskgraph.exception.FailedCommand as ex:
+        except taskgraph.task.FailedCommand as ex:
             print(ex)
             exit(1)
 

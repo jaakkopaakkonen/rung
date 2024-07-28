@@ -27,10 +27,10 @@ def test_fetch_value_dependency():
         module="module",
         inputs=["b"],
     )
-    valuestack = taskgraph.values.ValueStack(['a', 'b', 'c'])
-    valuestack.set_command_line_value('a',"value_a")
+    taskgraph.values.add_value_names(['a', 'b', 'c'])
+    taskgraph.values.set_command_line_value('a',"value_a")
 
-    result = valuestack.fetch_value('c')
+    result = taskgraph.values.fetch_value('c')
     assert result == "result_c"
     assert runnable_c.mock_calls == [
         (
@@ -68,3 +68,4 @@ def test_fetch_value_dependency():
     ]
     taskgraph.results.reset()
     taskgraph.dag.reset()
+    taskgraph.values.reset()

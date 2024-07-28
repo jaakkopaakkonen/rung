@@ -30,19 +30,19 @@ def test_fetch_value():
         "environment_variable": "environment_value",
         "commandline_variable": "commandline_value",
     }
-    valuestack = taskgraph.values.ValueStack(list(values.keys()))
-    valuestack.set_environment_values(
+    taskgraph.values.add_value_names(list(values.keys()))
+    taskgraph.values.set_environment_values(
         {
             "environment_variable": values["environment_variable"],
         },
     )
-    valuestack.set_command_line_value(
+    taskgraph.values.set_command_line_value(
         "commandline_variable",
         values["commandline_variable"],
     )
-    assert valuestack.fetch_value("environment_variable") == values["environment_variable"]
-    assert valuestack.fetch_value("commandline_variable") == values["commandline_variable"]
-    assert valuestack.fetch_value("task") == runnable.return_value
+    assert taskgraph.values.fetch_value("environment_variable") == values["environment_variable"]
+    assert taskgraph.values.fetch_value("commandline_variable") == values["commandline_variable"]
+    assert taskgraph.values.fetch_value("task") == runnable.return_value
     assert runnable.mock_calls == [
         (
             "",
@@ -50,9 +50,9 @@ def test_fetch_value():
             values,
         )
     ]
-    assert valuestack.fetch_value("task") == runnable.return_value
+    assert taskgraph.values.fetch_value("task") == runnable.return_value
     taskgraph.results.reset()
     taskgraph.dag.reset()
-
+    taskgraph.values.reset()
 
 

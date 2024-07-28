@@ -12,10 +12,12 @@ import taskgraph.inputs
 import taskgraph.results
 import taskgraph.values
 import taskgraph.util
-import taskgraph.exception
 
 
 class NonZeroExitStatus(BaseException):
+    pass
+
+class FailedCommand(BaseException):
     pass
 
 def values_as_string(values):
@@ -266,6 +268,27 @@ class Task:
         return result
 
 
+class ConsecutiveTask(Task):
+    @classmethod
+    def create_consecutive_tasks(cls, task_names):
+        consecutive_task = None
+        for task in reversed(task_names):
+            consecutive_task = ConsecutiveTask(
+                task_name=task,
+                next_consecutive_task=consecutive_task,
+            )
+        return consecutive_task
+
+    def __init__(self, task_name, next_consecutive_task=None):
+        self.task_name = task_name
+        self.next_consecutive_task = next_consecutive_task
+
+    def run(self):
+        result = taskgraph.values.fetch_value(self.task_name)
+        if self.next_consecutive_task is not None:
+            self.next_consecutive_task.run()
+
+
 class Condition:
 
     def __init__(self, input_names, evaluator, valuetask):
@@ -347,7 +370,7 @@ def run_commands(logger, commands):
             logger.exitcode(process.returncode)
 
             if process.returncode:
-                raise taskgraph.exception.FailedCommand(
+                raise FailedCommand(
                     "Command \"" + command + "\" exit code: " + str(process.returncode)
                 )
         cmd_idx += 1

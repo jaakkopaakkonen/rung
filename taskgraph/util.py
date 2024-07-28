@@ -9,7 +9,6 @@ import re
 import types
 
 
-import taskgraph.matrix
 import taskgraph.ascii
 import taskgraph.dag
 
@@ -214,15 +213,16 @@ def string_to_valid_identifier(string):
 def get_asciitree(task, values=dict()):
     parents = []
     for input in task.input_names + task.optional_input_names:
-        input_task = taskgraph.dag.get_task(input)
-        if input_task:
+        try:
+            input_task = taskgraph.dag.get_task(input)
+
             parents.append(
                 get_asciitree(
                     task=input_task,
                     values=values,
                 ),
             )
-        else:
+        except taskgraph.dag.NoSuchTask:
             contents = input
             if input in values:
                 contents += '=' + values[input]

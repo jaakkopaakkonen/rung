@@ -496,14 +496,15 @@ def test_optional_input_environment_value():
             ],
         },
     )
-    valuestack = taskgraph.values.ValueStack(
+    taskgraph.values.add_value_names(
         taskgraph.dag.get_all_value_names(),
     )
-    valuestack.set_environment_values(dict(os.environ))
+    taskgraph.values.set_environment_values(dict(os.environ))
     valuetask = taskgraph.runner.ValueTask.create_value_task(
         name="commit",
-        values=valuestack.get_values(),
+        values=taskgraph.values.get_values(),
     )
     assert valuetask.values == { "commitMessageFile": "commit.md"}
     taskgraph.dag.reset()
     taskgraph.results.reset()
+    taskgraph.values.reset()

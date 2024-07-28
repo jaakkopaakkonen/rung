@@ -1,110 +1,117 @@
-import colorama
 import taskgraph.dag
+import taskgraph.results
 
-class ValueStack:
-    """ValueStack stores and manages input values from
-    several different layers and sources, and is responsible for
-    providing them with correct overriding when needed.
+value_names = set()
+environment_values = dict()
+command_line_values = dict()
 
-    The precedence of values is (higher precedence first):
-    - command line values
-    - result values
-    - environment values
+
+def add_value_names(names):
+    global value_names
+    value_names.update(names)
+
+
+def set_environment_values(value_dict={}):
+    global value_names
+    global environment_values
+    for name in value_dict:
+        if name in value_names:
+            environment_values[name] = value_dict[name]
+
+def deprecate_input(input_name):
+    """Remove a value from cache
+    :param input_name:
+    :return:
+    """
+    global environment_values
+    try:
+        environment_values.pop(input_name)
+    except KeyError:
+        pass
+    try:
+        command_line_values.pop(input_name)
+    except KeyError:
+        pass
+
+def deprecate_input_recursive(inputs):
+    """Remove value from cache.
+    Removes also all values which have had this as input.
+
+    :param inputs:
+    :return:
+    """
+    for input in inputs:
+        deprecate_input_recursive(
+            taskgraph.dag.get_tasks_having_input(input),
+        )
+        deprecate_input(input)
+
+def set_command_line_value(input_name, value):
+    global command_line_values
+    deprecate_input_recursive([input_name])
+    command_line_values[input_name] = value
+
+
+def get_values():
     """
 
-    # Dictionary containing values defined on the command line
-
-    def __init__(self, value_names):
-        """ New instance.
-
-        :param value_names: List of names used as name or input names
-        """
-        self.value_names = value_names
-        # Dictionary containing values defined in system environment variables
-        self.environment_values = dict()
-        self.command_line_values = dict()
+    :return:
+    """
+    global environment_values
+    global command_line_values
+    result = dict()
+    result.update(environment_values)
+    result.update(command_line_values)
+    result.update(taskgraph.results.get_all_results())
+    return result
 
 
-    def set_environment_values(self, value_dict={}):
-        for name in value_dict:
-            if name in self.value_names:
-                self.environment_values[name] = value_dict[name]
+def get_value(name):
+    global command_line_values
+    global environment_values
 
-    def set_command_line_value(self, input_name, value):
-        self.deprecate_input_recursive([input_name])
-        self.command_line_values[input_name] = value
+    if name in command_line_values:
+        return command_line_values[name]
+    if name in environment_values:
+        return environment_values[name]
 
-    def deprecate_input(self, input_name):
-        """Remove a value from cache
-        :param input_name:
-        :return:
-        """
-        try:
-            self.environment_values.pop(input_name)
-        except KeyError:
-            pass
-        try:
-            self.command_line_values.pop(input_name)
-        except KeyError:
-            pass
-        except KeyError:
-            pass
+def is_valuename(name):
+    global value_names
+    return name in value_names
 
-    def deprecate_input_recursive(self, inputs):
-        """Remove value from cache.
-        Removes also all values which have had this as input.
 
-        :param inputs:
-        :return:
-        """
-        for input in inputs:
-            self.deprecate_input_recursive(
-                taskgraph.dag.get_tasks_having_input(input),
+def fetch_value(name):
+    """ Fetches the value from cache or
+    executes the task providing it.
+
+    :param name:
+    :return:
+    """
+    result = get_value(name)
+    if result is None:
+        task = taskgraph.dag.get_task(name)
+        values = task.get_relevant_values(get_values())
+        # TODO: Find a way to run dependencies first
+        # has_result will raise TyypeError on missing inputs
+        missing_inputs = task.get_missing_inputs(values)
+        for input in missing_inputs:
+            values[input] = fetch_value(input)
+        if not taskgraph.results.has_result(task, values):
+            result = task.run(values)
+        else:
+            # No result available
+            result = taskgraph.results.get_result(
+                task=task,
+                values=values,
             )
-            self.deprecate_input(input)
+    return result
 
-    def get_values(self):
-        """
 
-        :return:
-        """
-        result = dict()
-        result.update(self.environment_values)
-        result.update(self.command_line_values)
-        result.update(taskgraph.results.get_all_results())
-        return result
+def reset():
+    global value_names
+    global environment_values
+    global command_line_values
+    value_names = set()
+    environment_values = dict()
+    command_line_values = dict()
 
-    def get_value(self, name):
-        if name in self.command_line_values:
-            return self.command_line_values[name]
-        if name in self.environment_values:
-            return self.environment_values[name]
-
-    def is_valuename(self, name):
-        return name in self.value_names
-
-    def fetch_value(self, name):
-        """ Fetches the value from cache or
-        executes the task providing it.
-
-        :param name:
-        :return:
-        """
-        result = self.get_value(name)
-        if result is None:
-            task = taskgraph.dag.get_task(name)
-            values = task.get_relevant_values(self.get_values())
-            # TODO: Find a way to run dependencies first
-            # has_result will raise TyypeError on missing inputs
-            missing_inputs = task.get_missing_inputs(values)
-            for input in missing_inputs:
-                values[input] = self.fetch_value(input)
-            if not taskgraph.results.has_result(task, values):
-                result = task.run(values)
-            else:
-                # No result available
-                result = taskgraph.results.get_result(
-                    task=task,
-                    values=values,
-                )
-        return result

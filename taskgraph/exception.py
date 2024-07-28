@@ -1,2 +1,0 @@
-class FailedCommand(BaseException):
-    pass
