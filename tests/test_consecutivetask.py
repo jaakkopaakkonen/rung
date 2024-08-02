@@ -90,6 +90,7 @@ def test_consecutivetask_simple():
     taskgraph.results.reset()
     taskgraph.values.reset()
 
+
 def test_consecutivetask_dependencies():
     # a┐ a┐ d┐
     #  b  c  e
@@ -195,3 +196,111 @@ def test_consecutivetask_dependencies():
     taskgraph.results.reset()
 
 
+def test_append():
+    # a─c─d┐
+     #  e──f
+
+    # Set up runnables and tasks
+    runnable_a = Mock()
+    task_a = taskgraph.task.Task(
+        name='a',
+        runnable=runnable_a,
+    )
+    runnable_d = Mock(return_value="result_d")
+    task_d = taskgraph.task.Task(
+        name='d',
+        runnable=runnable_d,
+    )
+    runnable_e = Mock(return_value="result_e")
+    task_e = taskgraph.task.Task(
+        name='e',
+        runnable=runnable_e,
+    )
+    runnable_f = Mock(return_value="result_f")
+    task_f = taskgraph.task.Task(
+        name='f',
+        runnable=runnable_f,
+    )
+
+    # Set up consecutivetasks and a condition
+    a = taskgraph.task.ConsecutiveTask(task_name='a')
+    c = taskgraph.task.Condition(
+        input_names='a',
+        evaluator=lambda a:a,
+    )
+    d = taskgraph.task.ConsecutiveTask(task_name='d')
+    e = taskgraph.task.ConsecutiveTask(task_name='e')
+    f = taskgraph.task.ConsecutiveTask(task_name='f')
+
+    # Build consecutivetask graph and
+    # assert returned consecutivetasks from append method
+    assert a.append(next_consecutive_task=c) == c
+    assert c.append(next_consecutive_task=d, result=True) == d
+    assert c.append(next_consecutive_task=e, result=False) == e
+    assert c.append(next_consecutive_task=f) == f
+
+    # Check consecutivetask graph
+    assert a.next_consecutive_task == c
+    assert c.condition_map == {True: d, False: e}
+    assert d.next_consecutive_task == f
+    assert e.next_consecutive_task == f
+
+    # Run graph with a=True branch
+    runnable_a.return_value = True
+    result = a.run()
+
+    # Check results
+    assert result == "result_f"
+    results = taskgraph.results.results_in_order
+    assert results[0]["finish_timestamp"] < results[1]["finish_timestamp"] < results[2]["finish_timestamp"]
+    del(results[0]["finish_timestamp"])
+    del(results[1]["finish_timestamp"])
+    del(results[2]["finish_timestamp"])
+    assert results == [
+        {
+            "values": {},
+            "task": task_a,
+            "result": True,
+        },
+        {
+            "values": {},
+            "task": task_d,
+            "result": "result_d",
+        },
+        {
+            "values": {},
+            "task": task_f,
+            "result": "result_f",
+        },
+    ]
+    # Reset results
+    taskgraph.results.reset()
+
+    # Run same graph again with a=False branch
+    runnable_a.return_value = False
+    result = a.run()
+
+    # Check results
+    assert result == "result_f"
+    results = taskgraph.results.results_in_order
+    assert results[0]["finish_timestamp"] < results[1]["finish_timestamp"] < results[2]["finish_timestamp"]
+    del(results[0]["finish_timestamp"])
+    del(results[1]["finish_timestamp"])
+    del(results[2]["finish_timestamp"])
+    assert results == [
+        {
+            "values": {},
+            "task": task_a,
+            "result": False,
+        },
+        {
+            "values": {},
+            "task": task_e,
+            "result": "result_e",
+        },
+        {
+            "values": {},
+            "task": task_f,
+            "result": "result_f",
+        },
+    ]

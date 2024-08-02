@@ -183,7 +183,7 @@ def add_result(task, values, result):
     }
 
 
-def get(task):
+def get(task_name):
     """
     Get latest structure of task result and execution
     :param task: Task name
@@ -237,10 +237,9 @@ def get_all_results():
         task_name = results_in_order[i]["task"].name
         task_result = results_in_order[i]["result"]
         if task_name not in found_tasks and \
-           task_result is not None and \
-           len(task_result) <= 80:
-            results.insert(0, (task_name, task_result))
-            found_tasks.add(task_name)
+           task_result is not None:
+                results.insert(0, (task_name, task_result))
+                found_tasks.add(task_name)
         i -= 1
     return results
 

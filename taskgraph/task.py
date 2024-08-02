@@ -14,6 +14,9 @@ import taskgraph.values
 import taskgraph.util
 
 
+EMPTY_VALUE = object()
+
+
 class NonZeroExitStatus(BaseException):
     pass
 
@@ -56,7 +59,6 @@ class Task:
         more controlled entities to enable testing
     """
 
-    empty_input_value = object()
     @classmethod
     def create_inline_value_task(cls, name, inputs):
         """
@@ -176,10 +178,11 @@ class Task:
         :return: Value filled named tuple with task name in `task_name` and
             unset optional values containing "emtpy_input_value"
         """
+        global EMPTY_VALUE
         tupletype = collections.namedtuple(
             "task",
             ["task_name"] + self.input_names + self.optional_input_names,
-            defaults=(self.empty_input_value,) * len(self.optional_input_names),
+            defaults=(EMPTY_VALUE,) * len(self.optional_input_names),
         )
         if not "task_name" in values:
             values = dict(values)
@@ -268,7 +271,7 @@ class Task:
         return result
 
 
-class ConsecutiveTask(Task):
+class ConsecutiveTask:
     @classmethod
     def create_consecutive_tasks(cls, task_names):
         consecutive_task = None
@@ -283,28 +286,54 @@ class ConsecutiveTask(Task):
         self.task_name = task_name
         self.next_consecutive_task = next_consecutive_task
 
+    def append(self, next_consecutive_task):
+        if self.next_consecutive_task is not None:
+            return self.next_consecutive_task.append(next_consecutive_task)
+        else:
+            self.next_consecutive_task = next_consecutive_task
+        return self.next_consecutive_task
+
+
     def run(self):
         result = taskgraph.values.fetch_value(self.task_name)
         if self.next_consecutive_task is not None:
-            self.next_consecutive_task.run()
+            result = self.next_consecutive_task.run()
+        return result
 
 
-class Condition:
-
-    def __init__(self, input_names, evaluator, valuetask):
+class Condition(ConsecutiveTask):
+    def __init__(self, input_names, evaluator, condition_map=dict()):
         self.input_names = frozenset(input_names)
-        self.valuetask = valuetask
         self.evaluator = evaluator
+        self.condition_map = dict(condition_map)
+
 
     def can_evaluate(self, values):
         return self.input_names.issubset(frozenset(values.keys()))
 
     def evaluate(self, values):
-        return self.evaluate(values)
+        return self.evaluator(values)
 
-    def run(self, values):
-        if self.evaluator(values):
-            self.next_task.run(self.task_values)
+    def append(self, next_consecutive_task, result=EMPTY_VALUE):
+        global EMPTY_VALUE
+        if result != EMPTY_VALUE:
+            if result in self.condition_map and self.condition_map[result]:
+                self.condition_map[result].append(next_consecutive_task)
+            else:
+                self.condition_map[result] = next_consecutive_task
+        else:
+            for result in self.condition_map:
+                self.append(next_consecutive_task=next_consecutive_task, result=result)
+        return next_consecutive_task
+
+    def run(self):
+        # TODO Check get_values() has all the needed values and raise exception if needed
+        values = taskgraph.values.get_values()
+        values = values_subset(values, self.input_names)
+        result = self.evaluator(**values)
+        next_consecutive_task = self.condition_map[result]
+        return next_consecutive_task.run()
+
 
 
 def task_func(*args, **kwargs):

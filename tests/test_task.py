@@ -286,7 +286,7 @@ def test_get_namedtuple():
     assert valuedtuple1 == collections.namedtuple(
         "task",
         ["task_name", "inputName", "optionalInputName"],
-    )("task", "inputValue", taskgraph.task.Task.empty_input_value)
+    )("task", "inputValue", taskgraph.task.EMPTY_VALUE)
 
 
 def test_store_results():
@@ -359,7 +359,7 @@ def test_store_results():
             }
         )
     ]
-
+    taskgraph.results.reset()
 
 def test_tasks_store_results():
     # Initialize command_to_full_path to bypass executable search from PATH
