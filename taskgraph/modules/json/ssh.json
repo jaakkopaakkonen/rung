@@ -2,8 +2,9 @@
   {
     "name": "ssh",
     "executable": "ssh",
-    "commandLineArguments": "-A -o StrictHostKeyChecking=accept-new {host}",
-    "inputs": ["host"]
+    "commandLineArguments": ["-A -o StrictHostKeyChecking=accept-new", " -o ConnectTimeout {timeout}", " {host}"],
+    "inputs": ["host"],
+    "optionalInputs": ["timeout"]
   },
   {
     "name": "scp",
